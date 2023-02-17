@@ -1,3 +1,5 @@
+## This file is used to take screenshots in game for debug and config purposes. It is not required to run the program.
+
 import PIL.ImageGrab, PIL.Image
 import time
 
