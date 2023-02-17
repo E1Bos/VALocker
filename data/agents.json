@@ -7,26 +7,26 @@
         "Sova"
     ],
     "AGENTS": {
-        "Astra": true,
-        "Breach": true,
+        "Astra": false,
+        "Breach": false,
         "Brimstone": true,
-        "Chamber": true,
-        "Cypher": true,
-        "Fade": true,
-        "Harbor": true,
+        "Chamber": false,
+        "Cypher": false,
+        "Fade": false,
+        "Harbor": false,
         "Jett": true,
-        "Kayo": true,
-        "Killjoy": true,
-        "Neon": true,
-        "Omen": true,
+        "Kayo": false,
+        "Killjoy": false,
+        "Neon": false,
+        "Omen": false,
         "Phoenix": true,
-        "Raze": true,
-        "Reyna": true,
+        "Raze": false,
+        "Reyna": false,
         "Sage": true,
-        "Skye": true,
+        "Skye": false,
         "Sova": true,
-        "Viper": true,
-        "Yoru": true
+        "Viper": false,
+        "Yoru": false
     },
     "BOX_SIZE": 72,
     "LOCK_SIZE": [
@@ -120,15 +120,15 @@
         ]
     },
     "MAP_SPECIFIC": {
-        "Ascent": "Viper",
-        "Bind": "Viper",
-        "Breeze": "Viper",
-        "Fracture": "Viper",
-        "Haven": "Viper",
-        "Icebox": "Viper",
-        "Lotus": "Reyna",
-        "Pearl": "Reyna",
-        "Split": "Viper"
+        "Ascent": "Brimstone",
+        "Bind": "Brimstone",
+        "Breeze": "Brimstone",
+        "Fracture": "Brimstone",
+        "Haven": "Brimstone",
+        "Icebox": "Brimstone",
+        "Lotus": "Brimstone",
+        "Pearl": "Brimstone",
+        "Split": "Brimstone"
     },
-    "DEFAULT": "Reyna"
+    "DEFAULT": "Brimstone"
 }
