@@ -7,128 +7,56 @@
         "Sova"
     ],
     "AGENTS": {
-        "Astra": false,
-        "Breach": false,
+        "Astra": true,
+        "Breach": true,
         "Brimstone": true,
-        "Chamber": false,
-        "Cypher": false,
-        "Fade": false,
-        "Harbor": false,
+        "Chamber": true,
+        "Cypher": true,
+        "Fade": true,
+        "Gekko": false,
+        "Harbor": true,
         "Jett": true,
-        "Kayo": false,
-        "Killjoy": false,
-        "Neon": false,
-        "Omen": false,
+        "Kayo": true,
+        "Killjoy": true,
+        "Neon": true,
+        "Omen": true,
         "Phoenix": true,
-        "Raze": false,
-        "Reyna": false,
+        "Raze": true,
+        "Reyna": true,
         "Sage": true,
-        "Skye": false,
+        "Skye": true,
         "Sova": true,
-        "Viper": false,
-        "Yoru": false
+        "Viper": true,
+        "Yoru": true
     },
-    "BOX_SIZE": 72,
-    "LOCK_SIZE": [
-        234,
-        59
-    ],
-    "BOX_COORDS": {
-        "lock_button": [
+    "BOX_INFO": {
+        "SIZE": 72,
+        "LOCK_SIZE": [
+            234,
+            59
+        ],
+        "COLUMNS": 11,
+        "XDIST": 12,
+        "YDIST": 84,
+        "LOCK_COORDS": [
             843,
             785
         ],
-        "Box0": [
-            546,
+        "TOPLEFT": [
+            504,
             889
-        ],
-        "Box1": [
-            630,
-            889
-        ],
-        "Box2": [
-            714,
-            889
-        ],
-        "Box3": [
-            798,
-            889
-        ],
-        "Box4": [
-            882,
-            889
-        ],
-        "Box5": [
-            966,
-            889
-        ],
-        "Box6": [
-            1050,
-            889
-        ],
-        "Box7": [
-            1136,
-            889
-        ],
-        "Box8": [
-            1220,
-            889
-        ],
-        "Box9": [
-            1304,
-            889
-        ],
-        "Box10": [
-            546,
-            973
-        ],
-        "Box11": [
-            630,
-            973
-        ],
-        "Box12": [
-            714,
-            973
-        ],
-        "Box13": [
-            798,
-            973
-        ],
-        "Box14": [
-            882,
-            973
-        ],
-        "Box15": [
-            966,
-            973
-        ],
-        "Box16": [
-            1050,
-            973
-        ],
-        "Box17": [
-            1136,
-            973
-        ],
-        "Box18": [
-            1220,
-            973
-        ],
-        "Box19": [
-            1304,
-            973
         ]
     },
     "MAP_SPECIFIC": {
-        "Ascent": "Brimstone",
-        "Bind": "Brimstone",
-        "Breeze": "Brimstone",
-        "Fracture": "Brimstone",
-        "Haven": "Brimstone",
-        "Icebox": "Brimstone",
-        "Lotus": "Brimstone",
-        "Pearl": "Brimstone",
-        "Split": "Brimstone"
+        "Ascent": "Viper",
+        "Bind": "Viper",
+        "Breeze": "Viper",
+        "Fracture": "Viper",
+        "Haven": "Viper",
+        "Icebox": "Viper",
+        "Lotus": "Reyna",
+        "Pearl": "Viper",
+        "Split": "Viper"
     },
-    "DEFAULT": "Brimstone"
+    "DEFAULT": "Reyna"
 }

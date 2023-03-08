@@ -10,7 +10,6 @@ import PIL.ImageGrab
 import time
 import random
 
-
 class Program(customtkinter.CTk):
     #---------------INITIALIZATION---------------#
     def __init__(self):
@@ -45,8 +44,6 @@ class Program(customtkinter.CTk):
 
         with open('data/config.json', 'r') as f:
             config = json.load(f)
-            # Show notifications or not
-            self.show_notifications = config["NOTIFICATIONS"]
             self.start_minimized = config["START_MINIMIZED"]
 
         self.mouse = pynmouse.Controller()
@@ -95,14 +92,6 @@ class Program(customtkinter.CTk):
             ),
             pystray.MenuItem(
                 lambda x: f"Status: {'None' if self.active is False else 'Locking' if self.in_valorant_menu is True else 'In Game (Waiting)'}", lambda x: self.switch_mode()),
-            pystray.MenuItem(lambda x: f"Agent: {self.selected_agent}", pystray.Menu(
-                *[self.create_menu_item(agent) for agent in self.all_agents])),
-            pystray.MenuItem(lambda x: f"Map: {self.selected_map}", pystray.Menu(
-                *[self.create_menu_item(agent, False) for agent in self.maps]), visible=lambda x: self.map_specific_enabled),
-            pystray.MenuItem(lambda x: f"Enable/Disable Agents", pystray.Menu(
-                *[self.create_menu_item(agent, False) for agent in self.unlockable_agents])),
-            pystray.MenuItem(
-                lambda x: f"{'Enable' if self.map_specific_enabled == False else 'Disable'} Map Specific Agents", self.toggle_map_specific),
             pystray.MenuItem("Exit", lambda x: self.exit())
         )
 
@@ -225,14 +214,9 @@ class Program(customtkinter.CTk):
         self.none_radio_button.grid(row=0, column=1, pady=10)
 
         for index, agent in enumerate(self.unlockable_agents):
-            if agent != "All" and agent != "None":
-                index -= 2
-                if index < 5:
-                    self.create_agent_checkbox(agent, index, 0)
-                elif index < 10:
-                    self.create_agent_checkbox(agent, index - 5, 1)
-                elif index < 15:
-                    self.create_agent_checkbox(agent, index - 10, 2)
+            column = index//5
+            row = index%5
+            self.create_agent_checkbox(agent, row, column)
 
         # Map Specific Tab 
         self.map_specific_agent_dropdown = []
@@ -330,6 +314,7 @@ class Program(customtkinter.CTk):
         # Quit button
         self.quit_button = customtkinter.CTkButton(self.overview_tab, text="Exit", fg_color='#b52d3b', width=95, hover=False, command=self.exit)
         self.quit_button.place(relx=0.76, rely=0.9)
+    
 
     # Updates all GUI elements
     def update_gui(self):
@@ -377,13 +362,12 @@ class Program(customtkinter.CTk):
     def update_agent_tab(self):
         try:
             for agent in self.unlockable_agents:
-                if agent != "All" and agent != "None":
-                    if agent in self.unlocked_agents:
-                        globals()[f'self.{agent}_checkbox'].select()
-                    else:
-                        globals()[f'self.{agent}_checkbox'].deselect()
+                if agent in self.unlocked_agents:
+                    globals()[f'self.{agent}_checkbox'].select()
+                else:
+                    globals()[f'self.{agent}_checkbox'].deselect()
             
-            if len(self.unlockable_agents[3:]) == len(self.unlocked_agents)-6:
+            if len(self.unlockable_agents) == len(self.unlocked_agents)-5:
                 self.all_radio_button.select()
                 self.all_radio_button.configure(state=tk.DISABLED)
             else:
@@ -452,69 +436,6 @@ class Program(customtkinter.CTk):
             "Valocker", self.tray_icons[0], "Valocker", self.icon_menu)
         self.icon.run()
 
-    # Creates icon menu items
-    def create_menu_item(self, agent, hide=True):
-        if agent in self.all_agents or agent == 'None' or agent == 'All':
-            if hide == True:  # For selecting unlocked agents
-                item = pystray.MenuItem(
-                    agent,
-                    lambda x: self.change_agent(agent),
-                    checked=lambda x: self.selected_agent == agent,
-                    visible=lambda x: (agent in self.unlocked_agents)
-                )
-            else:
-                if agent != 'None' and agent != 'All':
-                    item = pystray.MenuItem(
-                        agent,
-                        lambda x: self.toggle_agent(agent),
-                        checked=lambda x: agent in self.unlocked_agents,
-                        visible=lambda x: (agent in self.unlockable_agents),
-                        radio=True
-                    )
-                elif agent == 'All':
-                    item = pystray.MenuItem(
-                        agent,
-                        lambda x: self.toggle_agent(agent),
-                        checked=lambda x: len(self.unlockable_agents[3:]) == len(
-                            self.unlocked_agents)-6,
-                        visible=True,
-                        radio=False
-                    )
-                elif agent == 'None':
-                    item = pystray.MenuItem(
-                        agent,
-                        lambda x: self.toggle_agent(agent),
-                        checked=lambda x: len(self.unlocked_agents) == 5,
-                        visible=True,
-                        radio=False
-                    )
-        else:  # For selecting map
-            item = pystray.MenuItem(
-                lambda x: f"{agent}\t{self.maps[agent]}",
-                lambda x: self.change_map(agent.split('\t')[0]),
-                checked=lambda x: self.selected_map == agent,
-                visible=lambda x: self.map_specific_enabled == True,
-                radio=True
-            )
-        return item
-
-    # Sends notification to windows notification center
-    def send_notification(self, message):
-        try:
-            if self.active == True and self.show_notifications == True:
-                self.icon.notify(message, title=self.name)
-        except AttributeError:
-            pass
-    
-    # Changes map for map specific agents
-    def change_map(self, map):
-        try:
-            self.selected_map = map
-            self.selected_agent = self.maps[self.selected_map]
-        except KeyError:
-            pass
-
-
     #---------------TOGGLING SETTINGS---------------#
     # Toggles whether or not the program is active
     def change_active_status(self):
@@ -570,12 +491,19 @@ class Program(customtkinter.CTk):
             # Get list of all agents
             self.all_agents = [agent for agent in json_file["AGENTS"].keys()]
             # List of all coords to click on
-            self.box_coords = json_file["BOX_COORDS"]
+            self.box_info = json_file["BOX_INFO"]
+            # self.lock_coords = box_info["LOCK_COORDS"]
+            # self.lock_dim = box_info["LOCK_SIZE"] 
+            
 
-            self.box_dim = json_file["BOX_SIZE"]
-            self.lock_dim = json_file["LOCK_SIZE"]
-            # Coords of lock button
-            self.lock_button = (self.box_coords["lock_button"][0]+self.lock_dim[0]/2, self.box_coords["lock_button"][1]+self.lock_dim[1]/2)
+            # dict of all coords for boxes and lock button using for loop. the top right box is "TOPRIGHT_COORDS", there are "COLUMNS" columns, and there are a total amount of boxes as the len(self.all_agents)
+            self.box_coords = {}
+            for i in range(len(self.all_agents)):
+                self.box_coords[f"Box{i}"] = (self.box_info["TOPLEFT"][0] + (i%self.box_info["COLUMNS"])*self.box_info["SIZE"] + (i%self.box_info["COLUMNS"])*self.box_info["XDIST"],
+                                                self.box_info["TOPLEFT"][1] + (i//(self.box_info["COLUMNS"]+1))*self.box_info["YDIST"])
+
+            print(self.box_coords)
+
             # Dict of map specific agents
             self.maps = json_file["MAP_SPECIFIC"]
             # Get the first map in the dict
@@ -584,7 +512,8 @@ class Program(customtkinter.CTk):
             # Get default agents, these cannot be disabled
             default_agents = json_file["DEFAULT_AGENTS"]
             # Adds "All" and "None" to the list of unlockable agents
-            self.unlockable_agents = ["All", "None"]
+            # self.unlockable_agents = ["All", "None"]
+            self.unlockable_agents = []
             for agent in self.all_agents:  # Adds rest of agent names to unlockable agents
                 if agent not in default_agents:
                     self.unlockable_agents.append(agent)
@@ -682,8 +611,6 @@ class Program(customtkinter.CTk):
                 if self.map_specific_enabled == True:
                     game_map = None
 
-                    self.send_notification("Looking for map")
-
                     while game_map == None and self.active_thread == True and self.in_valorant_menu == True and self.active == True and self.map_specific_enabled == True:
                         time.sleep(0.1)
                         current_map = PIL.ImageGrab.grab(
@@ -692,12 +619,8 @@ class Program(customtkinter.CTk):
                         game_map = self.maps_lookup.get(current_map)
 
                     if self.map_specific_enabled == True:
-                        self.change_map(game_map)
                         self.active_coords = self.get_coords_of_agent(
                             self.selected_agent)
-
-                        self.send_notification(
-                            f"Loaded into {self.selected_map}, switched to {self.selected_agent}")
 
                         agent_screen = self.locate_agent_select(True)
 
@@ -708,7 +631,7 @@ class Program(customtkinter.CTk):
 
                 if agent_screen == True:
                     start_lock = time.time()
-                    self.lock_button = (self.box_coords["lock_button"][0]+random.randint(0,self.lock_dim[0]), self.box_coords["lock_button"][1]+random.randint(0,self.lock_dim[1]))
+                    self.lock_button = (self.box_info["LOCK_COORDS"][0]+random.randint(0,self.box_info["LOCK_SIZE"][0]), self.box_info["LOCK_COORDS"][1]+random.randint(0,self.box_info["LOCK_SIZE"][1]))
 
                     if self.safe_mode == False:
                         self.mouse.position = (
@@ -741,9 +664,6 @@ class Program(customtkinter.CTk):
 
                     self.time_to_lock = round(((end_lock - start_lock)*1000), 2)
                     self.average_time_to_lock[self.safe_mode_strength].append(self.time_to_lock)
-                    
-                    self.send_notification(
-                        f'{self.selected_agent} was locked in {self.time_to_lock} ms')
 
                     self.in_valorant_menu = not self.in_valorant_menu
                     self.total_games_locked += 1
@@ -765,7 +685,6 @@ class Program(customtkinter.CTk):
 
     # Locates when in the agent select screen
     def locate_agent_select(self, using_specific_agent=False):
-        self.send_notification("Looking for agent select screen")
         while self.active_thread == True and self.in_valorant_menu == True and self.active == True and self.map_specific_enabled == using_specific_agent:
             agent_screen_yellow_section = PIL.ImageGrab.grab(
                 bbox=(945, 866, 955, 867)).tobytes()
@@ -778,13 +697,7 @@ class Program(customtkinter.CTk):
         agent_index = self.unlocked_agents.index(agent)
         corner_coords = self.box_coords[f'Box{agent_index}']
 
-        return (corner_coords[0]+random.randint(0, self.box_dim), corner_coords[1]+random.randint(0, self.box_dim))
-
-        # if self.safe_mode == False:
-        #     return (corner_coords[0]+(self.box_dim/2), corner_coords[1]+(self.box_dim/2))
-        # else:
-            # return (corner_coords[0]+random.randint(0, self.box_dim), corner_coords[1]+random.randint(0, self.box_dim))
-
+        return (corner_coords[0]+random.randint(0, self.box_info["SIZE"]), corner_coords[1]+random.randint(0, self.box_info["SIZE"]))
 
 # Runs when the program is started as a window
 if __name__ == "__main__":
