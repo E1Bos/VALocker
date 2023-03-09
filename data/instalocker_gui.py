@@ -452,7 +452,6 @@ class Program(customtkinter.CTk):
     def toggle_safe_mode(self):
         self.safe_mode = not self.safe_mode
         if self.safe_mode == False:
-            self.lock_button = (self.box_coords["lock_button"][0]+self.lock_dim[0]/2, self.box_coords["lock_button"][1]+self.lock_dim[1]/2)
             self.safe_mode_strength = 0
         else:
             self.safe_mode_strength = self.safe_mode_strength_saved
@@ -492,8 +491,6 @@ class Program(customtkinter.CTk):
             self.all_agents = [agent for agent in json_file["AGENTS"].keys()]
             # List of all coords to click on
             self.box_info = json_file["BOX_INFO"]
-            # self.lock_coords = box_info["LOCK_COORDS"]
-            # self.lock_dim = box_info["LOCK_SIZE"] 
             
 
             # dict of all coords for boxes and lock button using for loop. the top right box is "TOPRIGHT_COORDS", there are "COLUMNS" columns, and there are a total amount of boxes as the len(self.all_agents)
@@ -502,8 +499,6 @@ class Program(customtkinter.CTk):
                 self.box_coords[f"Box{i}"] = (self.box_info["TOPLEFT"][0] + (i%self.box_info["COLUMNS"])*self.box_info["SIZE"] + (i%self.box_info["COLUMNS"])*self.box_info["XDIST"],
                                                 self.box_info["TOPLEFT"][1] + (i//(self.box_info["COLUMNS"]+1))*self.box_info["YDIST"])
 
-            print(self.box_coords)
-
             # Dict of map specific agents
             self.maps = json_file["MAP_SPECIFIC"]
             # Get the first map in the dict
@@ -511,8 +506,7 @@ class Program(customtkinter.CTk):
 
             # Get default agents, these cannot be disabled
             default_agents = json_file["DEFAULT_AGENTS"]
-            # Adds "All" and "None" to the list of unlockable agents
-            # self.unlockable_agents = ["All", "None"]
+            
             self.unlockable_agents = []
             for agent in self.all_agents:  # Adds rest of agent names to unlockable agents
                 if agent not in default_agents:
