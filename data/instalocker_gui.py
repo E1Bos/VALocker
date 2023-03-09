@@ -605,8 +605,9 @@ class Program(customtkinter.CTk):
     #---------------AGENT LOCKING---------------#
     # Thread that runs in background, detecting map/running agent lock/clicking on agent
     def agent_lock(self):
+        time.sleep(1)
         while self.active_thread == True:
-            time.sleep(1)
+            time.sleep(0.2)
             if self.in_valorant_menu == True and self.active == True and self.active_thread == True:
                 if self.map_specific_enabled == True:
                     game_map = None
