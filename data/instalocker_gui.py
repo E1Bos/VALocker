@@ -12,6 +12,7 @@ import random
 
 class Program(customtkinter.CTk):
     #---------------INITIALIZATION---------------#
+    
     def __init__(self):
         super().__init__()
         # Default values
@@ -54,15 +55,6 @@ class Program(customtkinter.CTk):
         # Load icons
         self.tray_icons = (PIL.Image.open("images/instalocker_enabled.ico"),
                            PIL.Image.open("images/instalocker_disabled.ico"))
-
-        # Load the general images to be searched
-        # self.agent_select_images = [
-        #     PIL.Image.open(
-        #         'images/agent_screen/agent_screen_y_0.png').tobytes(),
-        #     PIL.Image.open(
-        #         'images/agent_screen/agent_screen_y_1.png').tobytes(),
-        # ]
-        # 959, 867, 960, 868
 
         self.agent_select_image = PIL.Image.open("images/agent_screen/agent_screen_bar.png").tobytes()
 
@@ -108,7 +100,7 @@ class Program(customtkinter.CTk):
 
 
     #---------------EXIT---------------#
-    # Exits program upon icon exit or GUI exit
+
     def exit(self):
         self.active_thread = False
         try: self.icon.stop()
@@ -117,6 +109,7 @@ class Program(customtkinter.CTk):
 
 
     #---------------GUI---------------#
+
     # Create GUI elements
     def create_gui(self):
         customtkinter.set_appearance_mode("Dark")
@@ -146,7 +139,7 @@ class Program(customtkinter.CTk):
         self.current_task_label = customtkinter.CTkLabel(self.current_status, text=f"Current Task:", font=("Arial", 16))
         self.current_task_label.grid(row=2, column=0, padx=10, pady=(5,0))
 
-        self.current_task_button = customtkinter.CTkButton(self.current_status, text=f"{'None' if self.active is False else 'Locking' if self.in_valorant_menu is True else 'In Game'}", font=("Arial", 14), command=self.switch_mode)
+        self.current_task_button = customtkinter.CTkButton(self.current_status, text=f"{'None' if self.active is False else 'Locking' if self.in_valorant_menu is True else 'In Game'}", hover=False, font=("Arial", 14), command=self.switch_mode)
         self.current_task_button.grid(row=3, column=0, padx=10, pady=(0,5))
 
         self.safe_mode_frame = customtkinter.CTkFrame(self.current_status, width=140, height=70, fg_color='transparent')
@@ -199,7 +192,6 @@ class Program(customtkinter.CTk):
         self.total_games_locked_value.grid(row=5, column=0, padx=10, pady=(0,5))
 
         
-
         # Agent Toggle 
         self.all_none_frame = customtkinter.CTkFrame(self.agent_tab, width=150, height=100)
         self.all_none_frame.grid(row=0, column=0, padx=20, pady=(20, 10))
@@ -325,6 +317,7 @@ class Program(customtkinter.CTk):
         except AttributeError:
             pass
 
+
     # Updates overview tab
     def update_overview_tab(self):
         try:
@@ -358,6 +351,7 @@ class Program(customtkinter.CTk):
         except AttributeError:
             pass
 
+
     # Updates map tab
     def update_agent_tab(self):
         try:
@@ -383,6 +377,7 @@ class Program(customtkinter.CTk):
         except AttributeError:
             pass
 
+
     # Updates map tab
     def update_map_tab(self):
         try:
@@ -402,6 +397,7 @@ class Program(customtkinter.CTk):
         except AttributeError:
             pass
 
+
     # Updates GUI or Icon Image
     def update_icon(self):
         self.current_icon = self.tray_icons[0] if self.active is True else self.tray_icons[1]
@@ -415,6 +411,7 @@ class Program(customtkinter.CTk):
         else:
             self.wm_iconbitmap("images/instalocker_disabled.ico")
 
+
     # Shows window when icon is clicked
     def show_window(self):
         try: self.icon.stop()
@@ -422,31 +419,39 @@ class Program(customtkinter.CTk):
         self.protocol('WM_DELETE_WINDOW', self.withdraw_window)
         self.after(0, self.deiconify)
 
+
     # Creates agent checkboxes
     def create_agent_checkbox(self, agent, column, row):
         globals()[f'self.{agent}_checkbox'] = customtkinter.CTkCheckBox(self.toggle_agent_checkbox_frame, text=agent, command=lambda: self.toggle_agent(agent))
         globals()[f'self.{agent}_checkbox'].grid(row=row, column=column, padx=10, pady=10)
 
 
+
     #---------------ICON---------------#
+
     # Shows icon when window is closed.
     def withdraw_window(self):
         self.withdraw()
         self.icon = pystray.Icon(
-            "Valocker", self.tray_icons[0], "Valocker", self.icon_menu)
+            "Valocker", self.current_icon, "Valocker", self.icon_menu)
         self.icon.run()
 
+
+
     #---------------TOGGLING SETTINGS---------------#
+
     # Toggles whether or not the program is active
     def change_active_status(self):
         self.active = not self.active
         self.update_icon()
         self.update_overview_tab()
 
+
     # Switches between locking and waiting
     def switch_mode(self):
         self.in_valorant_menu = not self.in_valorant_menu
         self.update_overview_tab()
+
 
     # Toggles safe mode
     def toggle_safe_mode(self):
@@ -457,6 +462,7 @@ class Program(customtkinter.CTk):
             self.safe_mode_strength = self.safe_mode_strength_saved
         self.update_overview_tab()
 
+
     # Changes safe mode strength
     def change_safe_mode_strength(self):
         if self.safe_mode_strength < 3:
@@ -465,6 +471,7 @@ class Program(customtkinter.CTk):
             self.safe_mode_strength = 1
         self.safe_mode_strength_saved = self.safe_mode_strength
         self.update_overview_tab()
+
 
     # Toggles map specific agents
     def toggle_map_specific(self):
@@ -481,7 +488,9 @@ class Program(customtkinter.CTk):
         self.update_map_tab()
 
 
+
     #---------------AGENT SELECTION---------------#
+
     # Loads agents from json file
     def load_agents(self):
         with open(f'data/agents.json', 'r') as f:
@@ -535,7 +544,6 @@ class Program(customtkinter.CTk):
             except KeyError:
                 pass
 
-        self.active_coords = self.get_coords_of_agent(self.selected_agent)
 
     # Toggles the unlock status of agent in the json file
     def toggle_agent(self, agent):
@@ -564,6 +572,7 @@ class Program(customtkinter.CTk):
         self.load_agents()
         self.update_gui()
 
+
     # Updates default or map agent in json file
     def change_agent(self, agent):
         self.selected_agent = agent
@@ -576,12 +585,12 @@ class Program(customtkinter.CTk):
                 self.maps = json_file["MAP_SPECIFIC"]
             else:
                 json_file["DEFAULT"] = agent
-                self.active_coords = self.get_coords_of_agent(agent)
 
         with open(f'data/agents.json', 'w') as file:
             file.write(json.dumps(json_file, indent=4))
 
         self.update_overview_tab()
+
 
     # Updates map specific agents in json file from GUI
     def change_map_specific_agent(self, agent, map):
@@ -596,7 +605,9 @@ class Program(customtkinter.CTk):
         self.update_map_tab()
 
 
+
     #---------------AGENT LOCKING---------------#
+    
     # Thread that runs in background, detecting map/running agent lock/clicking on agent
     def agent_lock(self):
         time.sleep(1)
@@ -660,7 +671,7 @@ class Program(customtkinter.CTk):
                     self.time_to_lock = round(((end_lock - start_lock)*1000), 2)
                     self.average_time_to_lock[self.safe_mode_strength].append(self.time_to_lock)
 
-                    self.in_valorant_menu = not self.in_valorant_menu
+                    self.in_valorant_menu = False
                     self.total_games_locked += 1
                     self.update_overview_tab()
                     time.sleep(1)
@@ -672,11 +683,12 @@ class Program(customtkinter.CTk):
                 menu_screen_2 = PIL.ImageGrab.grab(
                     bbox=(1330, 330, 1455, 353)).tobytes()
                 if menu_screen_1 in self.in_menu_images or menu_screen_2 in self.in_menu_images:
-                    self.in_valorant_menu = not self.in_valorant_menu
+                    self.in_valorant_menu = True
                     self.update_overview_tab()
                     try:
                         self.icon.update_menu()
                     except AttributeError: pass
+
 
     # Locates when in the agent select screen
     def locate_agent_select(self, using_specific_agent=False):
@@ -687,12 +699,14 @@ class Program(customtkinter.CTk):
                 return True
         return False
 
+
     # Returns box coords of agent based on agent name
     def get_coords_of_agent(self, agent):
         agent_index = self.unlocked_agents.index(agent)
         corner_coords = self.box_coords[f'Box{agent_index}']
 
         return (corner_coords[0]+random.randint(0, self.box_info["SIZE"]), corner_coords[1]+random.randint(0, self.box_info["SIZE"]))
+
 
 # Runs when the program is started as a window
 if __name__ == "__main__":
