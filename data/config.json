@@ -1,5 +1,6 @@
 {
     "START_MINIMIZED": false,
+    "ACTIVE_SAVE_FILE": "default",
     "DEFAULT_AGENTS": [
         "Brimstone",
         "Jett",

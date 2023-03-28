@@ -1,0 +1,37 @@
+{
+    "AGENTS": {
+        "Astra": false,
+        "Breach": false,
+        "Brimstone": true,
+        "Chamber": false,
+        "Cypher": false,
+        "Fade": false,
+        "Gekko": false,
+        "Harbor": false,
+        "Jett": true,
+        "Kayo": false,
+        "Killjoy": false,
+        "Neon": false,
+        "Omen": false,
+        "Phoenix": true,
+        "Raze": false,
+        "Reyna": false,
+        "Sage": true,
+        "Skye": false,
+        "Sova": true,
+        "Viper": false,
+        "Yoru": false
+    },
+    "MAP_SPECIFIC": {
+        "Ascent": "Cypher",
+        "Bind": "Brimstone",
+        "Breeze": "Brimstone",
+        "Fracture": "Brimstone",
+        "Haven": "Brimstone",
+        "Icebox": "Brimstone",
+        "Lotus": "Brimstone",
+        "Pearl": "Brimstone",
+        "Split": "Brimstone"
+    },
+    "DEFAULT": "Cypher"
+}

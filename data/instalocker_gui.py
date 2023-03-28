@@ -9,6 +9,7 @@ import PIL.Image
 import PIL.ImageGrab
 import time
 import random
+import os
 
 class Program(customtkinter.CTk):
     #---------------INITIALIZATION---------------#
@@ -43,9 +44,16 @@ class Program(customtkinter.CTk):
         self.box_dim = 0 # Box Dimension
         self.selected_agent = None  # Selected Agent
 
+        self.config_files = []
+        self.find_config_files()
+
         with open('data/config.json', 'r') as f:
             config = json.load(f)
             self.start_minimized = config["START_MINIMIZED"]
+            self.save_file = config["ACTIVE_SAVE_FILE"]
+
+            if self.save_file not in self.config_files:
+                self.change_active_save_file('default')
 
         self.mouse = pynmouse.Controller()
 
@@ -119,7 +127,7 @@ class Program(customtkinter.CTk):
         customtkinter.set_default_color_theme("blue")
 
         self.title("VaLocker")
-        self.geometry("650x350")
+        self.geometry("650x370")
         self.resizable(False, False)
 
         self.tabs = customtkinter.CTkTabview(self, corner_radius=10, width=650, height=350)
@@ -130,7 +138,7 @@ class Program(customtkinter.CTk):
         self.map_specific_tab = self.tabs.add("Map Specific")
 
         # Overview Tab
-        self.current_status = customtkinter.CTkFrame(self.overview_tab, width=202, height=200)
+        self.current_status = customtkinter.CTkFrame(self.overview_tab, width=202)
         self.current_status.pack(padx=(55,20), pady=10, side=tk.LEFT, anchor=tk.N)
 
         self.current_status_label = customtkinter.CTkLabel(self.current_status, text="Instalocker:", font=("Arial", 16))
@@ -155,6 +163,15 @@ class Program(customtkinter.CTk):
         self.safe_mode_enabled_button.pack(side=tk.LEFT, padx=(0,1), pady=(0,5))
 
         self.safe_mode_strength_button = customtkinter.CTkButton(self.safe_mode_frame, width=70, hover=False, text=f"{'Low' if self.safe_mode_strength == 0 else 'Medium' if self.safe_mode_strength == 1 else 'High'}", font=("Arial", 14), command=self.change_safe_mode_strength)
+
+        self.settings_text = customtkinter.CTkLabel(self.current_status, text="Current Save:", font=("Arial", 16))
+        self.settings_text.grid(row=5, column=0, padx=10, pady=(5,0))
+
+        self.selected_config_file_combobox = customtkinter.CTkComboBox(self.current_status, values=self.config_files, command=lambda x: self.change_config_file(x))
+        self.selected_config_file_combobox.set(f"{self.save_file}")
+        self.selected_config_file_combobox.grid(row=6, column=0, padx=10, pady=(0,5))
+        self.selected_config_file_combobox.bind("<Return>", lambda x: self.change_config_file(self.selected_config_file_combobox.get()))
+
 
         self.select_agent_frame = customtkinter.CTkFrame(self.overview_tab, width=150, height=100)
         self.select_agent_frame.pack(padx=20, pady=10, side=tk.LEFT, anchor=tk.N)
@@ -340,9 +357,11 @@ class Program(customtkinter.CTk):
             self.total_games_locked_value.configure(text=f"{self.total_games_locked} {'times' if self.total_games_locked != 1 else 'time'}")
 
             if self.safe_mode == True:
-                self.safe_mode_strength_button.pack(side=tk.LEFT, padx=0, pady=(0,5))
+                self.safe_mode_strength_button.pack(side=tk.RIGHT, padx=0, pady=(0,5))
             else:
                 self.safe_mode_strength_button.pack_forget()
+
+            self.selected_config_file_combobox.configure(values=self.config_files)
 
             if self.map_specific_enabled == False:
                 self.select_agent_dropdown.configure(state="normal")
@@ -480,7 +499,7 @@ class Program(customtkinter.CTk):
     def toggle_map_specific(self):
         self.map_specific_enabled = not self.map_specific_enabled
 
-        with open(f'data/agents.json', 'r') as file:
+        with open(f"data/agent_files/{self.save_file}.json", 'r') as file:
             json_file = json.load(file)
             if self.map_specific_enabled == False:
                 self.selected_agent = json_file["DEFAULT"]
@@ -494,10 +513,39 @@ class Program(customtkinter.CTk):
 
     #---------------AGENT SELECTION---------------#
 
+    def change_active_save_file(self, file_name):
+        self.save_file = file_name
+        with open("data/config.json", "r") as config_file:
+            config = json.load(config_file)
+            config["ACTIVE_SAVE_FILE"] = file_name
+        with open("data/config.json", 'w') as file:
+            file.write(json.dumps(config, indent=4))
+
+    def find_config_files(self):
+        self.config_files = ['default']
+        for file in os.listdir("./data/agent_files"):
+            if file.endswith(".json") and file.startswith("default") is False:
+                self.config_files.append(file.removesuffix(".json"))
+
+
+    def change_config_file(self, file_name):
+        if file_name not in self.config_files:
+            with open(f"data/agent_files/{self.save_file}.json", "r") as config_raw:
+                config_payload = json.load(config_raw)
+            with open(f"data/agent_files/{file_name}.json", "w") as new_config:
+                json.dump(config_payload, new_config, indent=4)
+        
+        self.change_active_save_file(file_name)
+        
+        self.load_agents() # Does unnecessary work if new file is created but leads to less code
+
+        self.find_config_files()
+        self.update_gui()
+
     # Loads agents from json file
     def load_agents(self):
-        with open('data/config.json', 'r') as f:
-            config = json.load(f)
+        with open('data/config.json', 'r') as config_raw:
+            config = json.load(config_raw)
 
             # List of all coords to click on
             self.box_info = config["BOX_INFO"]
@@ -506,7 +554,7 @@ class Program(customtkinter.CTk):
             default_agents = config["DEFAULT_AGENTS"]
 
 
-        with open(f'data/agents.json', 'r') as f:
+        with open(f"data/agent_files/{self.save_file}.json", 'r') as f:
             json_file = json.load(f)
 
             # Get list of all agents
@@ -555,26 +603,23 @@ class Program(customtkinter.CTk):
 
     # Toggles the unlock status of agent in the json file
     def toggle_agent(self, agent):
-        if agent != "All" and agent != "None":
-            with open(f'data/agents.json', 'r') as file:
-                json_file = json.load(file)
-                json_file["AGENTS"][agent] = not json_file["AGENTS"][agent]
+        with open(f"data/agent_files/{self.save_file}.json", 'r') as file:
+            json_file = json.load(file)
 
-        elif agent == "All":
-            with open(f'data/agents.json', 'r') as file:
-                json_file = json.load(file)
+            if agent == "All":
                 for agent in self.unlockable_agents:
                     if agent != 'None' and agent != 'All':
                         json_file["AGENTS"][agent] = True
 
-        elif agent == "None":
-            with open(f'data/agents.json', 'r') as file:
-                json_file = json.load(file)
+            elif agent == "None":
                 for agent in self.unlockable_agents:
                     if agent != 'None' and agent != 'All':
                         json_file["AGENTS"][agent] = False
+            
+            else:
+                json_file["AGENTS"][agent] = not json_file["AGENTS"][agent]
 
-        with open(f'data/agents.json', 'w') as file:
+        with open(f"data/agent_files/{self.save_file}.json", 'w') as file:
             file.write(json.dumps(json_file, indent=4))
 
         self.load_agents()
@@ -585,7 +630,7 @@ class Program(customtkinter.CTk):
     def change_agent(self, agent):
         self.selected_agent = agent
 
-        with open(f'data/agents.json', 'r') as file:
+        with open(f"data/agent_files/{self.save_file}.json", 'r') as file:
             json_file = json.load(file)
 
             if self.map_specific_enabled == True:
@@ -594,7 +639,7 @@ class Program(customtkinter.CTk):
             else:
                 json_file["DEFAULT"] = agent
 
-        with open(f'data/agents.json', 'w') as file:
+        with open(f"data/agent_files/{self.save_file}.json", 'w') as file:
             file.write(json.dumps(json_file, indent=4))
 
         self.update_overview_tab()
@@ -602,12 +647,12 @@ class Program(customtkinter.CTk):
 
     # Updates map specific agents in json file from GUI
     def change_map_specific_agent(self, agent, map):
-        with open(f'data/agents.json', 'r') as file:
+        with open(f"data/agent_files/{self.save_file}.json", 'r') as file:
             json_file = json.load(file)
             json_file["MAP_SPECIFIC"][map] = agent
             self.maps = json_file["MAP_SPECIFIC"]
 
-        with open(f'data/agents.json', 'w') as file:
+        with open(f"data/agent_files/{self.save_file}.json", 'w') as file:
             file.write(json.dumps(json_file, indent=4))
 
         self.update_map_tab()
