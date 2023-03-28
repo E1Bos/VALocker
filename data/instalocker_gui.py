@@ -496,36 +496,41 @@ class Program(customtkinter.CTk):
 
     # Loads agents from json file
     def load_agents(self):
+        with open('data/config.json', 'r') as f:
+            config = json.load(f)
+
+            # List of all coords to click on
+            self.box_info = config["BOX_INFO"]
+
+            # Get default agents, these cannot be disabled
+            default_agents = config["DEFAULT_AGENTS"]
+
+
         with open(f'data/agents.json', 'r') as f:
             json_file = json.load(f)
 
             # Get list of all agents
             self.all_agents = [agent for agent in json_file["AGENTS"].keys()]
-            # List of all coords to click on
-            self.box_info = json_file["BOX_INFO"]
-            
 
+            # Dict of map specific agents
+            self.maps = json_file["MAP_SPECIFIC"]
+
+            # Get list of available agents (With True/False)
+            list_of_available_agents = json_file["AGENTS"]
+            
             # dict of all coords for boxes and lock button using for loop. the top right box is "TOPRIGHT_COORDS", there are "COLUMNS" columns, and there are a total amount of boxes as the len(self.all_agents)
             self.box_coords = {}
             for i in range(len(self.all_agents)):
                 self.box_coords[f"Box{i}"] = (self.box_info["TOPLEFT"][0] + (i%self.box_info["COLUMNS"])*self.box_info["SIZE"] + (i%self.box_info["COLUMNS"])*self.box_info["XDIST"],
                                                 self.box_info["TOPLEFT"][1] + (i//(self.box_info["COLUMNS"]))*self.box_info["YDIST"])
 
-            # Dict of map specific agents
-            self.maps = json_file["MAP_SPECIFIC"]
             # Get the first map in the dict
             self.selected_map = next(iter(self.maps))
 
-            # Get default agents, these cannot be disabled
-            default_agents = json_file["DEFAULT_AGENTS"]
-            
             self.unlockable_agents = []
             for agent in self.all_agents:  # Adds rest of agent names to unlockable agents
                 if agent not in default_agents:
                     self.unlockable_agents.append(agent)
-
-            # Get list of available agents (With True/False)
-            list_of_available_agents = json_file["AGENTS"]
 
             # Adds unlocked agents to self.unlocked_agents which shows only agents that can be selected
             self.unlocked_agents = []
