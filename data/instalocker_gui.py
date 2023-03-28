@@ -28,7 +28,7 @@ class Program(customtkinter.CTk):
         
         # Safe Mode 
         self.safe_mode = False # Safe Mode
-        self.safe_mode_strength = 0 # Affets safe mode timing (0 = disabled, 1 = low, 2 = medium, 3 = high)
+        self.safe_mode_strength = 0
         self.safe_mode_strength_saved = 1 # Saved safe mode strength
         self.safe_mode_timing = [(0.2, 0.4), (0.4, 0.7), (0.7, 1.0)] # + 0.1s for average lock time
         # 0.3 - 0.5s, 0.5 - 0.8s, 0.8 - 1.1s
@@ -98,6 +98,9 @@ class Program(customtkinter.CTk):
         if self.start_minimized == True:
             self.withdraw_window()
 
+        ## Enable safe mode by default
+        self.toggle_safe_mode()
+        # self.change_safe_mode_strength()
 
     #---------------EXIT---------------#
 
@@ -506,7 +509,7 @@ class Program(customtkinter.CTk):
             self.box_coords = {}
             for i in range(len(self.all_agents)):
                 self.box_coords[f"Box{i}"] = (self.box_info["TOPLEFT"][0] + (i%self.box_info["COLUMNS"])*self.box_info["SIZE"] + (i%self.box_info["COLUMNS"])*self.box_info["XDIST"],
-                                                self.box_info["TOPLEFT"][1] + (i//(self.box_info["COLUMNS"]+1))*self.box_info["YDIST"])
+                                                self.box_info["TOPLEFT"][1] + (i//(self.box_info["COLUMNS"]))*self.box_info["YDIST"])
 
             # Dict of map specific agents
             self.maps = json_file["MAP_SPECIFIC"]
@@ -625,17 +628,14 @@ class Program(customtkinter.CTk):
                         game_map = self.maps_lookup.get(current_map)
 
                     if self.map_specific_enabled == True:
-                        self.active_coords = self.get_coords_of_agent(
-                            self.selected_agent)
-
                         agent_screen = self.locate_agent_select(True)
 
                 else:
-                    self.active_coords = self.get_coords_of_agent(
-                        self.selected_agent)
                     agent_screen = self.locate_agent_select()
 
                 if agent_screen == True:
+                    self.active_coords = self.get_coords_of_agent(
+                        self.selected_agent)
                     start_lock = time.time()
                     self.lock_button = (self.box_info["LOCK_COORDS"][0]+random.randint(0,self.box_info["LOCK_SIZE"][0]), self.box_info["LOCK_COORDS"][1]+random.randint(0,self.box_info["LOCK_SIZE"][1]))
 
@@ -704,8 +704,9 @@ class Program(customtkinter.CTk):
     def get_coords_of_agent(self, agent):
         agent_index = self.unlocked_agents.index(agent)
         corner_coords = self.box_coords[f'Box{agent_index}']
-
+    
         return (corner_coords[0]+random.randint(0, self.box_info["SIZE"]), corner_coords[1]+random.randint(0, self.box_info["SIZE"]))
+        # return (corner_coords[0]+self.box_info["SIZE"]/2, corner_coords[1]+self.box_info["SIZE"]/2)
 
 
 # Runs when the program is started as a window
