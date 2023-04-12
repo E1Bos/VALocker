@@ -66,8 +66,9 @@ class Program(customtkinter.CTk):
 
         self.agent_select_image = PIL.Image.open("images/agent_screen/agent_screen_bar.png").tobytes()
 
-        self.in_menu_images = [PIL.Image.open('images/in_menu/in_menu_1.png').tobytes(),
-                               PIL.Image.open('images/in_menu/in_menu_2.png').tobytes()]
+        self.in_menu_images = [PIL.Image.open('images/in_menu/in_menu_normal_bar.png').tobytes(),
+                               PIL.Image.open('images/in_menu/in_menu_comp_bar.png').tobytes(),
+                               PIL.Image.open('images/in_menu/in_menu_progress_text.png').tobytes()]
 
         # Load the map specific images to be searched
         maps_list = ['Ascent', 'Bind', 'Breeze', 'Fracture',
