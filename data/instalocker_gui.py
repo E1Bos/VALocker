@@ -19,6 +19,12 @@ class Program(customtkinter.CTk):
         # Default values
         self.name = "VaLocker"
 
+        # Locking Values
+        # self.locking_coords = (945, 866, 955, 867) # agent screen bar
+        self.locking_coords = (958, 866, 962, 870) # agent screen dot
+        self.locking_image_path = "images/agent_screen/agent_screen_dot.png"
+        
+
         # Default values
         self.active = False  # Instalocker Active
         self.map_specific_enabled = False  # Map Specific Agents Enabled by Default
@@ -64,7 +70,7 @@ class Program(customtkinter.CTk):
         self.tray_icons = (PIL.Image.open("images/instalocker_enabled.ico"),
                            PIL.Image.open("images/instalocker_disabled.ico"))
 
-        self.agent_select_image = PIL.Image.open("images/agent_screen/agent_screen_bar.png").tobytes()
+        self.agent_select_image = PIL.Image.open(self.locking_image_path).tobytes()
 
         self.in_menu_images = [PIL.Image.open('images/in_menu/in_menu_normal_bar.png').tobytes(),
                                PIL.Image.open('images/in_menu/in_menu_comp_bar.png').tobytes(),
@@ -744,9 +750,9 @@ class Program(customtkinter.CTk):
     # Locates when in the agent select screen
     def locate_agent_select(self, using_specific_agent=False):
         while self.active_thread == True and self.in_valorant_menu == True and self.active == True and self.map_specific_enabled == using_specific_agent:
-            agent_screen_yellow_section = PIL.ImageGrab.grab(
-                bbox=(945, 866, 955, 867)).tobytes()
-            if agent_screen_yellow_section == self.agent_select_image:
+            agent_screen_section = PIL.ImageGrab.grab(
+                bbox=(self.locking_coords)).tobytes()
+            if agent_screen_section == self.agent_select_image:
                 return True
         return False
 
