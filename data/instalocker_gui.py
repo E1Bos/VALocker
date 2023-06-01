@@ -1,15 +1,20 @@
-import json
-import threading
-import time
-import pystray
 import customtkinter
-import tkinter as tk
-import pynput.mouse as pynmouse
+import json
+import os
 import PIL.Image
 import PIL.ImageGrab
-import time
+import pynput.mouse as pynmouse
+import pystray
 import random
-import os
+import subprocess
+import threading
+import time
+import tkinter as tk
+
+
+def install_requirements():
+    """Install required packages using pip"""
+    subprocess.check_call(["pip", "install", "-r", "requirements.txt"])
 
 class Program(customtkinter.CTk):
     #---------------INITIALIZATION---------------#
@@ -20,9 +25,11 @@ class Program(customtkinter.CTk):
         self.name = "VaLocker"
 
         # Locking Values
-        # self.locking_coords = (945, 866, 955, 867) # agent screen bar
-        self.locking_coords = (958, 866, 962, 870) # agent screen dot
-        self.locking_image_path = "images/agent_screen/agent_screen_dot.png"
+        self.locking_coords = (945, 866, 955, 867) # agent screen bar
+        # self.locking_coords = (958, 866, 962, 870) # agent screen dot
+        # self.locking_coords = (959, 867, 961, 869) # agent screen dot solid
+        self.locking_image_path = "images/agent_screen/agent_screen_bar.png"
+        self.required_confirmations = 2 # times to confirm in agent select screen (helps with buggy map screen)
         
 
         # Default values
@@ -74,7 +81,8 @@ class Program(customtkinter.CTk):
 
         self.in_menu_images = [PIL.Image.open('images/in_menu/in_menu_normal_bar.png').tobytes(),
                                PIL.Image.open('images/in_menu/in_menu_comp_bar.png').tobytes(),
-                               PIL.Image.open('images/in_menu/in_menu_progress_text.png').tobytes()]
+                               PIL.Image.open('images/in_menu/in_menu_progress_text_1.png').tobytes(),
+                               PIL.Image.open('images/in_menu/in_menu_progress_text_2.png').tobytes()]
 
         # Load the map specific images to be searched
         maps_list = ['Ascent', 'Bind', 'Breeze', 'Fracture',
@@ -749,11 +757,20 @@ class Program(customtkinter.CTk):
 
     # Locates when in the agent select screen
     def locate_agent_select(self, using_specific_agent=False):
+        total_confirmations = 0
         while self.active_thread == True and self.in_valorant_menu == True and self.active == True and self.map_specific_enabled == using_specific_agent:
             agent_screen_section = PIL.ImageGrab.grab(
                 bbox=(self.locking_coords)).tobytes()
+            
             if agent_screen_section == self.agent_select_image:
-                return True
+                total_confirmations += 1
+
+                if total_confirmations > self.required_confirmations:
+                    return True
+                
+            else:
+                total_confirmations = 0
+                
         return False
 
 
@@ -768,5 +785,6 @@ class Program(customtkinter.CTk):
 
 # Runs when the program is started as a window
 if __name__ == "__main__":
+    install_requirements()
     p = Program()
     p.mainloop()
