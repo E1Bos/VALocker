@@ -1,1 +1,6 @@
-data/agents.json
+.gitignore
+data/__pycache__
+data/screenshotter.py
+data/old/instalocker_icon.py
+data/agent_files
+!default.json
