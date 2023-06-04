@@ -25,5 +25,36 @@
             504,
             889
         ]
+    },
+    "AGENT_ROLES": {
+        "CONTROLLERS": [
+            "Brimstone",
+            "Omen",
+            "Viper",
+            "Astra",
+            "Harbor"
+        ],
+        "DUELISTS": [
+            "Phoenix",
+            "Jett",
+            "Reyna",
+            "Raze",
+            "Yoru",
+            "Neon"
+        ],
+        "INITIATORS": [
+            "Sova",
+            "Breach",
+            "Skye",
+            "Kayo",
+            "Fade",
+            "Gekko"
+        ],
+        "SENTINELS": [
+            "Killjoy",
+            "Cypher",
+            "Sage",
+            "Chamber"
+        ]
     }
 }
