@@ -33,5 +33,28 @@
         "Pearl": "Brimstone",
         "Split": "Brimstone"
     },
-    "DEFAULT": "Brimstone"
+    "DEFAULT": "Brimstone",
+    "RANDOM_AGENTS": {
+        "Astra": false,
+        "Breach": false,
+        "Brimstone": false,
+        "Chamber": false,
+        "Cypher": false,
+        "Fade": false,
+        "Gekko": false,
+        "Harbor": false,
+        "Jett": false,
+        "Kayo": false,
+        "Killjoy": false,
+        "Neon": false,
+        "Omen": false,
+        "Phoenix": false,
+        "Raze": false,
+        "Reyna": false,
+        "Sage": false,
+        "Skye": false,
+        "Sova": false,
+        "Viper": false,
+        "Yoru": false
+    }
 }
