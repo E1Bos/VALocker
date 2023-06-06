@@ -16,554 +16,742 @@ def install_requirements():
     """Install required packages using pip"""
     subprocess.check_call(["pip", "install", "-r", "requirements.txt"])
 
+
 class Program(customtkinter.CTk):
-    #---------------INITIALIZATION---------------#
-    
+    # region Init and Exit Functions
+
     def __init__(self):
         super().__init__()
-        # Default values
-        self.name = "VaLocker"
+
+        # Default Save File
+        self.current_save_file = "default"
 
         # Locking Values
-        self.locking_coords = (945, 866, 955, 867) # agent screen bar
+        self.active = False
+        self.active_thread = True
+        self.locking = True
+        self.locking_coords = (945, 866, 955, 867)
+        self.locking_image_path = "images/agent_screen/agent_screen_bar.png"
+        self.locking_confirmations = 2
         # self.locking_coords = (958, 866, 962, 870) # agent screen dot
         # self.locking_coords = (959, 867, 961, 869) # agent screen dot solid
-        self.locking_image_path = "images/agent_screen/agent_screen_bar.png"
-        self.required_confirmations = 2 # times to confirm in agent select screen (helps with buggy map screen)
-        
 
-        # Default values
-        self.active = False  # Instalocker Active
-        self.map_specific_enabled = False  # Map Specific Agents Enabled by Default
-        self.active_coords = None  # Coords of Agent
-        self.lock_button = None  # Coords of Lock Button
-        self.active_thread = True  # Thread Active
-        self.in_valorant_menu = True  # In Valorant Menu
-        self.hover_mode = False
-        self.random_agent = False
-
-        # Safe Mode 
-        self.safe_mode = False # Safe Mode
-        self.safe_mode_strength = 0
-        self.safe_mode_strength_saved = 1 # Saved safe mode strength
-        self.safe_mode_timing = [(0.2, 0.4), (0.4, 0.7), (0.7, 1.0)] # + 0.1s for average lock time
-        # 0.3 - 0.5s, 0.5 - 0.8s, 0.8 - 1.1s
-        
-        # Stats
-        self.time_to_lock = "-" # Last lock time
-        self.total_games_locked = 0 # Total games locked
-
-        self.average_time_to_lock = [[] for _ in range(4)] # Average lock time for each safe mode strength
-
-        # Colors for random agent screen
-        self.role_colors = {"controllers": "#f5a623", "controllers_disabled": "#ae7008",
-                            "duelists": "#e91e63", "duelists_disabled": "#9c0f3f",
-                            "initiators": "#2196f3","initiators_disabled": "#0963aa",
-                            "sentinels": "#4caf50", "sentinels_disabled": "#317234"}
-
-        # Changed in agents.json
-        self.box_dim = 0 # Box Dimension
-        self.selected_agent = None  # Selected Agent
-
-        self.config_files = []
-        self.find_config_files()
-
-        with open('data/config.json', 'r') as f:
-            config = json.load(f)
-            self.start_minimized = config["START_MINIMIZED"]
-            self.save_file = config["ACTIVE_SAVE_FILE"]
-
-            if self.save_file not in self.config_files:
-                self.change_active_save_file('default')
-
-        self.mouse = pynmouse.Controller()
-
-        # Load all agents
-        self.load_agents()
-
-        # Load icons
-        self.tray_icons = (PIL.Image.open("images/instalocker_enabled.ico"),
-                           PIL.Image.open("images/instalocker_disabled.ico"))
-
+        # Locking Images
         self.agent_select_image = PIL.Image.open(self.locking_image_path).tobytes()
+        self.in_menu_images = [
+            PIL.Image.open("images/in_menu/in_menu_normal_bar.png").tobytes(),
+            PIL.Image.open("images/in_menu/in_menu_comp_bar.png").tobytes(),
+            PIL.Image.open("images/in_menu/in_menu_progress_text_1.png").tobytes(),
+            PIL.Image.open("images/in_menu/in_menu_progress_text_2.png").tobytes(),
+        ]
 
-        self.in_menu_images = [PIL.Image.open('images/in_menu/in_menu_normal_bar.png').tobytes(),
-                               PIL.Image.open('images/in_menu/in_menu_comp_bar.png').tobytes(),
-                               PIL.Image.open('images/in_menu/in_menu_progress_text_1.png').tobytes(),
-                               PIL.Image.open('images/in_menu/in_menu_progress_text_2.png').tobytes()]
+        # Map Specific
+        self.map_specific_mode = False
+        self.map_lookup = dict()
 
-        # Load the map specific images to be searched
-        maps_list = ['Ascent', 'Bind', 'Breeze', 'Fracture',
-                     'Haven', 'Icebox', 'Lotus', 'Pearl', 'Split']
-        self.maps_lookup = {}
-        for map_name in maps_list:
-            binary_of_map = PIL.Image.open(
-                f"images/map_images/{map_name}.png").tobytes()
-            self.maps_lookup[binary_of_map] = map_name
-        self.selected_map = maps_list[0]
+        # Safe Mode
+        self.safe_mode = True
+        self.safe_mode_strength = 0
+        self.safe_mode_timing = {
+            "Low": (0.2, 0.4),
+            "Medium": (0.4, 0.7),
+            "High": (0.7, 1.0),
+        }
 
-        # Create the icon
-        self.icon_menu = pystray.Menu(
-            pystray.MenuItem(
-                lambda x: f'Show GUI',
-                lambda x: self.show_window(),
-                default=True
-            ),
-            pystray.MenuItem(
-                lambda x: f'Status: {"Enabled" if self.active else "Disabled"}',
-                lambda x: self.change_active_status(), checked=lambda x: self.active
-            ),
-            pystray.MenuItem(
-                lambda x: f"Status: {'None' if self.active is False else 'Locking' if self.in_valorant_menu is True else 'In Game (Waiting)'}", lambda x: self.switch_thread_mode()),
-            pystray.MenuItem("Exit", lambda x: self.exit())
+        # Random Agent Mode
+        self.random_agent_mode = False
+
+        # Hover Mode
+        self.hover_mode = False
+
+        # Agent Data
+        self.selected_agent = None
+        self.all_agents = None
+
+        # Statistics
+        self.time_to_lock = None
+        self.total_games_used = 0
+        self.average_time_to_lock = list(
+            list() for _ in range(len(self.safe_mode_timing) + 1)
         )
 
-        # self.protocol('WM_DELETE_WINDOW', self.withdraw_window) #Enables icon on minimize instead of closing
+        # Box Coords
+        self.box_coords = dict()
+        self.lock_button = None
 
-        self.agent_thread = threading.Thread(target=self.agent_lock).start()
+        # Save Files
+        self.save_files = None
 
-        self.update_icon()
+        # GUI SETTINGS
+        self.window_width = 550
+        self.window_height = 500
+        self.label_font = ("Arial", 16)  # Arial Size 16
+        self.button_font = ("Arial", 14)  # Arial Size 14
+        customtkinter.set_appearance_mode("Dark")
+        customtkinter.set_default_color_theme("blue")
+        self.title("VaLocker")
+        self.button_colors = {"enabled": "#259969", "disabled": "#b52d3b"}
+        self.role_colors = {
+            "controllers": "#f5a623",
+            "controllers_disabled": "#ae7008",
+            "duelists": "#e91e63",
+            "duelists_disabled": "#9c0f3f",
+            "initiators": "#2196f3",
+            "initiators_disabled": "#0963aa",
+            "sentinels": "#4caf50",
+            "sentinels_disabled": "#317234",
+        }
+
+        # Icon Images
+        self.tray_icons = (
+            PIL.Image.open("images/instalocker_enabled.ico"),
+            PIL.Image.open("images/instalocker_disabled.ico"),
+        )
+
+        # Loads data from save files
+        self.load_data_from_files()
+        # Finds all save files
+        self.find_save_files()
+
+        # Creates Mouse Controller
+        self.mouse = pynmouse.Controller()
+
+    
+        # Creates GUI
         self.create_gui()
+
+        # Updates GUI
         self.update_gui()
 
-        if self.start_minimized is True:
-            self.withdraw_window()
+        # Checks if program should close to tray
+        if self.minimize_to_tray is True:
+            self.protocol("WM_DELETE_WINDOW", self.withdraw_window)
 
-        ## Enable safe mode by default
-        self.toggle_safe_mode()
-        # self.change_safe_mode_strength()
+            self.create_icon()
 
-    #---------------EXIT---------------#
+            if self.start_minimized is True:
+                self.withdraw_window()
+
+        # Creates Thread
+        self.agent_thread = threading.Thread(target=self.locking_thread).start()
+
 
     def exit(self):
         self.active_thread = False
-        try: self.icon.stop()
-        except AttributeError: pass
+        try:
+            self.icon.stop()
+        except AttributeError:
+            pass
         self.destroy()
 
+    # endregion
 
-    #---------------GUI---------------#
+    # region GUI Functions and Icon
 
-    # Create GUI elements
+    # region GUI Creation
     def create_gui(self):
-        customtkinter.set_appearance_mode("Dark")
-        customtkinter.set_default_color_theme("blue")
-
-        self.title("VaLocker")
-
-        window_width = 650
-        window_height = 400
-
-        self.geometry(f"{window_width}x{window_height}")
+        self.geometry(f"{self.window_width}x{self.window_height}")
         self.resizable(False, False)
 
-        self.tabs = customtkinter.CTkTabview(self, corner_radius=10, width=window_width, height=window_height-20)
-        self.tabs.pack(padx=10, pady=5, fill=tk.BOTH)
+        tabs = customtkinter.CTkTabview(
+            self,
+            corner_radius=10,
+            width=self.window_width,
+            height=self.window_height - 20,
+        )
+        tabs.pack(padx=10, pady=5, fill=tk.BOTH)
 
-        self.overview_tab = self.tabs.add("Overview")
-        self.agent_tab = self.tabs.add("Toggle Agents")
-        self.map_specific_tab = self.tabs.add("Map Specific")
-        self.random_agent_tab = self.tabs.add("Random Agents")
+        overview_tab = tabs.add("Overview")
+        agent_toggle_tab = tabs.add("Toggle Agents")
+        random_agent_tab = tabs.add("Random Agents")
+        map_specific_tab = tabs.add("Map Specific")
 
-        # Overview Tab
-        self.current_status = customtkinter.CTkFrame(self.overview_tab, width=202)
-        self.current_status.pack(padx=(55,20), pady=10, side=tk.LEFT, anchor=tk.N)
+        # region Overview Tab
 
-        self.current_status_label = customtkinter.CTkLabel(self.current_status, text="Instalocker:", font=("Arial", 16))
-        self.current_status_label.grid(row=0, column=0, padx=10, pady=(5,0))
+        current_status_frame = customtkinter.CTkFrame(overview_tab)
+        current_status_frame.grid(row=0, column=0)
 
-        self.current_status_button = customtkinter.CTkButton(self.current_status, text=f"{'Running' if self.active is True else 'Stopped'}", hover=False, fg_color=f"{'#259969' if self.active is True else '#b52d3b'}", font=("Arial", 14), command=self.change_active_status)
-        self.current_status_button.grid(row=1, column=0, padx=10, pady=(0,5))
+        current_status_label = customtkinter.CTkLabel(
+            current_status_frame, text="Instalocker:", font=self.label_font
+        )
+        current_status_label.pack(padx=10, pady=(5, 0))
 
-        self.current_task_label = customtkinter.CTkLabel(self.current_status, text=f"Current Task:", font=("Arial", 16))
-        self.current_task_label.grid(row=2, column=0, padx=10, pady=(5,0))
+        self.current_status_button = customtkinter.CTkButton(
+            current_status_frame,
+            text=f"{'Running' if self.active is True else 'Stopped'}",
+            hover=False,
+            fg_color=f"{self.button_colors['enabled'] if self.active is True else self.button_colors['disabled']}",
+            font=self.button_font,
+            command=self.toggle_active,
+        )
+        self.current_status_button.pack(padx=10, pady=(0, 5))
 
-        self.current_task_button = customtkinter.CTkButton(self.current_status, text=f"{'None' if self.active is False else 'Locking' if self.in_valorant_menu is True else 'In Game'}", hover=False, font=("Arial", 14), command=self.switch_thread_mode)
-        self.current_task_button.grid(row=3, column=0, padx=10, pady=(0,5))
+        current_task_label = customtkinter.CTkLabel(
+            current_status_frame, text=f"Current Task:", font=self.label_font
+        )
+        current_task_label.pack(padx=10, pady=(5, 0))
 
-        self.safe_mode_frame = customtkinter.CTkFrame(self.current_status, width=140, height=70, fg_color='transparent')
-        self.safe_mode_frame.grid(row=4, column=0, padx=10, pady=(5,0), ipadx=0)
+        self.current_task_button = customtkinter.CTkButton(
+            current_status_frame,
+            text=f"{'None' if self.active is False else 'Locking' if self.locking is True else 'In Game'}",
+            hover=False,
+            font=self.button_font,
+            command=self.toggle_thread_mode,
+        )
+        self.current_task_button.pack(padx=10, pady=(0, 5))
 
-        self.safe_mode_enabled_label = customtkinter.CTkLabel(self.safe_mode_frame, text=f"Safe Mode:", font=("Arial", 16))
-        self.safe_mode_enabled_label.pack(anchor=tk.N, padx=10)
+        safe_mode_frame = customtkinter.CTkFrame(
+            current_status_frame, width=140, height=70, fg_color="transparent"
+        )
+        safe_mode_frame.pack(padx=10, pady=(5, 0), ipadx=0)
 
-        self.safe_mode_enabled_button = customtkinter.CTkButton(self.safe_mode_frame, width=int(f"{141 if self.safe_mode is False else 70}"), hover=False, text=f"{'On' if self.safe_mode is True else 'Off'}", font=("Arial", 14), command=self.toggle_safe_mode)
-        self.safe_mode_enabled_button.pack(side=tk.LEFT, padx=(0,1), pady=(0,5))
+        safe_mode_label = customtkinter.CTkLabel(
+            safe_mode_frame, text=f"Safe Mode:", font=self.label_font
+        )
+        safe_mode_label.pack(anchor=tk.N, padx=10)
 
-        self.safe_mode_strength_button = customtkinter.CTkButton(self.safe_mode_frame, width=70, hover=False, text=f"{'Low' if self.safe_mode_strength == 0 else 'Medium' if self.safe_mode_strength == 1 else 'High'}", font=("Arial", 14), command=self.change_safe_mode_strength)
+        self.safe_mode_enabled_button = customtkinter.CTkButton(
+            safe_mode_frame,
+            width=int(f"{141 if self.safe_mode is False else 70}"),
+            hover=False,
+            text=f"{'On' if self.safe_mode is True else 'Off'}",
+            fg_color=f"{self.button_colors['enabled'] if self.active is True else self.button_colors['disabled']}",
+            font=self.button_font,
+            command=self.toggle_safe_mode,
+        )
+        self.safe_mode_enabled_button.pack(side=tk.LEFT, padx=(0, 1), pady=(0, 5))
 
-        self.settings_text = customtkinter.CTkLabel(self.current_status, text="Current Save:", font=("Arial", 16))
-        self.settings_text.grid(row=5, column=0, padx=10, pady=(5,0))
+        self.safe_mode_strength_button = customtkinter.CTkButton(
+            safe_mode_frame,
+            width=70,
+            hover=False,
+            text=f"{list(self.safe_mode_timing.keys())[self.safe_mode_strength]}",
+            font=self.button_font,
+            command=self.toggle_safe_mode_strength,
+        )
+        if self.safe_mode is True:
+            self.safe_mode_strength_button.pack(side=tk.RIGHT, padx=0, pady=(0, 5))
+        else:
+            self.safe_mode_strength_button.pack_forget()
 
-        self.selected_config_file_combobox = customtkinter.CTkComboBox(self.current_status, values=self.config_files, command=lambda x: self.change_config_file(x))
-        self.selected_config_file_combobox.set(f"{self.save_file}")
-        self.selected_config_file_combobox.grid(row=6, column=0, padx=10, pady=(0,5))
-        self.selected_config_file_combobox.bind("<Return>", lambda x: self.change_config_file(self.selected_config_file_combobox.get()))
+        current_save_label = customtkinter.CTkLabel(
+            current_status_frame, text="Current Save:", font=self.label_font
+        )
+        current_save_label.pack(padx=10, pady=(5, 0))
 
-        self.select_agent_frame = customtkinter.CTkFrame(self.overview_tab, width=150, height=100)
-        self.select_agent_frame.pack(padx=20, pady=10, side=tk.LEFT, anchor=tk.N)
+        self.selected_save_file_combobox = customtkinter.CTkComboBox(
+            current_status_frame,
+            values=self.save_files,
+            command=lambda x: self.change_current_save_file(x),
+        )
+        self.selected_save_file_combobox.set(f"{self.current_save_file}")
+        self.selected_save_file_combobox.pack(padx=10, pady=(0, 5))
+        self.selected_save_file_combobox.bind(
+            "<Return>",
+            lambda x: self.change_current_save_file(
+                self.selected_save_file_combobox.get()
+            ),
+        )
 
-        self.select_agent_label = customtkinter.CTkLabel(self.select_agent_frame, text="Selected Agent:", font=("Arial", 16))
-        self.select_agent_label.grid(row=0, column=0, padx=10, pady=(5,0))
+        select_agent_frame = customtkinter.CTkFrame(overview_tab)
+        select_agent_frame.grid(row=0, column=1)
 
-        self.select_agent_dropdown = customtkinter.CTkOptionMenu(self.select_agent_frame, dynamic_resizing=False,
-                                                                values=self.unlocked_agents, command=lambda x: self.change_agent(x))
+        select_agent_label = customtkinter.CTkLabel(
+            select_agent_frame, text="Selected Agent:", font=self.label_font
+        )
+        select_agent_label.pack(padx=10, pady=(5, 0))
+
+        self.select_agent_dropdown = customtkinter.CTkOptionMenu(
+            select_agent_frame,
+            dynamic_resizing=False,
+            values=list(
+                agent
+                for agent, unlock_status in self.unlocked_agents_dict.items()
+                if unlock_status is True
+            ),
+            command=lambda x: self.toggle_selected_agent(x),
+        )
         self.select_agent_dropdown.set(f"{self.selected_agent}")
-        self.select_agent_dropdown.grid(row=1, column=0, padx=10, pady=(0,5))
+        self.select_agent_dropdown.pack(padx=10, pady=(0, 5))
 
-        # Map Specific Agent Button
-        self.select_map_enabled_label = customtkinter.CTkLabel(self.select_agent_frame, text="Map Specific:", font=("Arial", 16))
-        self.select_map_enabled_label.grid(row=2, column=0, padx=10, pady=(5,0))
+        self.select_map_enabled_label = customtkinter.CTkLabel(
+            select_agent_frame, text="Map Specific:", font=self.label_font
+        )
+        self.select_map_enabled_label.pack(padx=10, pady=(5, 0))
 
-        self.select_map_specific_button = customtkinter.CTkButton(self.select_agent_frame, text=f"{'Enabled' if self.map_specific_enabled is True else 'Disabled'}", hover=False, fg_color=f"{'#259969' if self.map_specific_enabled is True else '#b52d3b'}", font=("Arial", 14), command=self.toggle_map_specific_mode)
-        self.select_map_specific_button.grid(row=3, column=0, padx=10, pady=(0,5))
+        self.select_map_specific_button = customtkinter.CTkButton(
+            select_agent_frame,
+            text=f"{'Enabled' if self.map_specific_mode is True else 'Disabled'}",
+            hover=False,
+            fg_color=f"{self.button_colors['enabled'] if self.map_specific_mode is True else self.button_colors['disabled']}",
+            font=self.button_font,
+            command=self.toggle_map_specific,
+        )
+        self.select_map_specific_button.pack(padx=10, pady=(0, 5))
 
+        random_agent_label = customtkinter.CTkLabel(
+            select_agent_frame, text="Random Agent:", font=self.label_font
+        )
+        random_agent_label.pack(padx=10, pady=(5, 0))
 
-        # Random Agent Button
-        self.random_agent_label = customtkinter.CTkLabel(self.select_agent_frame, text="Random Agent:", font=("Arial", 16))
-        self.random_agent_label.grid(row=4, column=0, padx=10, pady=(5,0))
-        self.random_agent_button = customtkinter.CTkButton(self.select_agent_frame, text=f"{'Enabled' if self.random_agent is True else 'Disabled'}", hover=False, fg_color=f"{'#259969' if self.random_agent is True else '#b52d3b'}", font=("Arial", 14), command=self.toggle_random_agent_mode)
-        self.random_agent_button.grid(row=5, column=0, padx=10, pady=(0,5))
+        self.random_agent_button = customtkinter.CTkButton(
+            select_agent_frame,
+            text=f"{'Enabled' if self.random_agent_mode is True else 'Disabled'}",
+            hover=False,
+            fg_color=f"{self.button_colors['enabled'] if self.random_agent_mode is True else self.button_colors['disabled']}",
+            font=self.button_font,
+            command=self.toggle_random_agent_mode,
+        )
+        self.random_agent_button.pack(padx=10, pady=(0, 5))
 
-        # Hover Mode Button
-        self.hover_mode_label = customtkinter.CTkLabel(self.select_agent_frame, text="Hover Mode:", font=("Arial", 16))
-        self.hover_mode_label.grid(row=6, column=0, padx=10, pady=(5,0))
-        self.hover_mode_button = customtkinter.CTkButton(self.select_agent_frame, text=f"{'Enabled' if self.hover_mode is True else 'Disabled'}", hover=False, fg_color=f"{'#259969' if self.hover_mode is True else '#b52d3b'}", font=("Arial", 14), command=self.toggle_hover_mode)
-        self.hover_mode_button.grid(row=7, column=0, padx=10, pady=(0,5))
+        hover_mode_label = customtkinter.CTkLabel(
+            select_agent_frame, text="Hover Mode:", font=self.label_font
+        )
+        hover_mode_label.pack(padx=10, pady=(5, 0))
+        self.hover_mode_button = customtkinter.CTkButton(
+            select_agent_frame,
+            text=f"{'Enabled' if self.hover_mode is True else 'Disabled'}",
+            hover=False,
+            fg_color=f"{self.button_colors['enabled'] if self.hover_mode is True else self.button_colors['disabled']}",
+            font=self.button_font,
+            command=self.toggle_hover_mode,
+        )
+        self.hover_mode_button.pack(padx=10, pady=(0, 5))
 
-        # Stats Frame
-        self.stats_frame = customtkinter.CTkFrame(self.overview_tab, width=300, height=100)
-        self.stats_frame.pack(padx=20, pady=10, side=tk.LEFT, anchor=tk.N, fill='x')
+        stats_frame = customtkinter.CTkFrame(overview_tab)
+        stats_frame.grid(row=0, column=2, sticky="n")
 
-        self.stats_label = customtkinter.CTkLabel(self.stats_frame, text="Last Lock:", font=("Arial", 16))
-        self.stats_label.grid(row=0, column=0, padx=10, pady=(5,0))
+        stats_label = customtkinter.CTkLabel(
+            stats_frame, text="Last Lock:", font=self.label_font
+        )
+        stats_label.pack(padx=10, pady=(5, 0))
 
-        self.time_to_lock_label = customtkinter.CTkLabel(self.stats_frame, text=f"{self.time_to_lock} ms", font=("Arial", 14))
-        self.time_to_lock_label.grid(row=1, column=0, padx=10, pady=(0,5))
+        self.time_to_lock_label = customtkinter.CTkLabel(
+            stats_frame,
+            text=f"{'-' if self.time_to_lock is None else self.time_to_lock} ms",
+            font=self.button_font,
+        )
+        self.time_to_lock_label.pack(padx=10, pady=(0, 5))
 
-        self.average_time_to_lock_label = customtkinter.CTkLabel(self.stats_frame, text=f"Average:", font=("Arial", 16))
-        self.average_time_to_lock_label.grid(row=2, column=0, padx=10, pady=(5,0))
+        average_time_to_lock_label = customtkinter.CTkLabel(
+            stats_frame, text=f"Average:", font=self.label_font
+        )
+        average_time_to_lock_label.pack(padx=10, pady=(5, 0))
 
-        self.average_time_to_lock_value = customtkinter.CTkLabel(self.stats_frame, text="-", font=("Arial", 14))
-        self.average_time_to_lock_value.grid(row=3, column=0, padx=10, pady=(0,5))
+        self.average_time_to_lock_value = customtkinter.CTkLabel(
+            stats_frame,
+            text=f"{'-' if len(self.average_time_to_lock[self.safe_mode_strength]) == 0 else round(sum(self.average_time_to_lock[self.safe_mode_strength])/len(self.average_time_to_lock[self.safe_mode_strength]),2)} ms",
+            font=self.button_font,
+        )
+        self.average_time_to_lock_value.pack(padx=10, pady=(0, 5))
 
-        self.total_games_locked_label = customtkinter.CTkLabel(self.stats_frame, text=f"Deployed:", font=("Arial", 16))
-        self.total_games_locked_label.grid(row=4, column=0, padx=10, pady=(5,0))
+        total_games_locked_label = customtkinter.CTkLabel(
+            stats_frame, text=f"Deployed:", font=self.label_font
+        )
+        total_games_locked_label.pack(padx=10, pady=(5, 0))
 
-        self.total_games_locked_value = customtkinter.CTkLabel(self.stats_frame, text=f"{self.total_games_locked} {'times' if self.total_games_locked != 1 else 'time'}", font=("Arial", 14))
-        self.total_games_locked_value.grid(row=5, column=0, padx=10, pady=(0,5))
+        self.total_games_locked_value = customtkinter.CTkLabel(
+            stats_frame,
+            text=f"{self.total_games_used} {'times' if self.total_games_used != 1 else 'time'}",
+            font=self.button_font,
+        )
+        self.total_games_locked_value.pack(padx=10, pady=(0, 5))
 
-        
-        # Agent Toggle 
-        self.all_none_frame = customtkinter.CTkFrame(self.agent_tab, width=150, height=100)
-        self.all_none_frame.grid(row=0, column=0, padx=20, pady=(20, 10))
+        quit_button = customtkinter.CTkButton(
+            overview_tab,
+            text="Exit",
+            fg_color=self.button_colors["disabled"],
+            width=95,
+            hover=False,
+            command=self.exit,
+        )
+        quit_button.place(relx=0.79, rely=0.9)
 
-        self.toggle_agent_checkbox_frame = customtkinter.CTkFrame(self.agent_tab, width=150, height=100)
-        self.toggle_agent_checkbox_frame.grid(row=1, column=0, pady=(20, 20))
+        overview_tab.columnconfigure((0, 1, 2), weight=1)
 
-        self.all_radio_button = customtkinter.CTkCheckBox(self.all_none_frame, text="All", command=lambda: self.toggle_agent("All"))
-        self.all_radio_button.grid(row=0, column=0, padx=(20,0), pady=10)
+        # endregion
 
-        self.none_radio_button = customtkinter.CTkCheckBox(self.all_none_frame, text="None", command=lambda: self.toggle_agent("None"))
-        self.none_radio_button.grid(row=0, column=1, pady=10)
+        # region Agent Toggle Tab
+
+        mass_select_frame = customtkinter.CTkFrame(agent_toggle_tab)
+        mass_select_frame.pack(padx=20, pady=(20, 10))
+
+        self.toggle_all_agent_button = customtkinter.CTkCheckBox(
+            mass_select_frame,
+            text="All",
+            command=lambda: self.toggle_unlocked_agent_status("all"),
+        )
+        self.toggle_all_agent_button.grid(row=0, column=0, padx=(20, 0), pady=10)
+
+        self.toggle_none_agent_button = customtkinter.CTkCheckBox(
+            mass_select_frame,
+            text="None",
+            command=lambda: self.toggle_unlocked_agent_status("none"),
+        )
+        self.toggle_none_agent_button.grid(row=0, column=1, pady=10)
+
+        toggle_agent_checkbox_frame = customtkinter.CTkFrame(agent_toggle_tab)
+        toggle_agent_checkbox_frame.pack()
+
+        interior_toggle_agent_checkbox_frame = customtkinter.CTkFrame(
+            toggle_agent_checkbox_frame, fg_color="transparent"
+        )
+        interior_toggle_agent_checkbox_frame.pack(padx=10, pady=10)
+
+        unlockable_agents = [
+            agent for agent in self.all_agents if agent not in self.default_agents
+        ]
 
         self.agent_checkboxes = {}
-        for index, agent in enumerate(self.unlockable_agents):
-            column = index//5
-            row = index%5
-            self.create_agent_checkbox(agent, row, column)
+        for index, agent in enumerate(unlockable_agents):
+            column, row = index % 4, index // 4
 
-        # Map Specific Tab 
-        self.map_specific_agent_dropdown = []
+            self.agent_checkboxes[f"self.{agent}_checkbox"] = customtkinter.CTkCheckBox(
+                interior_toggle_agent_checkbox_frame,
+                text=agent,
+                command=lambda agent=agent: self.toggle_unlocked_agent_status(agent),
+            )
+            self.agent_checkboxes[f"self.{agent}_checkbox"].grid(
+                row=row, column=column, padx=8, pady=8
+            )
 
-        self.ascent_frame = customtkinter.CTkFrame(self.map_specific_tab, width=230)
-        self.ascent_frame.grid(row=0, column=0, padx=7, pady=20, sticky="nsew")
-        self.ascent_label = customtkinter.CTkLabel(self.ascent_frame, text="Ascent:", font=("Arial", 16))
-        self.ascent_label.pack(padx=10, pady=5, side=tk.LEFT)
+        # endregion
 
-        self.ascent_agent_dropdown = customtkinter.CTkOptionMenu(self.ascent_frame, values=self.unlocked_agents, width=100,command=lambda x: self.change_map_specific_agent(x,"Ascent"))
-        self.ascent_agent_dropdown.pack(padx=(0,10), pady=5, side=tk.RIGHT)
-        
-        self.map_specific_agent_dropdown.append(self.ascent_agent_dropdown)
+        # region Random Agent Tab
+        random_agent_all_none_toggle_frame = customtkinter.CTkFrame(
+            random_agent_tab, width=150, height=100
+        )
+        random_agent_all_none_toggle_frame.pack(padx=20, pady=5)
 
-        self.bind_frame = customtkinter.CTkFrame(self.map_specific_tab, width=230)
-        self.bind_frame.grid(row=0, column=1, padx=7, pady=20, sticky="nsew")
-        self.bind_label = customtkinter.CTkLabel(self.bind_frame, text="Bind:", font=("Arial", 16))
-        self.bind_label.pack(padx=10, pady=5, side=tk.LEFT)
+        self.all_random_agent_radio_button = customtkinter.CTkCheckBox(
+            random_agent_all_none_toggle_frame,
+            text="All",
+            command=lambda: self.toggle_random_agent_status("all"),
+        )
+        self.all_random_agent_radio_button.grid(row=0, column=0, padx=(20, 0), pady=10)
 
-        self.bind_agent_dropdown = customtkinter.CTkOptionMenu(self.bind_frame, values=self.unlocked_agents, width=100,command=lambda x: self.change_map_specific_agent(x,"Bind"))
-        self.bind_agent_dropdown.pack(padx=(0,10), pady=5, side=tk.RIGHT)
-
-        self.map_specific_agent_dropdown.append(self.bind_agent_dropdown)
-
-        self.breeze_frame = customtkinter.CTkFrame(self.map_specific_tab, width=230)
-        self.breeze_frame.grid(row=0, column=2, padx=7, pady=20, sticky="nsew")
-        self.breeze_label = customtkinter.CTkLabel(self.breeze_frame, text="Breeze:", font=("Arial", 16))
-        self.breeze_label.pack(padx=10, pady=5, side=tk.LEFT)
-
-        self.breeze_agent_dropdown = customtkinter.CTkOptionMenu(self.breeze_frame, values=self.unlocked_agents, width=100,command=lambda x: self.change_map_specific_agent(x,"Breeze"))
-        self.breeze_agent_dropdown.pack(padx=(0,10), pady=5, side=tk.RIGHT)
-
-        self.map_specific_agent_dropdown.append(self.breeze_agent_dropdown)
-
-        self.fracture_frame = customtkinter.CTkFrame(self.map_specific_tab, width=230)
-        self.fracture_frame.grid(row=1, column=0, padx=7, pady=20, sticky="nsew")
-        self.fracture_label = customtkinter.CTkLabel(self.fracture_frame, text="Fracture:", font=("Arial", 16))
-        self.fracture_label.pack(padx=10, pady=5, side=tk.LEFT)
-
-        self.fracture_agent_dropdown = customtkinter.CTkOptionMenu(self.fracture_frame, values=self.unlocked_agents, width=100,command=lambda x: self.change_map_specific_agent(x,"Fracture"))
-        self.fracture_agent_dropdown.pack(padx=(0,10), pady=5, side=tk.RIGHT)
-
-        self.map_specific_agent_dropdown.append(self.fracture_agent_dropdown)
-
-        self.haven_frame = customtkinter.CTkFrame(self.map_specific_tab, width=230)
-        self.haven_frame.grid(row=1, column=1, padx=7, pady=20, sticky="nsew")
-        self.haven_label = customtkinter.CTkLabel(self.haven_frame, text="Haven:", font=("Arial", 16))
-        self.haven_label.pack(padx=10, pady=5, side=tk.LEFT)
-
-        self.haven_agent_dropdown = customtkinter.CTkOptionMenu(self.haven_frame, values=self.unlocked_agents, width=100,command=lambda x: self.change_map_specific_agent(x,"Haven"))
-        self.haven_agent_dropdown.pack(padx=(0,10), pady=5, side=tk.RIGHT)
-
-        self.map_specific_agent_dropdown.append(self.haven_agent_dropdown)
-
-        self.icebox_frame = customtkinter.CTkFrame(self.map_specific_tab, width=230)
-        self.icebox_frame.grid(row=1, column=2, padx=7, pady=20, sticky="nsew")
-        self.icebox_label = customtkinter.CTkLabel(self.icebox_frame, text="Icebox:", font=("Arial", 16))
-        self.icebox_label.pack(padx=10, pady=5, side=tk.LEFT)
-
-        self.icebox_agent_dropdown = customtkinter.CTkOptionMenu(self.icebox_frame, values=self.unlocked_agents, width=100,command=lambda x: self.change_map_specific_agent(x,"Icebox"))
-        self.icebox_agent_dropdown.pack(padx=(0,10), pady=5, side=tk.RIGHT)
-
-        self.map_specific_agent_dropdown.append(self.icebox_agent_dropdown)
-
-        self.lotus_frame = customtkinter.CTkFrame(self.map_specific_tab, width=230)
-        self.lotus_frame.grid(row=2, column=0, padx=7, pady=20, sticky="nsew")
-        self.lotus_label = customtkinter.CTkLabel(self.lotus_frame, text="Lotus:", font=("Arial", 16))
-        self.lotus_label.pack(padx=10, pady=5, side=tk.LEFT)
-
-        self.lotus_agent_dropdown = customtkinter.CTkOptionMenu(self.lotus_frame, values=self.unlocked_agents, width=100,command=lambda x: self.change_map_specific_agent(x,"Lotus"))
-        self.lotus_agent_dropdown.pack(padx=(0,10), pady=5, side=tk.RIGHT)
-
-        self.map_specific_agent_dropdown.append(self.lotus_agent_dropdown)
-
-        self.pearl_frame = customtkinter.CTkFrame(self.map_specific_tab, width=230)
-        self.pearl_frame.grid(row=2, column=1, padx=7, pady=20, sticky="nsew")
-        self.pearl_label = customtkinter.CTkLabel(self.pearl_frame, text="Pearl:", font=("Arial", 16))
-        self.pearl_label.pack(padx=10, pady=5, side=tk.LEFT)
-
-        self.pearl_agent_dropdown = customtkinter.CTkOptionMenu(self.pearl_frame, values=self.unlocked_agents, width=100,command=lambda x: self.change_map_specific_agent(x,"Pearl"))
-        self.pearl_agent_dropdown.pack(padx=(0,10), pady=5, side=tk.RIGHT)
-
-        self.map_specific_agent_dropdown.append(self.pearl_agent_dropdown)
-
-        self.split_frame = customtkinter.CTkFrame(self.map_specific_tab, width=230)
-        self.split_frame.grid(row=2, column=2, padx=7, pady=20, sticky="nsew")
-        self.split_label = customtkinter.CTkLabel(self.split_frame, text="Split:", font=("Arial", 16))
-        self.split_label.pack(padx=10, pady=5, side=tk.LEFT)
-
-        self.split_agent_dropdown = customtkinter.CTkOptionMenu(self.split_frame, values=self.unlocked_agents, width=100,command=lambda x: self.change_map_specific_agent(x,"Split"))
-        self.split_agent_dropdown.pack(padx=(0,10), pady=5, side=tk.RIGHT)
-
-        self.map_specific_agent_dropdown.append(self.split_agent_dropdown)
-
-        # Quit button
-        self.quit_button = customtkinter.CTkButton(self.overview_tab, text="Exit", fg_color='#b52d3b', width=95, hover=False, command=self.exit)
-        self.quit_button.place(relx=0.76, rely=0.9)
-
-        # Random Agent Tab
-
-        self.random_agent_all_none_toggle_frame = customtkinter.CTkFrame(self.random_agent_tab, width=150, height=100)
-        self.random_agent_all_none_toggle_frame.grid(row=0, column=0, padx=20, pady=(5, 5))
-
-        self.all_random_agent_radio_button = customtkinter.CTkCheckBox(self.random_agent_all_none_toggle_frame, text="All", command=lambda: self.toggle_random_agent("All"))
-        self.all_random_agent_radio_button.grid(row=0, column=0, padx=(20,0), pady=10)
-
-        self.none_random_agent_radio_button = customtkinter.CTkCheckBox(self.random_agent_all_none_toggle_frame, text="None", command=lambda: self.toggle_random_agent("None"))
+        self.none_random_agent_radio_button = customtkinter.CTkCheckBox(
+            random_agent_all_none_toggle_frame,
+            text="None",
+            command=lambda: self.toggle_random_agent_status("none"),
+        )
         self.none_random_agent_radio_button.grid(row=0, column=1, pady=10)
 
-        self.random_agent_role_toggle_frame = customtkinter.CTkFrame(self.random_agent_tab, width=150, height=100)
-        self.random_agent_role_toggle_frame.grid(row=1, column=0, pady=(5, 5))
+        random_agent_role_toggle_frame = customtkinter.CTkFrame(random_agent_tab)
+        random_agent_role_toggle_frame.pack(padx=0, pady=5)
 
-        self.agent_role_checkboxes = {}
+        # Creates the checkboxes for each role
+        self.agent_role_checkboxes = dict()
+        for index, role in enumerate(self.config_file_agents.keys()):
+            role = role.lower()
 
-        self.agent_role_checkboxes["controllers"] = customtkinter.CTkCheckBox(self.random_agent_role_toggle_frame, text="Controllers", text_color=self.role_colors["controllers"], text_color_disabled=self.role_colors["controllers_disabled"], command=lambda: self.toggle_random_agent("Controllers"))
-        self.agent_role_checkboxes["controllers"].grid(row=0, column=0, padx=10, pady=10)
+            self.agent_role_checkboxes[role] = customtkinter.CTkCheckBox(
+                random_agent_role_toggle_frame,
+                text=role.capitalize(),
+                text_color=self.role_colors[role],
+                text_color_disabled=self.role_colors[f"{role}_disabled"],
+                command=lambda role=role: self.toggle_random_agent_status(role),
+            )
+            self.agent_role_checkboxes[role].grid(row=0, column=index, padx=10, pady=10)
 
-        self.agent_role_checkboxes["duelists"] = customtkinter.CTkCheckBox(self.random_agent_role_toggle_frame, text="Duelists", text_color=self.role_colors["duelists"], text_color_disabled=self.role_colors["duelists_disabled"], command=lambda: self.toggle_random_agent("Duelists"))
-        self.agent_role_checkboxes["duelists"].grid(row=0, column=1, padx=10, pady=10)
+        # Creates frames for each role
+        random_agent_individual_toggle_frame = customtkinter.CTkFrame(
+            random_agent_tab, width=150, height=100, fg_color="transparent"
+        )
+        random_agent_individual_toggle_frame.pack(padx=0, pady=0)
 
-        self.agent_role_checkboxes["initiators"] = customtkinter.CTkCheckBox(self.random_agent_role_toggle_frame, text="Initiators", text_color=self.role_colors["initiators"], text_color_disabled=self.role_colors["initiators_disabled"], command=lambda: self.toggle_random_agent("Initiators"))
-        self.agent_role_checkboxes["initiators"].grid(row=0, column=2, padx=10, pady=10)
+        role_frames = dict()
+        for index, role in enumerate(self.config_file_agents.keys()):
+            role = role.lower()
 
-        self.agent_role_checkboxes["sentinels"] = customtkinter.CTkCheckBox(self.random_agent_role_toggle_frame, text="Sentinels", text_color=self.role_colors["sentinels"], text_color_disabled=self.role_colors["sentinels_disabled"], command=lambda: self.toggle_random_agent("Sentinels"))
-        self.agent_role_checkboxes["sentinels"].grid(row=0, column=3, padx=10, pady=10)
+            role_frames[role] = customtkinter.CTkFrame(
+                random_agent_individual_toggle_frame, width=120, height=100, fg_color="#333333"
+            )
+            role_frames[role].grid(row=0, column=index % 4, padx=5, pady=5, sticky="n")
 
-        self.random_agent_individual_toggle_frame = customtkinter.CTkFrame(self.random_agent_tab, width=150, height=100)
-        self.random_agent_individual_toggle_frame.grid(row=2, column=0, pady=(5, 20))
+            role_frames[role].columnconfigure(index, weight=1)
 
+        # Creates the checkboxes for each agent
         self.random_agent_checkboxes = {}
         for index, agent in enumerate(self.all_agents):
-            column = index//5
-            row = index%5
-            self.create_random_agent_checkbox(agent, row, column)
+            for role, agent_list in self.config_file_agents.items():
+                if agent in agent_list:
+                    agent_role = role.lower()
+                    break
 
+            frame = role_frames[agent_role]
 
-    # Updates all GUI elements
+            self.random_agent_checkboxes[
+                f"self.{agent}_random_checkbox"
+            ] = customtkinter.CTkCheckBox(
+                frame,
+                text=agent,
+                text_color=self.role_colors[agent_role],
+                command=lambda agent=agent: self.toggle_random_agent_status(agent),
+            )
+            self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].pack(
+                padx=5, pady=5
+            )
+        # endregion
+
+        # region Map Specific Tab
+        map_frames, map_labels, self.map_dropdowns = dict(), dict(), dict()
+        for index, map_name in enumerate(self.map_names):
+            row, column = index // 2, index % 2
+
+            map_frames[f"{map_name}_frame"] = customtkinter.CTkFrame(
+                map_specific_tab, width=230
+            )
+            map_frames[f"{map_name}_frame"].grid(
+                row=row, column=column, padx=10, pady=10, sticky="nsew"
+            )
+            map_labels[f"{map_name}_label"] = customtkinter.CTkLabel(
+                map_frames[f"{map_name}_frame"],
+                text=f"{map_name}:",
+                font=self.label_font,
+            )
+            map_labels[f"{map_name}_label"].pack(padx=10, pady=5, side=tk.LEFT)
+
+            self.map_dropdowns[map_name] = customtkinter.CTkOptionMenu(
+                map_frames[f"{map_name}_frame"],
+                values=list(
+                    agent
+                    for agent, unlock_status in self.unlocked_agents_dict.items()
+                    if unlock_status is True
+                ),
+                width=100,
+                command=lambda agent_name, map_name=map_name: self.toggle_map_specific_agent(
+                    agent_name=agent_name, map_name=map_name
+                ),
+            )
+
+            self.map_dropdowns[map_name].pack(padx=(0, 10), pady=5, side=tk.RIGHT)
+
+        map_specific_tab.columnconfigure((0, 1), weight=1)
+
+        # endregion
+
+    def create_icon(self):
+        self.icon_menu = pystray.Menu(
+            pystray.MenuItem(
+                lambda x: f"Show GUI", lambda x: self.show_window(), default=True
+            ),
+            pystray.MenuItem(
+                lambda x: f'Status: {"Enabled" if self.active else "Disabled"}',
+                lambda x: self.toggle_active(),
+                checked=lambda x: self.active,
+            ),
+            pystray.MenuItem(
+                lambda x: f"Status: {'None' if self.active is False else 'Locking' if self.locking is True else 'In Game (Waiting)'}",
+                lambda x: self.toggle_thread_mode(),
+            ),
+            pystray.MenuItem("Exit", lambda x: self.exit()),
+        )
+
+    # Closes the window and runs the icon
+    def withdraw_window(self):
+        self.withdraw()
+        self.icon = pystray.Icon(
+            "VaLocker", self.current_icon, "VaLocker", self.icon_menu
+        )
+        self.icon.run()
+
+    # endregion
+
+    # region GUI  Updates
+
+    # Updates All GUI Elements
     def update_gui(self):
         try:
             self.update_overview_tab()
-            self.update_agent_tab()
-            self.update_map_tab()
-            self.update_random_tab()
+            self.update_agent_toggle_tab()
+            self.update_random_agent_tab()
+            self.update_map_specific_tab()
+            self.update_icon()
         except AttributeError:
             pass
-
 
     # Updates overview tab
     def update_overview_tab(self):
-        try:
-            if len(self.average_time_to_lock[self.safe_mode_strength]) > 0:
-                average_time_to_lock = round(sum(self.average_time_to_lock[self.safe_mode_strength])/len(self.average_time_to_lock[self.safe_mode_strength]), 2)
-                self.average_time_to_lock_value.configure(text=f"{average_time_to_lock} ms")
-            else:
-                self.average_time_to_lock_value.configure(text="- ms")
+        # Stats
+        if self.safe_mode is False: average_time_to_lock_index = -1
+        else: average_time_to_lock_index = self.safe_mode_strength
+        self.average_time_to_lock_value.configure(
+            text=f"{'-' if len(self.average_time_to_lock[average_time_to_lock_index]) == 0 else round(sum(self.average_time_to_lock[average_time_to_lock_index])/len(self.average_time_to_lock[average_time_to_lock_index]),2)} ms",
+        )
+        self.time_to_lock_label.configure(
+            text=f"{'-' if len(self.average_time_to_lock[average_time_to_lock_index]) == 0 else self.average_time_to_lock[average_time_to_lock_index][-1]} ms"
+        )
+        self.total_games_locked_value.configure(
+            text=f"{self.total_games_used} {'times' if self.total_games_used != 1 else 'time'}"
+        )
 
-            self.current_status_button.configure(text=f"{'Running' if self.active is True else 'Stopped'}", fg_color=f"{'#259969' if self.active is True else '#b52d3b'}")
-            self.current_task_button.configure(text=f"{'None' if self.active is False else 'Locking' if self.in_valorant_menu is True else 'In Game'}")
-            self.safe_mode_enabled_button.configure(text=f"{'On' if self.safe_mode is True else 'Off'}", fg_color=f"{'#259969' if self.safe_mode is True else '#b52d3b'}", width=int(f"{141 if self.safe_mode is False else 70}"))
-            self.safe_mode_strength_button.configure(text=f"{'Low' if self.safe_mode_strength == 1 else 'Medium' if self.safe_mode_strength == 2 else 'High'}")
+        # Buttons Left Column
+        self.current_status_button.configure(
+            text=f"{'Running' if self.active is True else 'Stopped'}",
+            fg_color=f"{self.button_colors['enabled'] if self.active is True else self.button_colors['disabled']}",
+        )
+        self.current_task_button.configure(
+            text=f"{'None' if self.active is False else 'Locking' if self.locking is True else 'In Game'}"
+        )
+        self.safe_mode_enabled_button.configure(
+            text=f"{'On' if self.safe_mode is True else 'Off'}",
+            fg_color=f"{self.button_colors['enabled'] if self.safe_mode is True else self.button_colors['disabled']}",
+            width=int(f"{140 if self.safe_mode is False else 70}"),
+        )
+        if self.safe_mode is True:
+            self.safe_mode_strength_button.pack(side=tk.RIGHT, padx=0, pady=(0, 5))
+        else:
+            self.safe_mode_strength_button.pack_forget()
 
+        self.safe_mode_strength_button.configure(
+            text=f"{list(self.safe_mode_timing.keys())[self.safe_mode_strength]}"
+        )
 
-            self.hover_mode_button.configure(text=f"{'Enabled' if self.hover_mode is True else 'Disabled'}", fg_color=f"{'#259969' if self.hover_mode is True else '#b52d3b'}")
+        self.selected_save_file_combobox.configure(values=self.save_files)
 
-            self.select_map_specific_button.configure(text=f"{'Enabled' if self.map_specific_enabled is True else 'Disabled'}", fg_color=f"{'#259969' if self.map_specific_enabled is True else '#b52d3b'}")
-            self.time_to_lock_label.configure(text=f"{self.time_to_lock} ms")
-            self.total_games_locked_value.configure(text=f"{self.total_games_locked} {'times' if self.total_games_locked != 1 else 'time'}")
+        # Buttons Middle Column
+        self.hover_mode_button.configure(
+            text=f"{'Enabled' if self.hover_mode is True else 'Disabled'}",
+            fg_color=f"{self.button_colors['enabled'] if self.hover_mode is True else self.button_colors['disabled']}",
+        )
 
-            if self.safe_mode is True:
-                self.safe_mode_strength_button.pack(side=tk.RIGHT, padx=0, pady=(0,5))
-            else:
-                self.safe_mode_strength_button.pack_forget()
+        self.select_map_specific_button.configure(
+            text=f"{'Enabled' if self.map_specific_mode is True else 'Disabled'}",
+            fg_color=f"{self.button_colors['enabled'] if self.map_specific_mode is True else self.button_colors['disabled']}",
+        )
 
-            self.selected_config_file_combobox.configure(values=self.config_files)
+        self.select_agent_dropdown.configure(
+            values=list(
+                agent
+                for agent, unlock_status in self.unlocked_agents_dict.items()
+                if unlock_status is True
+            )
+        )
+        self.select_agent_dropdown.set(f"{self.selected_agent}")
 
-            if self.random_agent is False and self.map_specific_enabled is False:
-                self.select_agent_dropdown.configure(values=self.unlocked_agents)
-                self.select_agent_dropdown.set(f"{self.selected_agent}")
+        # Disables random agent button if no random agents are selected
+        if (
+            any(agent is True for agent in self.random_agents_dict.values())
+            and self.map_specific_mode is False
+        ):
+            self.random_agent_button.configure(state=tk.NORMAL)
+        else:
+            self.random_agent_button.configure(state=tk.DISABLED)
+            self.random_agent_mode = False
 
-            if self.map_specific_enabled is False and len(self.random_agent_list) == 0:
-                self.random_agent_button.configure(state=tk.DISABLED)
-                self.random_agent = False
-            elif self.map_specific_enabled is False and len(self.random_agent_list) > 0:
-                self.random_agent_button.configure(state=tk.NORMAL)
+        self.random_agent_button.configure(
+            text=f"{'Enabled' if self.random_agent_mode is True else 'Disabled'}",
+            fg_color=f"{self.button_colors['enabled'] if self.random_agent_mode is True else self.button_colors['disabled']}",
+        )
 
-            self.random_agent_button.configure(text=f"{'Enabled' if self.random_agent is True else 'Disabled'}", fg_color=f"{'#259969' if self.random_agent is True else '#b52d3b'}")
-
-
-        except AttributeError:
-            pass
-
-
-    # Updates map tab
-    def update_agent_tab(self):
-        try:
-            for agent in self.unlockable_agents:
-                if agent in self.unlocked_agents:
-                    self.agent_checkboxes[f'self.{agent}_checkbox'].select()
+    # Updates agent toggle tab
+    def update_agent_toggle_tab(self):
+        for agent in self.all_agents:
+            if agent not in self.default_agents:
+                if self.unlocked_agents_dict[agent] is True:
+                    self.agent_checkboxes[f"self.{agent}_checkbox"].select()
                 else:
-                    self.agent_checkboxes[f'self.{agent}_checkbox'].deselect()
-            
-            if len(self.unlockable_agents) == len(self.unlocked_agents)-5:
-                self.all_radio_button.select()
-                self.all_radio_button.configure(state=tk.DISABLED)
+                    self.agent_checkboxes[f"self.{agent}_checkbox"].deselect()
+
+        if all(
+            value is True
+            for agent, value in self.unlocked_agents_dict.items()
+            if agent not in self.default_agents
+        ):
+            self.toggle_all_agent_button.select()
+            self.toggle_all_agent_button.configure(state=tk.DISABLED)
+        else:
+            self.toggle_all_agent_button.deselect()
+            self.toggle_all_agent_button.configure(state=tk.NORMAL)
+
+        if all(
+            value is False
+            for agent, value in self.unlocked_agents_dict.items()
+            if agent not in self.default_agents
+        ):
+            self.toggle_none_agent_button.select()
+            self.toggle_none_agent_button.configure(state=tk.DISABLED)
+        else:
+            self.toggle_none_agent_button.deselect()
+            self.toggle_none_agent_button.configure(state=tk.NORMAL)
+
+    # Updates random agent tab
+    def update_random_agent_tab(self):
+        # Disables agents that are not unlocked
+        for agent in self.unlocked_agents_dict:
+            if (
+                agent not in self.default_agents
+                and self.unlocked_agents_dict[agent] is False
+            ):
+                self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].configure(
+                    state=tk.DISABLED
+                )
+                self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].deselect()
             else:
-                self.all_radio_button.deselect()
-                self.all_radio_button.configure(state=tk.NORMAL)
+                self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].configure(
+                    state=tk.NORMAL
+                )
 
-            if len(self.unlocked_agents) == 5:
-                self.none_radio_button.select()
-                self.none_radio_button.configure(state=tk.DISABLED)
+        # Selects enabled agents
+        for agent in self.random_agents_dict:
+            if self.random_agents_dict[agent] is True:
+                self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].select()
             else:
-                self.none_radio_button.deselect()
-                self.none_radio_button.configure(state=tk.NORMAL)
-        except AttributeError:
-            pass
+                self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].deselect()
 
+        # Select none if no agents are selected
+        if all(value is False for value in self.random_agents_dict.values()):
+            self.none_random_agent_radio_button.select()
+            self.none_random_agent_radio_button.configure(state=tk.DISABLED)
+        else:
+            self.none_random_agent_radio_button.deselect()
+            self.none_random_agent_radio_button.configure(state=tk.NORMAL)
 
-    # Updates map tab
-    def update_map_tab(self):
-        try:
-            for dropdown in self.map_specific_agent_dropdown:
-                dropdown.configure(state=f"{'disabled' if self.map_specific_enabled is False else 'normal'}", values=self.unlocked_agents)
+        # Select all if all possible agents are selected
+        if all(
+            self.random_agents_dict[agent] is True
+            for agent in self.unlocked_agents_dict
+            if self.unlocked_agents_dict[agent] is True
+        ):
+            self.all_random_agent_radio_button.select()
+            self.all_random_agent_radio_button.configure(state=tk.DISABLED)
+        else:
+            self.all_random_agent_radio_button.deselect()
+            self.all_random_agent_radio_button.configure(state=tk.NORMAL)
 
-            self.ascent_agent_dropdown.set(f"{self.maps['Ascent']}")
-            self.bind_agent_dropdown.set(f"{self.maps['Bind']}")
-            self.breeze_agent_dropdown.set(f"{self.maps['Breeze']}")
-            self.fracture_agent_dropdown.set(f"{self.maps['Fracture']}")
-            self.haven_agent_dropdown.set(f"{self.maps['Haven']}")
-            self.icebox_agent_dropdown.set(f"{self.maps['Icebox']}")
-            self.lotus_agent_dropdown.set(f"{self.maps['Lotus']}")
-            self.pearl_agent_dropdown.set(f"{self.maps['Pearl']}")
-            self.split_agent_dropdown.set(f"{self.maps['Split']}")
-            
-        except AttributeError:
-            pass
-
-
-    # Update random agent tab
-    def update_random_tab(self):
-        try:
-            for agent in self.all_agents:
-                if agent not in self.unlocked_agents:
-                    self.random_agent_checkboxes[f'self.{agent}_random_checkbox'].configure(state=tk.DISABLED)
-                    self.random_agent_checkboxes[f'self.{agent}_random_checkbox'].deselect()
-                else:
-                    self.random_agent_checkboxes[f'self.{agent}_random_checkbox'].configure(state=tk.NORMAL)
-        except AttributeError:
-            pass
-
-
-        try:
-            for agent in self.all_agents:
-                if agent in self.random_agent_list and agent in self.unlocked_agents:
-                    self.random_agent_checkboxes[f'self.{agent}_random_checkbox'].select()
-                else:
-                    self.random_agent_checkboxes[f'self.{agent}_random_checkbox'].deselect()
-            
-            if len(self.random_agent_list) == len(self.unlocked_agents):
-                self.all_random_agent_radio_button.select()
-                self.all_random_agent_radio_button.configure(state=tk.DISABLED)
+        # Selects enabled roles (controller/duelist/initiator/sentinel)
+        for role in self.config_file_agents:
+            if all(
+                self.random_agents_dict[agent] is True
+                for agent in self.config_file_agents[role]
+                if self.unlocked_agents_dict[agent] is True
+            ):
+                self.agent_role_checkboxes[role.lower()].select()
             else:
-                self.all_random_agent_radio_button.deselect()
-                self.all_random_agent_radio_button.configure(state=tk.NORMAL)
+                self.agent_role_checkboxes[role.lower()].deselect()
 
-            if len(self.random_agent_list) == 0:
-                self.none_random_agent_radio_button.select()
-                self.none_random_agent_radio_button.configure(state=tk.DISABLED)
-            else:
-                self.none_random_agent_radio_button.deselect()
-                self.none_random_agent_radio_button.configure(state=tk.NORMAL)
+    # Updates map specific tab
+    def update_map_specific_tab(self):
+        for map_name in self.map_names:
+            self.map_dropdowns[map_name].configure(
+                state=tk.DISABLED if self.map_specific_mode is False else tk.NORMAL,
+                values=list(
+                    agent
+                    for agent, unlock_status in self.unlocked_agents_dict.items()
+                    if unlock_status is True
+                ),
+            )
 
-            for role in self.agent_roles:
-                gui_role = role.lower()
-                
-                # add agents from role role to new variable if agent is in self.unlocked_agents
-                agents_in_role = [agent for agent in self.agent_roles[role] if agent in self.unlocked_agents]
+            self.map_dropdowns[map_name].set(
+                f"{self.map_specific_agents_dict[map_name]}"
+            )
 
-                if all(agent in self.random_agent_list for agent in agents_in_role) is True:
-                    self.agent_role_checkboxes[gui_role].select()
-                    self.agent_role_checkboxes[gui_role].configure(state=tk.DISABLED)
-                else:
-                    self.agent_role_checkboxes[gui_role].deselect()
-                    self.agent_role_checkboxes[gui_role].configure(state=tk.NORMAL)
-
-        except AttributeError:
-            pass
-
-
-    # Updates GUI or Icon Image
+    # Updates GUI and tray icons
     def update_icon(self):
-        self.current_icon = self.tray_icons[0] if self.active is True else self.tray_icons[1]
+        self.current_icon = (
+            self.tray_icons[0] if self.active is True else self.tray_icons[1]
+        )
         try:
             self.icon.icon = self.current_icon
         except AttributeError:
@@ -574,483 +762,453 @@ class Program(customtkinter.CTk):
         else:
             self.wm_iconbitmap("images/instalocker_disabled.ico")
 
-
-    # Shows window when icon is clicked
+    # Shows the window when icon is clicked
     def show_window(self):
-        try: self.icon.stop()
-        except AttributeError: pass
-        self.protocol('WM_DELETE_WINDOW', self.withdraw_window)
+        try:
+            self.icon.stop()
+        except AttributeError:
+            pass
+        self.protocol("WM_DELETE_WINDOW", self.withdraw_window)
         self.after(0, self.deiconify)
 
+    # endregion
 
-    # Creates agent checkboxes
-    def create_agent_checkbox(self, agent, column, row):
-        self.agent_checkboxes[f'self.{agent}_checkbox'] = customtkinter.CTkCheckBox(self.toggle_agent_checkbox_frame, text=agent, command=lambda: self.toggle_agent(agent))
-        self.agent_checkboxes[f'self.{agent}_checkbox'].grid(row=row, column=column, padx=10, pady=10)
+    # endregion
 
-    # Creates checkboxes for random agent tab
-    def create_random_agent_checkbox(self, agent, column, row):
-        for role, agent_list in self.agent_roles.items():
-            if agent in agent_list:
-                agent_role = role.lower()
-                break
-        self.random_agent_checkboxes[f'self.{agent}_random_checkbox'] = customtkinter.CTkCheckBox(self.random_agent_individual_toggle_frame, text=agent, text_color=self.role_colors[agent_role], text_color_disabled=self.role_colors[f'{agent_role}_disabled'], command=lambda: self.toggle_random_agent(agent))
-        self.random_agent_checkboxes[f'self.{agent}_random_checkbox'].grid(row=row, column=column, padx=10, pady=10)
+    # region Toggles
 
-
-    #---------------ICON---------------#
-
-    # Shows icon when window is closed.
-    def withdraw_window(self):
-        self.withdraw()
-        self.icon = pystray.Icon(
-            "Valocker", self.current_icon, "Valocker", self.icon_menu)
-        self.icon.run()
-
-
-
-    #---------------TOGGLING SETTINGS---------------#
-
-    # Toggles whether or not the program is active
-    def change_active_status(self):
+    # Toggles the active state of the program between running and stopped
+    def toggle_active(self):
         self.active = not self.active
+        self.update_overview_tab()
         self.update_icon()
+
+    # Toggles the thread between locking and waiting
+    def toggle_thread_mode(self):
+        self.locking = not self.locking
         self.update_overview_tab()
 
-
-    # Switches between locking and waiting
-    def switch_thread_mode(self):
-        self.in_valorant_menu = not self.in_valorant_menu
-        self.update_overview_tab()
-
-
-    # Toggles safe mode
+    # Toggles the safe mode
     def toggle_safe_mode(self):
         self.safe_mode = not self.safe_mode
-        if self.safe_mode is False:
+        self.update_overview_tab()
+
+    # Increases the safe mode strength
+    def toggle_safe_mode_strength(self):
+        if self.safe_mode_strength >= len(self.safe_mode_timing) - 1:
             self.safe_mode_strength = 0
         else:
-            self.safe_mode_strength = self.safe_mode_strength_saved
-        self.update_overview_tab()
-
-
-    # Changes safe mode strength
-    def change_safe_mode_strength(self):
-        if self.safe_mode_strength < 3:
             self.safe_mode_strength += 1
-        else:
-            self.safe_mode_strength = 1
-        self.safe_mode_strength_saved = self.safe_mode_strength
         self.update_overview_tab()
 
+    # Toggles the map specific mode
+    def toggle_map_specific(self):
+        self.map_specific_mode = not self.map_specific_mode
 
-    # Toggles map specific agents
-    def toggle_map_specific_mode(self):
-        self.map_specific_enabled = not self.map_specific_enabled
-
-        with open(f"data/agent_files/{self.save_file}.json", 'r') as file:
-            json_file = json.load(file)
-            if self.map_specific_enabled is False:
-                self.selected_agent = json_file["DEFAULT"]
-            else:
-                self.selected_agent = self.maps[self.selected_map]
-
-        if self.map_specific_enabled is True:
-            self.random_agent_button.configure(state='disabled')
-            self.select_agent_dropdown.configure(state='disabled')
+        if self.map_specific_mode is True:
+            self.random_agent_button.configure(state=tk.DISABLED)
+            self.select_agent_dropdown.configure(state=tk.DISABLED)
         else:
-            self.random_agent_button.configure(state='normal')
-            self.select_agent_dropdown.configure(state='normal')
+            if any(agent is True for agent in self.random_agents_dict):
+                self.random_agent_button.configure(state=tk.NORMAL)
+            self.select_agent_dropdown.configure(state=tk.NORMAL)
 
         self.update_overview_tab()
-        self.update_map_tab()
+        self.update_map_specific_tab()
 
-
-    # Toggles random agent mode
+    # Toggles the random agent mode
     def toggle_random_agent_mode(self):
-        self.random_agent = not self.random_agent
+        self.random_agent_mode = not self.random_agent_mode
 
-        if self.random_agent is True:
-            self.select_map_specific_button.configure(state='disabled')
-            self.select_agent_dropdown.configure(state='disabled')
+        if self.random_agent_mode is True:
+            self.select_agent_dropdown.configure(state=tk.DISABLED)
+            self.select_map_specific_button.configure(state=tk.DISABLED)
         else:
-            self.select_map_specific_button.configure(state='normal')
-            self.select_agent_dropdown.configure(state='normal')
+            self.select_agent_dropdown.configure(state=tk.NORMAL)
+            self.select_map_specific_button.configure(state=tk.NORMAL)
 
         self.update_overview_tab()
 
-
-    # Toggles hover mode
+    # Toggles the hover mode
     def toggle_hover_mode(self):
         self.hover_mode = not self.hover_mode
         self.update_overview_tab()
-        
 
+    # endregion
 
+    # region Config and Save Reading and Writing
 
-    #---------------AGENT SELECTION---------------#
+    # Loads all the data from the config.json and current save file
+    def load_data_from_files(self):
+        # Loads the config.json file
+        with open("data/config.json", "r") as config_file:
+            config = json.load(config_file)
 
-    # Changes active save/config file in config file
-    def change_active_save_file(self, file_name):
-        self.save_file = file_name
+            self.current_save_file = config["ACTIVE_SAVE_FILE"]
+            self.default_agents = config["DEFAULT_AGENTS"]
+            self.box_info = config["BOX_INFO"]
+            self.config_file_agents = config["ALL_AGENTS"]
+            self.map_names = config["MAPS"]
+            self.minimize_to_tray = config["MINIMIZE_TO_TRAY"]
+            self.start_minimized = config["START_MINIMIZED"]
+
+        # Loads the map images
+        for map_name in self.map_names:
+            try:
+                map_binary = PIL.Image.open(
+                    f"images/map_images/{map_name}.png"
+                ).tobytes()
+                self.map_lookup[map_name] = map_binary
+            except (PIL.UnidentifiedImageError, FileNotFoundError):
+                self.map_lookup[map_name] = None
+
+        # Loads the save file data
+        with open(f"data/save_files/{self.current_save_file}.json", "r") as sf:
+            save_file_json = json.load(sf)
+            self.selected_agent = save_file_json["SELECTED_AGENT"]
+            self.unlocked_agents_dict = save_file_json["UNLOCKED_AGENTS"]
+            self.random_agents_dict = save_file_json["RANDOM_AGENTS"]
+            self.map_specific_agents_dict = save_file_json["MAP_SPECIFIC_AGENTS"]
+
+        # Creates a list of all agents
+        self.all_agents = list(
+            agent
+            for role in self.config_file_agents
+            for agent in self.config_file_agents[role]
+        )
+        self.all_agents.sort()
+
+        # Makes sure any new agents are added to the save file as unlocked
+        for agent in self.all_agents:
+            if agent not in self.unlocked_agents_dict:
+                if agent in self.default_agents:
+                    self.unlocked_agents_dict[agent] = True
+                else:
+                    self.unlocked_agents_dict[agent] = False
+
+            if agent not in self.random_agents_dict:
+                self.random_agents_dict[agent] = False
+
+        # Removes any agents from save file that are not in the config file
+        for agent in self.unlocked_agents_dict.copy():
+            if agent not in self.all_agents:
+                del self.unlocked_agents_dict[agent]
+
+        for agent in self.random_agents_dict.copy():
+            if agent not in self.all_agents:
+                del self.random_agents_dict[agent]
+
+        # Makes sure that all default agents are enabled
+        for agent in self.default_agents:
+            self.unlocked_agents_dict[agent] = True
+
+        # Makes sure any new maps are added to the map specific agents dict
+        for map_name in self.map_names:
+            if map_name not in self.map_specific_agents_dict:
+                self.map_specific_agents_dict[map_name] = self.default_agents[0]
+
+        # Removes any maps from the save file that are not in the config file
+        for map_name in self.map_specific_agents_dict.copy():
+            if map_name not in self.map_names:
+                del self.map_specific_agents_dict[map_name]
+
+        # Calculates location of box coords
+        for box_index in range(len(self.all_agents)):
+            self.box_coords[f"Box{box_index}"] = (
+                self.box_info["TOPLEFT"][0]
+                + (box_index % self.box_info["COLUMNS"]) * self.box_info["SIZE"]
+                + (box_index % self.box_info["COLUMNS"]) * self.box_info["XDIST"],
+                self.box_info["TOPLEFT"][1]
+                + (box_index // (self.box_info["COLUMNS"])) * self.box_info["YDIST"],
+            )
+
+        # Sorts the agents alphabetically before saving them
+        self.unlocked_agents_dict = dict(sorted(self.unlocked_agents_dict.items()))
+        self.random_agents_dict = dict(sorted(self.random_agents_dict.items()))
+        self.map_specific_agents_dict = dict(
+            sorted(self.map_specific_agents_dict.items())
+        )
+
+        # Gets Coords for the selected agent
+        self.find_agent_coords(self.selected_agent)
+
+        # Saves the data to the current save file
+        self.save_current_data()
+
+    # Saves all the data to the current save file
+    def save_current_data(self):
+        with open(f"data/save_files/{self.current_save_file}.json", "w") as sf:
+            save_file_json = {
+                "SELECTED_AGENT": self.selected_agent,
+                "UNLOCKED_AGENTS": self.unlocked_agents_dict,
+                "RANDOM_AGENTS": self.random_agents_dict,
+                "MAP_SPECIFIC_AGENTS": self.map_specific_agents_dict,
+            }
+            sf.write(json.dumps(save_file_json, indent=4))
+
+    # Changes the current active save file
+    def change_current_save_file(self, file_name):
+        if file_name not in self.save_files:
+            with open(
+                f"data/save_files/{self.current_save_file}.json", "r"
+            ) as config_raw:
+                config_payload = json.load(config_raw)
+            with open(f"data/save_files/{file_name}.json", "w") as new_config:
+                json.dump(config_payload, new_config, indent=4)
+
+        self.current_save_file = file_name
+
         with open("data/config.json", "r") as config_file:
             config = json.load(config_file)
             config["ACTIVE_SAVE_FILE"] = file_name
-        with open("data/config.json", 'w') as file:
+        with open("data/config.json", "w") as file:
             file.write(json.dumps(config, indent=4))
 
+        self.load_data_from_files()
+        self.find_save_files()
 
-    # Generates list of config files to switch to
-    def find_config_files(self):
-        self.config_files = ['default']
-        for file in os.listdir("./data/agent_files"):
+        self.update_gui()
+
+    # Finds all save files in data/save_files
+    def find_save_files(self):
+        self.save_files = ["default"]
+        for file in os.listdir("./data/save_files"):
             if file.endswith(".json") and file.startswith("default") is False:
-                self.config_files.append(file.removesuffix(".json"))
+                self.save_files.append(file.removesuffix(".json"))
 
+    # endregion
 
-    # Updates the current agent config file
-    def change_config_file(self, file_name):
-        if file_name not in self.config_files:
-            with open(f"data/agent_files/{self.save_file}.json", "r") as config_raw:
-                config_payload = json.load(config_raw)
-            with open(f"data/agent_files/{file_name}.json", "w") as new_config:
-                json.dump(config_payload, new_config, indent=4)
-        
-        self.change_active_save_file(file_name)
-        
-        self.load_agents() # Does unnecessary work if new file is created but leads to less code
+    # region Agent Toggles
 
-        self.find_config_files()
-        self.update_gui()
-
-
-    # Loads agents from json file
-    def load_agents(self):
-        with open('data/config.json', 'r') as config_raw:
-            config = json.load(config_raw)
-
-            # List of all coords to click on
-            self.box_info = config["BOX_INFO"]
-
-            # Get default agents, these cannot be disabled
-            default_agents = config["DEFAULT_AGENTS"]
-
-            # Get list of all current agents and their role
-            self.agent_roles = config["AGENT_ROLES"]
-            
-        # Adds new agents and random agents section to config file
-        with open(f"data/agent_files/{self.save_file}.json", 'r') as f:
-            json_file = json.load(f)
-            agents_in_config_file = [agent for agent in json_file["AGENTS"].keys()]
-
-            try: random_agents_in_config_file = [agent for agent in json_file["RANDOM_AGENTS"].keys()]
-            except KeyError:
-                json_file["RANDOM_AGENTS"] = {}
-                random_agents_in_config_file = []
-
-            self.all_agents = list()
-            for role in self.agent_roles: # Goes through each role (Controller, Duelist, etc.)
-                for agent in self.agent_roles[role]: # Goes through each agent in that role
-                    self.all_agents.append(agent) # Appends agent to list of all agents
-            self.all_agents.sort()
-
-            for agent in self.all_agents: # Adds new agents to config file
-                if agent not in agents_in_config_file and agent not in default_agents:
-                    json_file["AGENTS"][agent] = False
-                if agent not in agents_in_config_file and agent in default_agents:
-                    json_file["AGENTS"][agent] = True
-                if agent not in random_agents_in_config_file:
-                    json_file["RANDOM_AGENTS"][agent] = False
-
-            for agents in agents_in_config_file: # Removes any agents in agent section that are not in config file
-                if agents not in self.all_agents:
-                    json_file["AGENTS"].pop(agents)
-            
-            for agents in random_agents_in_config_file: # Removes any agents from random agents that are not in config file
-                if agents not in self.all_agents:
-                    json_file["RANDOM_AGENTS"].pop(agents)
-
-            with open(f"data/agent_files/{self.save_file}.json", 'w') as file:
-                file.write(json.dumps(json_file, indent=4))
-
-        with open(f"data/agent_files/{self.save_file}.json", 'r') as f:
-            json_file = json.load(f)
-
-            # Dict of map specific agents
-            self.maps = json_file["MAP_SPECIFIC"]
-
-            # Get list of available agents (With True/False)
-            list_of_available_agents = json_file["AGENTS"]
-            
-            # dict of all coords for boxes and lock button using for loop. the top right box is "TOPRIGHT_COORDS", there are "COLUMNS" columns, and there are a total amount of boxes as the len(self.all_agents)
-            self.box_coords = {}
-            for i in range(len(self.all_agents)):
-                self.box_coords[f"Box{i}"] = (self.box_info["TOPLEFT"][0] + (i%self.box_info["COLUMNS"])*self.box_info["SIZE"] + (i%self.box_info["COLUMNS"])*self.box_info["XDIST"],
-                                                self.box_info["TOPLEFT"][1] + (i//(self.box_info["COLUMNS"]))*self.box_info["YDIST"])
-
-            # Get the first map in the dict
-            self.selected_map = next(iter(self.maps))
-
-            self.unlockable_agents = []
-            for agent in self.all_agents:  # Adds rest of agent names to unlockable agents
-                if agent not in default_agents:
-                    self.unlockable_agents.append(agent)
-
-            # Adds unlocked agents to self.unlocked_agents which shows only agents that can be selected
-            self.unlocked_agents = []
-            for agent in list_of_available_agents:
-                if list_of_available_agents[agent] is True:
-                    self.unlocked_agents.append(agent)
-            self.unlocked_agents.sort()
-
-            # Adds random agents to list
-            self.random_agent_list = []
-            for agent in json_file["RANDOM_AGENTS"]:
-                if json_file["RANDOM_AGENTS"][agent] is True and agent in self.unlocked_agents:
-                    self.random_agent_list.append(agent)
-            self.random_agent_list.sort()
-
-            # Get default agent
-            try:
-                if self.map_specific_enabled is False:
-                    self.selected_agent = json_file["DEFAULT"]
-                    if self.selected_agent not in self.unlocked_agents:
-                        self.selected_agent = self.unlocked_agents[0]
-                else:
-                    self.selected_agent = self.maps[self.selected_map]
-                    if self.selected_agent not in self.unlocked_agents:
-                        self.selected_agent = self.unlocked_agents[0]
-            except KeyError:
-                pass
-
-
-    # Toggles the unlock status of agent in the json file
-    def toggle_agent(self, agent):
-
-        non_agent_button_names = ['All', 'None']
-
-        with open(f"data/agent_files/{self.save_file}.json", 'r') as file:
-            json_file = json.load(file)
-
-            if agent in non_agent_button_names:
-                if agent == "All":
-                    for agent in self.unlockable_agents:
-                            json_file["AGENTS"][agent] = True
-
-                elif agent == "None":
-                    for agent in self.unlockable_agents:
-                            json_file["AGENTS"][agent] = False
-
-            else:
-                json_file["AGENTS"][agent] = not json_file["AGENTS"][agent]
-
-        with open(f"data/agent_files/{self.save_file}.json", 'w') as file:
-            file.write(json.dumps(json_file, indent=4))
-
-        self.load_agents()
-        self.update_gui()
-
-
-    # Toggles the random agent
-    def toggle_random_agent(self, agent):
-
-        non_agent_button_names = ['All', 'None', 'Controllers', 'Duelists', 'Initiators', 'Sentinels']
-
-        with open(f"data/agent_files/{self.save_file}.json", 'r') as file:
-            json_file = json.load(file)
-
-            if agent in non_agent_button_names:
-                if agent == "All":
-                    for agent in self.all_agents:
-                        if agent in self.unlocked_agents:
-                            json_file["RANDOM_AGENTS"][agent] = True
-
-                elif agent == "None":
-                    for agent in self.all_agents:
-                        if agent in self.unlocked_agents:
-                            json_file["RANDOM_AGENTS"][agent] = False
-                
-                elif agent == "Controllers":
-                    for agent in self.agent_roles["CONTROLLERS"]:
-                        if agent in self.unlocked_agents:
-                            json_file["RANDOM_AGENTS"][agent] = True
-                
-                elif agent == "Duelists":
-                    for agent in self.agent_roles["DUELISTS"]:
-                        if agent in self.unlocked_agents:
-                            json_file["RANDOM_AGENTS"][agent] = True
-                
-                elif agent == "Initiators":
-                    for agent in self.agent_roles["INITIATORS"]:
-                        if agent in self.unlocked_agents:
-                            json_file["RANDOM_AGENTS"][agent] = True
-
-                elif agent == "Sentinels":
-                    for agent in self.agent_roles["SENTINELS"]:
-                        if agent in self.unlocked_agents:
-                            json_file["RANDOM_AGENTS"][agent] = True
-            
-            else:
-                json_file["RANDOM_AGENTS"][agent] = not json_file["RANDOM_AGENTS"][agent]
-
-        with open(f"data/agent_files/{self.save_file}.json", 'w') as file:
-            file.write(json.dumps(json_file, indent=4))
-
-        self.load_agents()
-        self.update_overview_tab()
-        self.update_random_tab()
-
-    # Updates default or map agent in json file
-    def change_agent(self, agent):
-        self.selected_agent = agent
-
-        with open(f"data/agent_files/{self.save_file}.json", 'r') as file:
-            json_file = json.load(file)
-
-            if self.map_specific_enabled is True:
-                json_file["MAP_SPECIFIC"][self.selected_map] = agent
-                self.maps = json_file["MAP_SPECIFIC"]
-            else:
-                json_file["DEFAULT"] = agent
-
-        with open(f"data/agent_files/{self.save_file}.json", 'w') as file:
-            file.write(json.dumps(json_file, indent=4))
-
+    # Toggles the default / locking agent
+    def toggle_selected_agent(self, agent_name):
+        self.selected_agent = agent_name
+        self.find_agent_coords(self.selected_agent)
+        self.save_current_data()
         self.update_overview_tab()
 
+    # Toggles whether or not the agent is unlocked
+    def toggle_unlocked_agent_status(self, agent_name):
+        match agent_name:
+            case "all":
+                for agent in self.all_agents:
+                    if agent not in self.default_agents:
+                        self.unlocked_agents_dict[agent] = True
+            case "none":
+                for agent in self.all_agents:
+                    if agent not in self.default_agents:
+                        self.unlocked_agents_dict[agent] = False
+            case _:
+                self.unlocked_agents_dict[agent_name] = not self.unlocked_agents_dict[
+                    agent_name
+                ]
 
-    # Updates map specific agents in json file from GUI
-    def change_map_specific_agent(self, agent, map):
-        with open(f"data/agent_files/{self.save_file}.json", 'r') as file:
-            json_file = json.load(file)
-            json_file["MAP_SPECIFIC"][map] = agent
-            self.maps = json_file["MAP_SPECIFIC"]
+        self.save_current_data()
+        self.update_gui()
 
-        with open(f"data/agent_files/{self.save_file}.json", 'w') as file:
-            file.write(json.dumps(json_file, indent=4))
+    # Toggles the agent in the random agent tab
+    def toggle_random_agent_status(self, agent_name):
+        if agent_name in [
+            "all",
+            "none",
+            "controllers",
+            "duelists",
+            "initiators",
+            "sentinels",
+        ]:
+            match agent_name:
+                case "all":
+                    for agent in self.all_agents:
+                        if self.unlocked_agents_dict[agent] is True:
+                            self.random_agents_dict[agent] = True
+                case "none":
+                    for agent in self.all_agents:
+                        self.random_agents_dict[agent] = False
+                case _:
+                    if all(
+                        self.random_agents_dict[agent] is True
+                        for agent in self.config_file_agents[agent_name.upper()]
+                        if self.unlocked_agents_dict[agent] is True
+                    ):
+                        for agent in self.config_file_agents[agent_name.upper()]:
+                            if self.unlocked_agents_dict[agent] is True:
+                                self.random_agents_dict[agent] = False
+                    else:
+                        for agent in self.config_file_agents[agent_name.upper()]:
+                            if self.unlocked_agents_dict[agent] is True:
+                                self.random_agents_dict[agent] = True
+        else:
+            self.random_agents_dict[agent_name] = not self.random_agents_dict[
+                agent_name
+            ]
 
-        self.update_map_tab()
+        self.save_current_data()
+        self.update_random_agent_tab()
+        self.update_overview_tab()
 
+    # Toggles which agent is selected for a specific map
+    def toggle_map_specific_agent(self, agent_name, map_name):
+        self.map_specific_agents_dict[map_name] = agent_name
+        self.save_current_data()
 
-    #---------------AGENT LOCKING---------------#
-    
-    # Thread that runs in background, detecting map/running agent lock/clicking on agent
-    def agent_lock(self):
+    # endregion
+
+    # region Locking
+
+    def locking_thread(self):
         time.sleep(1)
         while self.active_thread is True:
-            time.sleep(0.2)
-            if self.in_valorant_menu is True and self.active is True and self.active_thread is True:
-                if self.map_specific_enabled is True:
-                    game_map = None
-
-                    while game_map == None and self.active_thread is True and self.in_valorant_menu is True and self.active is True and self.map_specific_enabled is True:
-                        time.sleep(0.1)
-                        current_map = PIL.ImageGrab.grab(
-                            bbox=(878, 437, 1047, 646)).tobytes()
-
-                        game_map = self.maps_lookup.get(current_map)
-
-                    if self.map_specific_enabled is True:
-                        agent_screen = self.locate_agent_select(True)
-
+            time.sleep(0.3)
+            if self.lock_button is None:
+                self.lock_button = (
+                    self.box_info["LOCK_COORDS"][0]
+                    + random.randint(0, self.box_info["LOCK_SIZE"][0]),
+                    self.box_info["LOCK_COORDS"][1]
+                    + random.randint(0, self.box_info["LOCK_SIZE"][1]),
+                )
+            if (
+                self.locking is True
+                and self.active is True
+                and self.active_thread is True
+            ):
+                if self.map_specific_mode is False:
+                    self.locate_agent_screen()
                 else:
-                    agent_screen = self.locate_agent_select()
-
-                if agent_screen is True:
-                    if self.random_agent is False:
-                        self.active_coords = self.get_coords_of_agent(
-                            self.selected_agent)
-                    else:
-                        self.active_coords = self.get_coords_of_agent(
-                            random.choice(self.random_agent_list))
-                    start_lock = time.time()
-                    self.lock_button = (self.box_info["LOCK_COORDS"][0]+random.randint(0,self.box_info["LOCK_SIZE"][0]), self.box_info["LOCK_COORDS"][1]+random.randint(0,self.box_info["LOCK_SIZE"][1]))
-
-                    if self.safe_mode is False:
-                        self.mouse.position = (
-                            self.active_coords[0], self.active_coords[1])
-                        time.sleep(0.01)
-                        self.mouse.click(pynmouse.Button.left, 1)
-                        time.sleep(0.06)
-                        self.mouse.position = (
-                            self.lock_button[0], self.lock_button[1])
-                        
-                        if self.hover_mode is False:
-                            time.sleep(0.01)
-                            self.mouse.click(pynmouse.Button.left, 1)
-
-                    else:
-                        low_timing = self.safe_mode_timing[self.safe_mode_strength-1][0]/4
-                        high_timing = self.safe_mode_timing[self.safe_mode_strength-1][1]/4
-
-                        time.sleep(round(random.uniform(low_timing, high_timing), 2))
-                        self.mouse.position = (
-                            self.active_coords[0], self.active_coords[1])
-                        time.sleep(round(random.uniform(low_timing, high_timing), 2))
-                        self.mouse.click(pynmouse.Button.left, 1)
-                        time.sleep(round(random.uniform(low_timing, high_timing), 2))
-                        self.mouse.position = (
-                            self.lock_button[0], self.lock_button[1])
-                        
-                        if self.hover_mode is False:
-                            time.sleep(round(random.uniform(low_timing, high_timing), 2))
-                            self.mouse.click(pynmouse.Button.left, 1)
-
-
-                    end_lock = time.time()
-
-                    self.time_to_lock = round(((end_lock - start_lock)*1000), 2)
-                    self.average_time_to_lock[self.safe_mode_strength].append(self.time_to_lock)
-
-                    self.in_valorant_menu = False
-                    self.total_games_locked += 1
-                    self.update_overview_tab()
-                    time.sleep(1)
-
-            while self.active is True and self.active_thread is True and self.in_valorant_menu is False:
-                time.sleep(1)
-                menu_screen_1 = PIL.ImageGrab.grab(
-                    bbox=(814, 243, 892, 244)).tobytes()
-                menu_screen_2 = PIL.ImageGrab.grab(
-                    bbox=(1330, 330, 1455, 353)).tobytes()
-                if menu_screen_1 in self.in_menu_images or menu_screen_2 in self.in_menu_images:
-                    self.in_valorant_menu = True
-                    self.update_overview_tab()
-                    try:
-                        self.icon.update_menu()
-                    except AttributeError: pass
-
-
-    # Locates when in the agent select screen
-    def locate_agent_select(self, using_specific_agent=False):
-        total_confirmations = 0
-        while self.active_thread is True and self.in_valorant_menu is True and self.active is True and self.map_specific_enabled == using_specific_agent:
-            agent_screen_section = PIL.ImageGrab.grab(
-                bbox=(self.locking_coords)).tobytes()
+                    self.locate_map_screen()
             
+
+    def locate_map_screen(self):
+        game_map = None
+        while (
+            game_map == None
+            and self.active_thread is True
+            and self.locking is True
+            and self.active is True
+            and self.map_specific_mode is True
+        ):
+            time.sleep(0.1)
+            current_map = PIL.ImageGrab.grab(bbox=(878, 437, 1047, 646)).tobytes()
+            game_map = self.map_lookup.get(current_map)
+
+        if game_map is not None:
+            self.locate_agent_screen(True)
+        else:
+            self.locking_thread()
+
+    def locate_agent_screen(self, map_specific_toggle=False):
+        total_confirmations = 0
+        self.start_lock = None
+        while (
+            self.active_thread is True
+            and self.locking is True
+            and self.active is True
+            and self.map_specific_mode is map_specific_toggle
+        ):
+            agent_screen_section = PIL.ImageGrab.grab(
+                bbox=(self.locking_coords)
+            ).tobytes()
+
             if agent_screen_section == self.agent_select_image:
                 total_confirmations += 1
 
-                if total_confirmations > self.required_confirmations:
-                    return True
-                
-            else:
-                total_confirmations = 0
-                
-        return False
+                if total_confirmations >= self.locking_confirmations:
+                    self.start_lock = time.time()
+                    self.lock_agent()
+                    break
+        self.locking_thread()
+
+    def lock_agent(self):
+        if self.random_agent_mode is True:
+            self.find_agent_coords(random.choice(list(agent for agent in self.random_agents_dict if self.random_agents_dict[agent] is True)))
+        if self.safe_mode is False:
+            self.mouse.position = (self.agent_coords[0], self.agent_coords[1])
+            time.sleep(0.01)
+            self.mouse.click(pynmouse.Button.left, 1)
+            time.sleep(0.06)
+            self.mouse.position = (self.lock_button[0], self.lock_button[1])
+
+            if self.hover_mode is False:
+                time.sleep(0.01)
+                self.mouse.click(pynmouse.Button.left, 1)
+        else:
+            low_timing = self.safe_mode_timing[self.safe_mode_strength - 1][0] / 4
+            high_timing = self.safe_mode_timing[self.safe_mode_strength - 1][1] / 4
+
+            time.sleep(round(random.uniform(low_timing, high_timing), 2))
+            self.mouse.position = (self.agent_coords[0], self.agent_coords[1])
+            time.sleep(round(random.uniform(low_timing, high_timing), 2))
+            self.mouse.click(pynmouse.Button.left, 1)
+            time.sleep(round(random.uniform(low_timing, high_timing), 2))
+            self.mouse.position = (self.lock_button[0], self.lock_button[1])
+
+            if self.hover_mode is False:
+                time.sleep(round(random.uniform(low_timing, high_timing), 2))
+                self.mouse.click(pynmouse.Button.left, 1)
+
+        end_lock = time.time()
+        self.time_to_lock = round((time.time() - self.start_lock) * 1000, 2)
+        if self.safe_mode is True:
+            self.average_time_to_lock[self.safe_mode_strength].append(self.time_to_lock)
+        else:
+            self.average_time_to_lock[-1].append(self.time_to_lock)
+
+        self.locking = False
+        self.total_games_used += 1
+        self.lock_button = None
+        self.update_overview_tab()
+        self.find_game_end()
+
+    def find_game_end(self):
+        while self.active is True and self.active_thread is True and self.locking is False:
+            time.sleep(1)
+            menu_screen_1 = PIL.ImageGrab.grab(
+                bbox=(814, 243, 892, 244)).tobytes()
+            menu_screen_2 = PIL.ImageGrab.grab(
+                bbox=(1330, 330, 1455, 353)).tobytes()
+            if menu_screen_1 in self.in_menu_images or menu_screen_2 in self.in_menu_images:
+                self.locking = True
+                self.update_overview_tab()
+                try:
+                    self.icon.update_menu()
+                except AttributeError: pass
+                self.locking_thread()
+                break
+        self.locking_thread()
 
 
-    # Returns box coords of agent based on agent name
-    def get_coords_of_agent(self, agent):
-        agent_index = self.unlocked_agents.index(agent)
-        corner_coords = self.box_coords[f'Box{agent_index}']
-    
-        return (corner_coords[0]+random.randint(0, self.box_info["SIZE"]), corner_coords[1]+random.randint(0, self.box_info["SIZE"]))
-        # return (corner_coords[0]+self.box_info["SIZE"]/2, corner_coords[1]+self.box_info["SIZE"]/2)
+    # Returns the coords for the agent selected
+    def find_agent_coords(self, agent_name):
+        try:
+            # Turns agent dict into list of agents with True values
+            unlocked_agents = list(
+                agent
+                for agent, unlock_status in self.unlocked_agents_dict.items()
+                if unlock_status is True
+            )
+
+            # Finds the index of the agent selected
+            agent_index = unlocked_agents.index(agent_name)
+
+            # Finds the corner coords of the box the agent is in
+            corner_coords = self.box_coords[f"Box{agent_index}"]
+
+            # Returns the coords of the agent with a random offset
+            self.agent_coords = (
+                corner_coords[0] + random.randint(0, self.box_info["SIZE"]),
+                corner_coords[1] + random.randint(0, self.box_info["SIZE"]),
+            )
+
+            return None
+
+        # Disable instalocking if the agent trying to be selected is not unlocked
+        except ValueError:
+            self.active = False
+            return None
+
+    # endregion
 
 
-# Runs when the program is started as a window
 if __name__ == "__main__":
     # install_requirements()
-    p = Program()
-    p.mainloop()
+    program = Program()
+    program.mainloop()

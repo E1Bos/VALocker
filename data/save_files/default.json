@@ -1,5 +1,6 @@
 {
-    "AGENTS": {
+    "SELECTED_AGENT": "Brimstone",
+    "UNLOCKED_AGENTS": {
         "Astra": false,
         "Breach": false,
         "Brimstone": true,
@@ -22,8 +23,31 @@
         "Viper": false,
         "Yoru": false
     },
-    "MAP_SPECIFIC": {
-        "Ascent": "Cypher",
+    "RANDOM_AGENTS": {
+        "Astra": false,
+        "Breach": false,
+        "Brimstone": false,
+        "Chamber": false,
+        "Cypher": false,
+        "Fade": false,
+        "Gekko": false,
+        "Harbor": false,
+        "Jett": false,
+        "Kayo": false,
+        "Killjoy": false,
+        "Neon": false,
+        "Omen": false,
+        "Phoenix": false,
+        "Raze": false,
+        "Reyna": false,
+        "Sage": false,
+        "Skye": false,
+        "Sova": false,
+        "Viper": false,
+        "Yoru": false
+    },
+    "MAP_SPECIFIC_AGENTS": {
+        "Ascent": "Brimstone",
         "Bind": "Brimstone",
         "Breeze": "Brimstone",
         "Fracture": "Brimstone",
@@ -32,6 +56,5 @@
         "Lotus": "Brimstone",
         "Pearl": "Brimstone",
         "Split": "Brimstone"
-    },
-    "DEFAULT": "Cypher"
+    }
 }

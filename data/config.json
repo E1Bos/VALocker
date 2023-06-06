@@ -1,5 +1,6 @@
 {
     "START_MINIMIZED": false,
+    "MINIMIZE_TO_TRAY": false,
     "ACTIVE_SAVE_FILE": "default",
     "DEFAULT_AGENTS": [
         "Brimstone",
@@ -26,7 +27,7 @@
             889
         ]
     },
-    "AGENT_ROLES": {
+    "ALL_AGENTS": {
         "CONTROLLERS": [
             "Brimstone",
             "Omen",
@@ -56,5 +57,16 @@
             "Sage",
             "Chamber"
         ]
-    }
+    },
+    "MAPS": [
+        "Ascent",
+        "Bind",
+        "Breeze",
+        "Fracture",
+        "Haven",
+        "Icebox",
+        "Split",
+        "Lotus",
+        "Pearl"
+    ]
 }
