@@ -32,7 +32,9 @@ class Program(customtkinter.CTk):
         self.locking = True
         self.locking_coords = (945, 866, 955, 867)
         self.locking_image_path = "images/agent_screen/agent_screen_bar.png"
-        self.locking_confirmations = 2
+        self.locking_confirmations = 3
+        self.locking_button = None
+        self.agent_coords_offset = (5, 5)
         # self.locking_coords = (958, 866, 962, 870) # agent screen dot
         # self.locking_coords = (959, 867, 961, 869) # agent screen dot solid
 
@@ -65,6 +67,7 @@ class Program(customtkinter.CTk):
         self.hover_mode = False
 
         # Agent Data
+        self.default_agents = None
         self.selected_agent = None
         self.all_agents = None
 
@@ -76,7 +79,7 @@ class Program(customtkinter.CTk):
         )
 
         # Box Coords
-        self.box_coords = dict()
+        self.box_coords = None
         self.lock_button = None
 
         # Save Files
@@ -110,13 +113,13 @@ class Program(customtkinter.CTk):
 
         # Loads data from save files
         self.load_data_from_files()
+
         # Finds all save files
         self.find_save_files()
 
         # Creates Mouse Controller
         self.mouse = pynmouse.Controller()
 
-    
         # Creates GUI
         self.create_gui()
 
@@ -134,7 +137,6 @@ class Program(customtkinter.CTk):
 
         # Creates Thread
         self.agent_thread = threading.Thread(target=self.locking_thread).start()
-
 
     def exit(self):
         self.active_thread = False
@@ -465,7 +467,10 @@ class Program(customtkinter.CTk):
             role = role.lower()
 
             role_frames[role] = customtkinter.CTkFrame(
-                random_agent_individual_toggle_frame, width=120, height=100, fg_color="#333333"
+                random_agent_individual_toggle_frame,
+                width=120,
+                height=100,
+                fg_color="#333333",
             )
             role_frames[role].grid(row=0, column=index % 4, padx=5, pady=5, sticky="n")
 
@@ -574,8 +579,10 @@ class Program(customtkinter.CTk):
     # Updates overview tab
     def update_overview_tab(self):
         # Stats
-        if self.safe_mode is False: average_time_to_lock_index = -1
-        else: average_time_to_lock_index = self.safe_mode_strength
+        if self.safe_mode is False:
+            average_time_to_lock_index = -1
+        else:
+            average_time_to_lock_index = self.safe_mode_strength
         self.average_time_to_lock_value.configure(
             text=f"{'-' if len(self.average_time_to_lock[average_time_to_lock_index]) == 0 else round(sum(self.average_time_to_lock[average_time_to_lock_index])/len(self.average_time_to_lock[average_time_to_lock_index]),2)} ms",
         )
@@ -841,26 +848,27 @@ class Program(customtkinter.CTk):
     # Loads all the data from the config.json and current save file
     def load_data_from_files(self):
         # Loads the config.json file
-        with open("data/config.json", "r") as config_file:
-            config = json.load(config_file)
+        if self.default_agents is None:
+            with open("data/config.json", "r") as config_file:
+                config = json.load(config_file)
 
-            self.current_save_file = config["ACTIVE_SAVE_FILE"]
-            self.default_agents = config["DEFAULT_AGENTS"]
-            self.box_info = config["BOX_INFO"]
-            self.config_file_agents = config["ALL_AGENTS"]
-            self.map_names = config["MAPS"]
-            self.minimize_to_tray = config["MINIMIZE_TO_TRAY"]
-            self.start_minimized = config["START_MINIMIZED"]
+                self.current_save_file = config["ACTIVE_SAVE_FILE"]
+                self.default_agents = config["DEFAULT_AGENTS"]
+                self.box_info = config["BOX_INFO"]
+                self.config_file_agents = config["ALL_AGENTS"]
+                self.map_names = config["MAPS"]
+                self.minimize_to_tray = config["MINIMIZE_TO_TRAY"]
+                self.start_minimized = config["START_MINIMIZED"]
 
-        # Loads the map images
-        for map_name in self.map_names:
-            try:
-                map_binary = PIL.Image.open(
-                    f"images/map_images/{map_name}.png"
-                ).tobytes()
-                self.map_lookup[map_name] = map_binary
-            except (PIL.UnidentifiedImageError, FileNotFoundError):
-                self.map_lookup[map_name] = None
+            # Loads the map images
+            for map_name in self.map_names:
+                try:
+                    map_binary = PIL.Image.open(
+                        f"images/map_images/{map_name}.png"
+                    ).tobytes()
+                    self.map_lookup[map_name] = map_binary
+                except (PIL.UnidentifiedImageError, FileNotFoundError):
+                    self.map_lookup[map_name] = None
 
         # Loads the save file data
         with open(f"data/save_files/{self.current_save_file}.json", "r") as sf:
@@ -913,14 +921,18 @@ class Program(customtkinter.CTk):
                 del self.map_specific_agents_dict[map_name]
 
         # Calculates location of box coords
-        for box_index in range(len(self.all_agents)):
-            self.box_coords[f"Box{box_index}"] = (
-                self.box_info["TOPLEFT"][0]
-                + (box_index % self.box_info["COLUMNS"]) * self.box_info["SIZE"]
-                + (box_index % self.box_info["COLUMNS"]) * self.box_info["XDIST"],
-                self.box_info["TOPLEFT"][1]
-                + (box_index // (self.box_info["COLUMNS"])) * self.box_info["YDIST"],
-            )
+        if self.box_coords is None:
+            self.box_coords = dict()
+            for box_index in range(len(self.all_agents)):
+                position_x = self.box_info["TOPLEFT"][0] + (
+                    (box_index % self.box_info["COLUMNS"])
+                    * (self.box_info["SIZE"] + self.box_info["XDIST"])
+                )
+                position_y = self.box_info["TOPLEFT"][1] + (
+                    (box_index // self.box_info["COLUMNS"])
+                    * (self.box_info["SIZE"] + self.box_info["YDIST"])
+                )
+                self.box_coords[f"Box{box_index}"] = (position_x, position_y)
 
         # Sorts the agents alphabetically before saving them
         self.unlocked_agents_dict = dict(sorted(self.unlocked_agents_dict.items()))
@@ -928,6 +940,14 @@ class Program(customtkinter.CTk):
         self.map_specific_agents_dict = dict(
             sorted(self.map_specific_agents_dict.items())
         )
+
+        # Makes sure selected agent is unlocked
+        if self.unlocked_agents_dict[self.selected_agent] is False:
+            self.selected_agent = list(
+                agent
+                for agent, unlock_status in self.unlocked_agents_dict.items()
+                if unlock_status is True
+            )[0]
 
         # Gets Coords for the selected agent
         self.find_agent_coords(self.selected_agent)
@@ -948,15 +968,10 @@ class Program(customtkinter.CTk):
 
     # Changes the current active save file
     def change_current_save_file(self, file_name):
-        if file_name not in self.save_files:
-            with open(
-                f"data/save_files/{self.current_save_file}.json", "r"
-            ) as config_raw:
-                config_payload = json.load(config_raw)
-            with open(f"data/save_files/{file_name}.json", "w") as new_config:
-                json.dump(config_payload, new_config, indent=4)
-
         self.current_save_file = file_name
+
+        if file_name not in self.save_files:
+            self.save_current_data()
 
         with open("data/config.json", "r") as config_file:
             config = json.load(config_file)
@@ -964,8 +979,9 @@ class Program(customtkinter.CTk):
         with open("data/config.json", "w") as file:
             file.write(json.dumps(config, indent=4))
 
-        self.load_data_from_files()
         self.find_save_files()
+
+        self.load_data_from_files()
 
         self.update_gui()
 
@@ -1002,6 +1018,14 @@ class Program(customtkinter.CTk):
                 self.unlocked_agents_dict[agent_name] = not self.unlocked_agents_dict[
                     agent_name
                 ]
+
+        # Makes sure selected agent is unlocked
+        if self.unlocked_agents_dict[self.selected_agent] is False:
+            self.selected_agent = list(
+                agent
+                for agent, unlock_status in self.unlocked_agents_dict.items()
+                if unlock_status is True
+            )[0]
 
         self.save_current_data()
         self.update_gui()
@@ -1059,23 +1083,21 @@ class Program(customtkinter.CTk):
         time.sleep(1)
         while self.active_thread is True:
             time.sleep(0.3)
-            if self.lock_button is None:
+            if (
+                self.locking is True
+                and self.active is True
+                and self.active_thread is True
+            ):
                 self.lock_button = (
                     self.box_info["LOCK_COORDS"][0]
                     + random.randint(0, self.box_info["LOCK_SIZE"][0]),
                     self.box_info["LOCK_COORDS"][1]
                     + random.randint(0, self.box_info["LOCK_SIZE"][1]),
                 )
-            if (
-                self.locking is True
-                and self.active is True
-                and self.active_thread is True
-            ):
                 if self.map_specific_mode is False:
                     self.locate_agent_screen()
                 else:
                     self.locate_map_screen()
-            
 
     def locate_map_screen(self):
         game_map = None
@@ -1092,8 +1114,6 @@ class Program(customtkinter.CTk):
 
         if game_map is not None:
             self.locate_agent_screen(True)
-        else:
-            self.locking_thread()
 
     def locate_agent_screen(self, map_specific_toggle=False):
         total_confirmations = 0
@@ -1114,12 +1134,18 @@ class Program(customtkinter.CTk):
                 if total_confirmations >= self.locking_confirmations:
                     self.start_lock = time.time()
                     self.lock_agent()
-                    break
-        self.locking_thread()
 
     def lock_agent(self):
         if self.random_agent_mode is True:
-            self.find_agent_coords(random.choice(list(agent for agent in self.random_agents_dict if self.random_agents_dict[agent] is True)))
+            self.find_agent_coords(
+                random.choice(
+                    list(
+                        agent
+                        for agent in self.random_agents_dict
+                        if self.random_agents_dict[agent] is True
+                    )
+                )
+            )
         if self.safe_mode is False:
             self.mouse.position = (self.agent_coords[0], self.agent_coords[1])
             time.sleep(0.01)
@@ -1131,8 +1157,12 @@ class Program(customtkinter.CTk):
                 time.sleep(0.01)
                 self.mouse.click(pynmouse.Button.left, 1)
         else:
-            low_timing = self.safe_mode_timing[self.safe_mode_strength - 1][0] / 4
-            high_timing = self.safe_mode_timing[self.safe_mode_strength - 1][1] / 4
+            low_timing = (
+                list(self.safe_mode_timing.values())[self.safe_mode_strength][0] / 4
+            )
+            high_timing = (
+                list(self.safe_mode_timing.values())[self.safe_mode_strength][1] / 4
+            )
 
             time.sleep(round(random.uniform(low_timing, high_timing), 2))
             self.mouse.position = (self.agent_coords[0], self.agent_coords[1])
@@ -1154,27 +1184,27 @@ class Program(customtkinter.CTk):
 
         self.locking = False
         self.total_games_used += 1
-        self.lock_button = None
         self.update_overview_tab()
         self.find_game_end()
 
     def find_game_end(self):
-        while self.active is True and self.active_thread is True and self.locking is False:
+        while (
+            self.active is True and self.active_thread is True and self.locking is False
+        ):
             time.sleep(1)
-            menu_screen_1 = PIL.ImageGrab.grab(
-                bbox=(814, 243, 892, 244)).tobytes()
-            menu_screen_2 = PIL.ImageGrab.grab(
-                bbox=(1330, 330, 1455, 353)).tobytes()
-            if menu_screen_1 in self.in_menu_images or menu_screen_2 in self.in_menu_images:
+            menu_screen_1 = PIL.ImageGrab.grab(bbox=(814, 243, 892, 244)).tobytes()
+            menu_screen_2 = PIL.ImageGrab.grab(bbox=(1330, 330, 1455, 353)).tobytes()
+            if (
+                menu_screen_1 in self.in_menu_images
+                or menu_screen_2 in self.in_menu_images
+            ):
                 self.locking = True
                 self.update_overview_tab()
                 try:
                     self.icon.update_menu()
-                except AttributeError: pass
+                except AttributeError:
+                    pass
                 self.locking_thread()
-                break
-        self.locking_thread()
-
 
     # Returns the coords for the agent selected
     def find_agent_coords(self, agent_name):
@@ -1192,18 +1222,23 @@ class Program(customtkinter.CTk):
             # Finds the corner coords of the box the agent is in
             corner_coords = self.box_coords[f"Box{agent_index}"]
 
-            # Returns the coords of the agent with a random offset
-            self.agent_coords = (
-                corner_coords[0] + random.randint(0, self.box_info["SIZE"]),
-                corner_coords[1] + random.randint(0, self.box_info["SIZE"]),
+            # Box Offset
+            offset_x, offset_y = random.randint(
+                self.agent_coords_offset[0],
+                (self.box_info["SIZE"] - self.agent_coords_offset[0]),
+            ), random.randint(
+                self.agent_coords_offset[1],
+                (self.box_info["SIZE"] - self.agent_coords_offset[1]),
             )
 
-            return None
-
+            # Returns the coords of the agent with a random offset
+            self.agent_coords = (
+                corner_coords[0] + offset_x,
+                corner_coords[1] + offset_y,
+            )
         # Disable instalocking if the agent trying to be selected is not unlocked
         except ValueError:
             self.active = False
-            return None
 
     # endregion
 
