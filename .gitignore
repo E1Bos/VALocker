@@ -1,6 +1,7 @@
 .gitignore
 data/__pycache__
 data/screenshotter.py
-data/old/instalocker_icon.py
-data/agent_files
+data/save_files
+data/user_settings.json
+data/instalocker_beta.py
 !default.json
