@@ -1,20 +1,23 @@
 # region Imports
-import subprocess
 
-subprocess.check_call(["pip", "install", "-r", "requirements.txt"])
 
-import json
-import os
-import random
-import threading
-import time
+# Imports all modules, if it fails it will install them
+try:
+    # Modules that are not installed by default
+    import customtkinter, pystray
+    import PIL.Image, PIL.ImageGrab
+    import pynput.mouse as pynmouse
+except ModuleNotFoundError:
+    # Installs missing modules if exception is raised
+    import subprocess
+    subprocess.run(["pip", "install", "-r", "requirements.txt"])
+    import customtkinter, pystray
+    import PIL.Image, PIL.ImageGrab
+    import pynput.mouse as pynmouse
+
+# Imports modules that are installed with Python
+import json, os, random, threading, time
 import tkinter as tk
-import customtkinter
-import PIL.Image
-import PIL.ImageGrab
-import pynput.mouse as pynmouse
-import pystray
-
 # endregion
 
 class Program(customtkinter.CTk):
