@@ -1,6 +1,5 @@
 # region Imports
 
-
 # Imports all modules, if it fails it will install them
 try:
     # Modules that are not installed by default
@@ -883,6 +882,9 @@ class Program(customtkinter.CTk):
                 self.current_save_file = user_settings["ACTIVE_SAVE_FILE"]
                 self.minimize_to_tray = user_settings["MINIMIZE_TO_TRAY"]
                 self.start_minimized = user_settings["START_MINIMIZED"]
+                self.active = user_settings["INSTALOCK_ON_START"]
+                self.safe_mode = user_settings["SAFE_MODE_ENABLED_ON_START"]
+                self.safe_mode_strength = user_settings["SAFE_MODE_STRENGTH_ON_START"]
                 self.total_games_used = user_settings["TIMES_USED"]
                 self.time_to_lock_list = user_settings["TIME_TO_LOCK"]
 
@@ -894,6 +896,9 @@ class Program(customtkinter.CTk):
                     "ACTIVE_SAVE_FILE": self.current_save_file,
                     "MINIMIZE_TO_TRAY": self.minimize_to_tray,
                     "START_MINIMIZED": self.start_minimized,
+                    "INSTALOCK_ON_START": self.active,
+                    "SAFE_MODE_ENABLED_ON_START": self.safe_mode,
+                    "SAFE_MODE_STRENGTH_ON_START": self.safe_mode_strength,
                     "TIMES_USED": self.total_games_used,
                     "TIME_TO_LOCK": self.time_to_lock_list,
                 }
@@ -901,16 +906,16 @@ class Program(customtkinter.CTk):
 
         # Creates a new user_settings.json file if one does not exist
         except FileNotFoundError:
-            self.current_save_file = "default"
             self.minimize_to_tray = False
             self.start_minimized = False
-            self.time_to_lock_list = list(list() for _ in range(len(self.safe_mode_timing)+1))
-            self.total_games_used = 0
             with open("data/user_settings.json", "w") as us:
                 user_settings_file_json = {
                     "ACTIVE_SAVE_FILE": self.current_save_file,
                     "MINIMIZE_TO_TRAY": self.minimize_to_tray,
                     "START_MINIMIZED": self.start_minimized,
+                    "INSTALOCK_ON_START": self.active,
+                    "SAFE_MODE_ENABLED_ON_START": self.safe_mode,
+                    "SAFE_MODE_STRENGTH_ON_START": self.safe_mode_strength,
                     "TIMES_USED": self.total_games_used,
                     "TIME_TO_LOCK": self.time_to_lock_list,
                 }
