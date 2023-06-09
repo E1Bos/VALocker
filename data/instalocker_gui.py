@@ -61,7 +61,7 @@ class Program(customtkinter.CTk):
         self.safe_mode_timing = {
             "Low": (0.2, 0.4),
             "Medium": (0.4, 0.7),
-            "High": (0.7, 1.0),
+            "High": (0.7, 1.0)
         }
 
         # Random Agent Mode
@@ -877,15 +877,30 @@ class Program(customtkinter.CTk):
                 except (PIL.UnidentifiedImageError, FileNotFoundError):
                     self.map_lookup[map_name] = None
 
+        # Loads the user_settings.json file, clears time_to_lock if new timings are added
         try:
             with open("data/user_settings.json", "r") as user_settings_file:
                 user_settings = json.load(user_settings_file)
                 self.current_save_file = user_settings["ACTIVE_SAVE_FILE"]
                 self.minimize_to_tray = user_settings["MINIMIZE_TO_TRAY"]
                 self.start_minimized = user_settings["START_MINIMIZED"]
-                self.time_to_lock_list = user_settings["TIME_TO_LOCK"]
                 self.total_games_used = user_settings["TIMES_USED"]
+                self.time_to_lock_list = user_settings["TIME_TO_LOCK"]
 
+                if len(self.time_to_lock_list) != len(self.safe_mode_timing)+1:
+                    self.time_to_lock_list = list(list() for _ in range(len(self.safe_mode_timing)+1))
+                
+            with open("data/user_settings.json", "w") as us:
+                user_settings_file_json = {
+                    "ACTIVE_SAVE_FILE": self.current_save_file,
+                    "MINIMIZE_TO_TRAY": self.minimize_to_tray,
+                    "START_MINIMIZED": self.start_minimized,
+                    "TIMES_USED": self.total_games_used,
+                    "TIME_TO_LOCK": self.time_to_lock_list,
+                }
+                us.write(json.dumps(user_settings_file_json, indent=4))
+
+        # Creates a new user_settings.json file if one does not exist
         except FileNotFoundError:
             self.current_save_file = "default"
             self.minimize_to_tray = False
