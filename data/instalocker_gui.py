@@ -1,24 +1,28 @@
-import customtkinter
+# region Imports
 import json
 import os
-import PIL.Image
-import PIL.ImageGrab
-import pynput.mouse as pynmouse
-import pystray
 import random
-import subprocess
 import threading
 import time
 import tkinter as tk
+try:
+    import customtkinter
+    import PIL.Image
+    import PIL.ImageGrab
+    import pynput.mouse as pynmouse
+    import pystray
 
+except ModuleNotFoundError as error:
+    from tkinter import messagebox
+    module_name = str(error).split("'")[1]
+    root = tk.Tk().withdraw()
 
-def install_requirements():
-    """Install required packages using pip"""
-    subprocess.check_call(["pip", "install", "-r", "requirements.txt"])
-
+    messagebox.showerror("Package Error", f"Failed to import modules: {module_name}\nPlease run install_requirements.py first.")
+    exit()
+# endregion
 
 class Program(customtkinter.CTk):
-    # region Init and Exit Functions
+    # region Init and Exit Function
 
     def __init__(self):
         super().__init__()
@@ -32,7 +36,7 @@ class Program(customtkinter.CTk):
         self.locking = True
         self.locking_coords = (945, 866, 955, 867)
         self.locking_image_path = "images/agent_screen/agent_screen_bar.png"
-        self.locking_confirmations = 3
+        self.locking_confirmations = 2
         self.locking_button = None
         self.agent_coords_offset = (5, 5)
         # self.locking_coords = (958, 866, 962, 870) # agent screen dot
@@ -72,9 +76,8 @@ class Program(customtkinter.CTk):
         self.all_agents = None
 
         # Statistics
-        self.time_to_lock = None
         self.total_games_used = 0
-        self.average_time_to_lock = list(
+        self.time_to_lock_list = list(
             list() for _ in range(len(self.safe_mode_timing) + 1)
         )
 
@@ -134,6 +137,8 @@ class Program(customtkinter.CTk):
 
             if self.start_minimized is True:
                 self.withdraw_window()
+        else:
+            self.protocol("WM_DELETE_WINDOW", self.exit)
 
         # Creates Thread
         self.agent_thread = threading.Thread(target=self.locking_thread).start()
@@ -328,9 +333,14 @@ class Program(customtkinter.CTk):
         )
         stats_label.pack(padx=10, pady=(5, 0))
 
+        if self.safe_mode is False:
+            time_to_lock_text = f"{self.time_to_lock_list[-1] if len(self.time_to_lock_list[-1]) != 0 else '-'}"
+        else:
+            time_to_lock_text = f"{self.time_to_lock_list[self.safe_mode_strength][-1] if len(self.time_to_lock_list[self.safe_mode_strength]) != 0 else '-'}"
+
         self.time_to_lock_label = customtkinter.CTkLabel(
             stats_frame,
-            text=f"{'-' if self.time_to_lock is None else self.time_to_lock} ms",
+            text=f"{time_to_lock_text} ms",
             font=self.button_font,
         )
         self.time_to_lock_label.pack(padx=10, pady=(0, 5))
@@ -342,7 +352,7 @@ class Program(customtkinter.CTk):
 
         self.average_time_to_lock_value = customtkinter.CTkLabel(
             stats_frame,
-            text=f"{'-' if len(self.average_time_to_lock[self.safe_mode_strength]) == 0 else round(sum(self.average_time_to_lock[self.safe_mode_strength])/len(self.average_time_to_lock[self.safe_mode_strength]),2)} ms",
+            text=f"{'-' if len(self.time_to_lock_list[self.safe_mode_strength]) == 0 else round(sum(self.time_to_lock_list[self.safe_mode_strength])/len(self.time_to_lock_list[self.safe_mode_strength]),2)} ms",
             font=self.button_font,
         )
         self.average_time_to_lock_value.pack(padx=10, pady=(0, 5))
@@ -584,10 +594,10 @@ class Program(customtkinter.CTk):
         else:
             average_time_to_lock_index = self.safe_mode_strength
         self.average_time_to_lock_value.configure(
-            text=f"{'-' if len(self.average_time_to_lock[average_time_to_lock_index]) == 0 else round(sum(self.average_time_to_lock[average_time_to_lock_index])/len(self.average_time_to_lock[average_time_to_lock_index]),2)} ms",
+            text=f"{'-' if len(self.time_to_lock_list[average_time_to_lock_index]) == 0 else round(sum(self.time_to_lock_list[average_time_to_lock_index])/len(self.time_to_lock_list[average_time_to_lock_index]),2)} ms",
         )
         self.time_to_lock_label.configure(
-            text=f"{'-' if len(self.average_time_to_lock[average_time_to_lock_index]) == 0 else self.average_time_to_lock[average_time_to_lock_index][-1]} ms"
+            text=f"{'-' if len(self.time_to_lock_list[average_time_to_lock_index]) == 0 else self.time_to_lock_list[average_time_to_lock_index][-1]} ms"
         )
         self.total_games_locked_value.configure(
             text=f"{self.total_games_used} {'times' if self.total_games_used != 1 else 'time'}"
@@ -852,13 +862,10 @@ class Program(customtkinter.CTk):
             with open("data/config.json", "r") as config_file:
                 config = json.load(config_file)
 
-                self.current_save_file = config["ACTIVE_SAVE_FILE"]
                 self.default_agents = config["DEFAULT_AGENTS"]
                 self.box_info = config["BOX_INFO"]
                 self.config_file_agents = config["ALL_AGENTS"]
                 self.map_names = config["MAPS"]
-                self.minimize_to_tray = config["MINIMIZE_TO_TRAY"]
-                self.start_minimized = config["START_MINIMIZED"]
 
             # Loads the map images
             for map_name in self.map_names:
@@ -869,6 +876,31 @@ class Program(customtkinter.CTk):
                     self.map_lookup[map_name] = map_binary
                 except (PIL.UnidentifiedImageError, FileNotFoundError):
                     self.map_lookup[map_name] = None
+
+        try:
+            with open("data/user_settings.json", "r") as user_settings_file:
+                user_settings = json.load(user_settings_file)
+                self.current_save_file = user_settings["ACTIVE_SAVE_FILE"]
+                self.minimize_to_tray = user_settings["MINIMIZE_TO_TRAY"]
+                self.start_minimized = user_settings["START_MINIMIZED"]
+                self.time_to_lock_list = user_settings["TIME_TO_LOCK"]
+                self.total_games_used = user_settings["TIMES_USED"]
+
+        except FileNotFoundError:
+            self.current_save_file = "default"
+            self.minimize_to_tray = False
+            self.start_minimized = False
+            self.time_to_lock_list = list(list() for _ in range(len(self.safe_mode_timing)+1))
+            self.total_games_used = 0
+            with open("data/user_settings.json", "w") as us:
+                user_settings_file_json = {
+                    "ACTIVE_SAVE_FILE": self.current_save_file,
+                    "MINIMIZE_TO_TRAY": self.minimize_to_tray,
+                    "START_MINIMIZED": self.start_minimized,
+                    "TIMES_USED": self.total_games_used,
+                    "TIME_TO_LOCK": self.time_to_lock_list,
+                }
+                us.write(json.dumps(user_settings_file_json, indent=4))
 
         # Loads the save file data
         with open(f"data/save_files/{self.current_save_file}.json", "r") as sf:
@@ -973,10 +1005,10 @@ class Program(customtkinter.CTk):
         if file_name not in self.save_files:
             self.save_current_data()
 
-        with open("data/config.json", "r") as config_file:
+        with open("data/user_settings.json", "r") as config_file:
             config = json.load(config_file)
             config["ACTIVE_SAVE_FILE"] = file_name
-        with open("data/config.json", "w") as file:
+        with open("data/user_settings.json", "w") as file:
             file.write(json.dumps(config, indent=4))
 
         self.find_save_files()
@@ -991,6 +1023,15 @@ class Program(customtkinter.CTk):
         for file in os.listdir("./data/save_files"):
             if file.endswith(".json") and file.startswith("default") is False:
                 self.save_files.append(file.removesuffix(".json"))
+
+    # Updates the stats in config.json
+    def update_stats_in_user_settings(self):
+        with open("data/user_settings.json", "r") as config_file:
+            config = json.load(config_file)
+            config["TIMES_USED"] = self.total_games_used
+            config["TIME_TO_LOCK"] = self.time_to_lock_list
+        with open("data/config.json", "w") as file:
+            file.write(json.dumps(config, indent=4))
 
     # endregion
 
@@ -1008,7 +1049,6 @@ class Program(customtkinter.CTk):
         match agent_name:
             case "all":
                 for agent in self.all_agents:
-                    if agent not in self.default_agents:
                         self.unlocked_agents_dict[agent] = True
             case "none":
                 for agent in self.all_agents:
@@ -1027,8 +1067,13 @@ class Program(customtkinter.CTk):
                 if unlock_status is True
             )[0]
 
-        self.save_current_data()
+        for agent in self.all_agents:
+            if self.unlocked_agents_dict[agent] is False:
+                self.random_agents_dict[agent] = False
+
         self.update_gui()
+        self.save_current_data()
+        
 
     # Toggles the agent in the random agent tab
     def toggle_random_agent_status(self, agent_name):
@@ -1066,9 +1111,9 @@ class Program(customtkinter.CTk):
                 agent_name
             ]
 
-        self.save_current_data()
         self.update_random_agent_tab()
         self.update_overview_tab()
+        self.save_current_data()
 
     # Toggles which agent is selected for a specific map
     def toggle_map_specific_agent(self, agent_name, map_name):
@@ -1134,6 +1179,9 @@ class Program(customtkinter.CTk):
                 if total_confirmations >= self.locking_confirmations:
                     self.start_lock = time.time()
                     self.lock_agent()
+            
+            else:
+                total_confirmations = 0
 
     def lock_agent(self):
         if self.random_agent_mode is True:
@@ -1152,9 +1200,10 @@ class Program(customtkinter.CTk):
             self.mouse.click(pynmouse.Button.left, 1)
             time.sleep(0.06)
             self.mouse.position = (self.lock_button[0], self.lock_button[1])
+            time.sleep(0.01)
 
             if self.hover_mode is False:
-                time.sleep(0.01)
+                
                 self.mouse.click(pynmouse.Button.left, 1)
         else:
             low_timing = (
@@ -1170,21 +1219,30 @@ class Program(customtkinter.CTk):
             self.mouse.click(pynmouse.Button.left, 1)
             time.sleep(round(random.uniform(low_timing, high_timing), 2))
             self.mouse.position = (self.lock_button[0], self.lock_button[1])
+            time.sleep(round(random.uniform(low_timing, high_timing), 2))
 
             if self.hover_mode is False:
-                time.sleep(round(random.uniform(low_timing, high_timing), 2))
                 self.mouse.click(pynmouse.Button.left, 1)
 
-        end_lock = time.time()
-        self.time_to_lock = round((time.time() - self.start_lock) * 1000, 2)
+        time_to_lock = round((time.time() - self.start_lock) * 1000, 2)
         if self.safe_mode is True:
-            self.average_time_to_lock[self.safe_mode_strength].append(self.time_to_lock)
+            self.time_to_lock_list[self.safe_mode_strength].append(time_to_lock)
         else:
-            self.average_time_to_lock[-1].append(self.time_to_lock)
+            self.time_to_lock_list[-1].append(time_to_lock)
 
         self.locking = False
         self.total_games_used += 1
+
+        last_five_data_points = list()
+        for timing_list in self.time_to_lock_list:
+            if len(timing_list) >= 5:
+                last_five_data_points.append(timing_list[-5:])
+            else:
+                last_five_data_points.append(timing_list)
+        self.time_to_lock_list = last_five_data_points
+
         self.update_overview_tab()
+        self.update_stats_in_user_settings()
         self.find_game_end()
 
     def find_game_end(self):
@@ -1244,6 +1302,5 @@ class Program(customtkinter.CTk):
 
 
 if __name__ == "__main__":
-    # install_requirements()
     program = Program()
     program.mainloop()
