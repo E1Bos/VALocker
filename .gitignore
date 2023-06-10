@@ -1,6 +1,8 @@
 .gitignore
 .vscode
 venv
+output
+build_config
 data/__pycache__
 data/screenshotter.py
 data/save_files

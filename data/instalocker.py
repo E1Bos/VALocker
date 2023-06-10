@@ -21,6 +21,16 @@ import tkinter as tk
 
 # endregion
 
+# region PyInstaller Requirement
+def resource_path(relative):
+    return os.path.join(
+        os.environ.get(
+            "_MEIPASS2",
+            os.path.abspath(".")
+        ),
+        relative
+    )
+# endregion
 
 class Program(customtkinter.CTk):
     # region Init and Exit Function
@@ -46,10 +56,10 @@ class Program(customtkinter.CTk):
         # Locking Images
         self.agent_select_image = PIL.Image.open(self.locking_image_path).tobytes()
         self.in_menu_images = [
-            PIL.Image.open("images/in_menu/in_menu_normal_bar.png").tobytes(),
-            PIL.Image.open("images/in_menu/in_menu_comp_bar.png").tobytes(),
-            PIL.Image.open("images/in_menu/in_menu_progress_text_1.png").tobytes(),
-            PIL.Image.open("images/in_menu/in_menu_progress_text_2.png").tobytes(),
+            PIL.Image.open(resource_path("images/in_menu/in_menu_normal_bar.png")).tobytes(),
+            PIL.Image.open(resource_path("images/in_menu/in_menu_comp_bar.png")).tobytes(),
+            PIL.Image.open(resource_path("images/in_menu/in_menu_progress_text_1.png")).tobytes(),
+            PIL.Image.open(resource_path("images/in_menu/in_menu_progress_text_2.png")).tobytes(),
         ]
 
         # Map Specific
@@ -801,9 +811,9 @@ class Program(customtkinter.CTk):
         else:
             self.current_icon = self.icons["waiting"]
 
-        self.wm_iconbitmap(self.current_icon)
+        self.wm_iconbitmap(resource_path(self.current_icon))
         try:
-            self.icon.icon = PIL.Image.open(self.current_icon)
+            self.icon.icon = PIL.Image.open(resource_path(self.current_icon))
         except AttributeError:
             pass
 
@@ -821,7 +831,7 @@ class Program(customtkinter.CTk):
     def withdraw_window(self):
         self.withdraw()
         self.icon = pystray.Icon(
-            "VALocker", PIL.Image.open(self.current_icon), "VALocker", self.icon_menu
+            "VALocker", PIL.Image.open(resource_path(self.current_icon)), "VALocker", self.icon_menu
         )
         self.icon.run()
 
@@ -910,7 +920,7 @@ class Program(customtkinter.CTk):
     def load_data_from_files(self):
         # Loads the config.json file
         if len(self.default_agents) == 0:
-            with open("data/config.json", "r") as config_file:
+            with open(resource_path("data/config.json"), "r") as config_file:
                 config = json.load(config_file)
 
                 self.default_agents = config["DEFAULT_AGENTS"]
@@ -922,7 +932,7 @@ class Program(customtkinter.CTk):
             for map_name in self.map_names:
                 try:
                     map_binary = PIL.Image.open(
-                        f"images/map_images/{map_name}.png"
+                        resource_path(f"images/map_images/{map_name}.png")
                     ).tobytes()
                     self.map_lookup[map_name] = map_binary
                 except (PIL.UnidentifiedImageError, FileNotFoundError):
@@ -930,7 +940,7 @@ class Program(customtkinter.CTk):
 
         # Loads the user_settings.json file, clears time_to_lock if new timings are added
         try:
-            with open("data/user_settings.json", "r") as user_settings_file:
+            with open(resource_path("data/user_settings.json"), "r") as user_settings_file:
                 user_settings = json.load(user_settings_file)
                 self.current_save_file = user_settings["ACTIVE_SAVE_FILE"]
                 self.minimize_to_tray = user_settings["MINIMIZE_TO_TRAY"]
@@ -946,7 +956,7 @@ class Program(customtkinter.CTk):
                         list() for _ in range(len(self.safe_mode_timing) + 1)
                     )
 
-            with open("data/user_settings.json", "w") as us:
+            with open(resource_path("data/user_settings.json"), "w") as us:
                 user_settings_file_json = {
                     "ACTIVE_SAVE_FILE": self.current_save_file,
                     "MINIMIZE_TO_TRAY": self.minimize_to_tray,
@@ -963,7 +973,7 @@ class Program(customtkinter.CTk):
         except FileNotFoundError:
             self.minimize_to_tray = False
             self.start_minimized = False
-            with open("data/user_settings.json", "w") as us:
+            with open(resource_path("data/user_settings.json"), "w") as us:
                 user_settings_file_json = {
                     "ACTIVE_SAVE_FILE": self.current_save_file,
                     "MINIMIZE_TO_TRAY": self.minimize_to_tray,
@@ -977,7 +987,7 @@ class Program(customtkinter.CTk):
                 us.write(json.dumps(user_settings_file_json, indent=4))
 
         # Loads the save file data
-        with open(f"data/save_files/{self.current_save_file}.json", "r") as sf:
+        with open(resource_path(f"data/save_files/{self.current_save_file}.json"), "r") as sf:
             save_file_json = json.load(sf)
             self.selected_agent = save_file_json["SELECTED_AGENT"]
             self.unlocked_agents_dict = save_file_json["UNLOCKED_AGENTS"]
@@ -1064,7 +1074,7 @@ class Program(customtkinter.CTk):
 
     # Saves all the data to the current save file
     def save_current_data(self):
-        with open(f"data/save_files/{self.current_save_file}.json", "w") as sf:
+        with open(resource_path(f"data/save_files/{self.current_save_file}.json"), "w") as sf:
             save_file_json = {
                 "SELECTED_AGENT": self.selected_agent,
                 "UNLOCKED_AGENTS": self.unlocked_agents_dict,
@@ -1080,10 +1090,10 @@ class Program(customtkinter.CTk):
         if file_name not in self.save_files:
             self.save_current_data()
 
-        with open("data/user_settings.json", "r") as config_file:
+        with open(resource_path("data/user_settings.json"), "r") as config_file:
             config = json.load(config_file)
             config["ACTIVE_SAVE_FILE"] = file_name
-        with open("data/user_settings.json", "w") as file:
+        with open(resource_path("data/user_settings.json"), "w") as file:
             file.write(json.dumps(config, indent=4))
 
         self.find_save_files()
@@ -1095,17 +1105,17 @@ class Program(customtkinter.CTk):
     # Finds all save files in data/save_files
     def find_save_files(self):
         self.save_files = ["default"]
-        for file in os.listdir("./data/save_files"):
+        for file in os.listdir(resource_path("./data/save_files")):
             if file.endswith(".json") and file.startswith("default") is False:
                 self.save_files.append(file.removesuffix(".json"))
 
     # Updates the stats in config.json
     def update_stats_in_user_settings(self):
-        with open("data/user_settings.json", "r") as config_file:
+        with open(resource_path("data/user_settings.json"), "r") as config_file:
             config = json.load(config_file)
             config["TIMES_USED"] = self.total_games_used
             config["TIME_TO_LOCK"] = self.time_to_lock_list
-        with open("data/user_settings.json", "w") as file:
+        with open(resource_path("data/user_settings.json"), "w") as file:
             file.write(json.dumps(config, indent=4))
 
     # endregion
