@@ -1,4 +1,5 @@
 .gitignore
+venv
 data/__pycache__
 data/screenshotter.py
 data/save_files
