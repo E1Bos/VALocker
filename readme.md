@@ -1,18 +1,23 @@
 # VaLocker - Valorant Agent Locker
 
-VaLocker is a Python script that allows you to automatically lock in your desired Valorant agent quickly and reliably. It helps you secure your favorite agent during the agent selection phase, saving you time and ensuring you don't miss out on playing your preferred character.
+VaLocker is a Python program that allows you to automatically lock in your desired Valorant agent quickly and reliably. It helps you secure your favorite agent during the agent selection phase, saving you time and ensuring you don't miss out on playing your preferred character.
 
 ## Features
 
 - Installs all necessary dependencies automatically.
 - Provides a user-friendly GUI for easy interaction.
 - Allows the window to be minimized into an icon.
+- Load-to-lock time of 100ms on average.
 - Supports map-specific agent locking.
-- Includes safe mode options for a more cautious approach.
-- Allows you to hover over the agent without immediately locking it.
-- Enables random agent selection from a pool, adding variety and reducing repetition.
+- Safe mode adds random delays to the locking process for a more cautious approach.
+    - Low 300-500ms
+    - Medium 500-800ms
+    - High 800-1000ms
+- Hover mode allows you to select an agent without locking them.
+- Random agent mode allows random agent selection from a pool, adding variety and reducing repetition.
+- ExclusiSelect disables random agents after they're picked, ensuring a new agent every time.
 - Tracks and displays average time to lock in agents.
-- Monitors game end screen for seamless agent relocking.
+- Auto-detects game end screen for set-and-forget relocking.
 - Allows for multiple save files for different accounts and configurations.
 
 ## Installation
@@ -22,7 +27,7 @@ VaLocker is a Python script that allows you to automatically lock in your desire
 
 ## Usage
 
-1. Run the `VaLocker.pyw` script to launch the application. If it's your first time running the script, it will automatically install the necessary dependencies. Wait for the installation process to complete.
+1. Run the `VaLocker.pyw` file to launch the application. If it's your first time running the program, it will automatically install the necessary dependencies. Wait for the installation process to complete.
 2. Enable all your unlocked agents in the toggle agent screen.
 2. Select your desired agent from the dropdown menu.
 3. Choose any additional options or settings based on your preference.
@@ -31,7 +36,7 @@ VaLocker is a Python script that allows you to automatically lock in your desire
 
 ## Configuration
 
-VaLocker provides a `user_settings.json` file in the data directory where you can customize certain aspects of the script. The configuration file allows you to:
+VaLocker provides a `user_settings.json` file in the data directory where you can customize certain aspects of the program. The `user_settings.json` file is created when running the program for the first time. The configuration file allows you to:
 
 - Toggle icon feature
 - Minimize on startup
@@ -74,4 +79,4 @@ For any questions, issues, or feedback, please contact the project maintainer:
 
 Discord: @e1bos
 
-Feel free to reach out with any inquiries or suggestions you may have. We appreciate your interest in VaLocker!
+Feel free to reach out with any inquiries or suggestions you may have. I appreciate your interest in VaLocker!
