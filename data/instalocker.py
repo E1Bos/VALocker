@@ -72,9 +72,9 @@ class Program(customtkinter.CTk):
         self.hover_mode = False
 
         # Agent Data
-        self.default_agents = None
-        self.selected_agent = None
-        self.all_agents = None
+        self.default_agents = list()
+        self.selected_agent = str()
+        self.all_agents = list()
         self.random_agent_exclusiselect = False
 
         # Statistics
@@ -84,8 +84,8 @@ class Program(customtkinter.CTk):
         )
 
         # Box Coords
-        self.box_coords = None
-        self.lock_button = None
+        self.box_coords = dict()
+        self.lock_button = list()
 
         # Save Files
         self.save_files = None
@@ -112,13 +112,12 @@ class Program(customtkinter.CTk):
 
         # Icons
         self.icons = dict(
-        disabled = "images/icons/instalocker_disabled.ico",
-        locking = "images/icons/instalocker_enabled.ico",
-        waiting = "images/icons/instalocker_enabled.ico"
+            disabled="images/icons/instalocker_disabled.ico",
+            locking="images/icons/instalocker_enabled.ico",
+            waiting="images/icons/instalocker_enabled.ico",
         )
         self.current_icon = self.icons["disabled"]
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("myappid")
-
 
         # Loads data from save files
         self.load_data_from_files()
@@ -385,7 +384,7 @@ class Program(customtkinter.CTk):
         )
         quit_button.place(relx=0.79, rely=0.9)
 
-        overview_tab.columnconfigure((0, 1, 2), weight=1)
+        overview_tab.columnconfigure((0, 1, 2), weight=1)  # type: ignore
 
         # endregion
 
@@ -524,7 +523,7 @@ class Program(customtkinter.CTk):
             role_frames[role].columnconfigure(index, weight=1)
 
         # Creates the checkboxes for each agent
-        self.random_agent_checkboxes = {}
+        self.random_agent_checkboxes, agent_role = dict(), str()
         for index, agent in enumerate(self.all_agents):
             for role, agent_list in self.config_file_agents.items():
                 if agent in agent_list:
@@ -579,7 +578,7 @@ class Program(customtkinter.CTk):
 
             self.map_dropdowns[map_name].pack(padx=(0, 10), pady=5, side=tk.RIGHT)
 
-        map_specific_tab.columnconfigure((0, 1), weight=1)
+        map_specific_tab.columnconfigure((0, 1), weight=1)  # type: ignore
 
         # endregion
 
@@ -801,7 +800,7 @@ class Program(customtkinter.CTk):
             self.current_icon = self.icons["locking"]
         else:
             self.current_icon = self.icons["waiting"]
-        
+
         self.wm_iconbitmap(self.current_icon)
         try:
             self.icon.icon = PIL.Image.open(self.current_icon)
@@ -818,6 +817,7 @@ class Program(customtkinter.CTk):
         self.after(0, self.deiconify)
 
         # Closes the window and runs the icon
+
     def withdraw_window(self):
         self.withdraw()
         self.icon = pystray.Icon(
@@ -1242,7 +1242,7 @@ class Program(customtkinter.CTk):
 
     def locate_agent_screen(self, map_specific_toggle=False):
         total_confirmations = 0
-        self.start_lock = None
+        self.start_lock = float()
         while (
             self.active_thread is True
             and self.locking is True
@@ -1265,6 +1265,7 @@ class Program(customtkinter.CTk):
         self.find_game_end()
 
     def lock_agent(self):
+        randomly_selected_agent = str()
         if self.random_agent_mode is True:
             randomly_selected_agent = random.choice(
                 list(
@@ -1310,10 +1311,11 @@ class Program(customtkinter.CTk):
             self.time_to_lock_list[-1].append(time_to_lock)
 
         if self.random_agent_mode is True and self.random_agent_exclusiselect is True:
-            self.toggle_random_agent_status(randomly_selected_agent, exclusiselect_toggle=True)
+            self.toggle_random_agent_status(
+                randomly_selected_agent, exclusiselect_toggle=True
+            )
             if all(value is False for value in self.random_agents_dict.values()):
                 self.toggle_random_agent_exclusiselect()
-
 
         self.locking = False
         self.total_games_used += 1
