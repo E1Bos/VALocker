@@ -9,6 +9,7 @@ try:
 except ModuleNotFoundError:
     # Installs missing modules if exception is raised
     import subprocess
+
     subprocess.run(["pip", "install", "-r", "requirements.txt"])
     import customtkinter, pystray
     import PIL.Image, PIL.ImageGrab
@@ -17,7 +18,9 @@ except ModuleNotFoundError:
 # Imports modules that are installed with Python
 import json, os, random, threading, time
 import tkinter as tk
+
 # endregion
+
 
 class Program(customtkinter.CTk):
     # region Init and Exit Function
@@ -59,7 +62,7 @@ class Program(customtkinter.CTk):
         self.safe_mode_timing = {
             "Low": (0.2, 0.4),
             "Medium": (0.4, 0.7),
-            "High": (0.7, 1.0)
+            "High": (0.7, 1.0),
         }
 
         # Random Agent Mode
@@ -72,6 +75,7 @@ class Program(customtkinter.CTk):
         self.default_agents = None
         self.selected_agent = None
         self.all_agents = None
+        self.random_agent_exclusiselect = False
 
         # Statistics
         self.total_games_used = 0
@@ -428,8 +432,39 @@ class Program(customtkinter.CTk):
         # endregion
 
         # region Random Agent Tab
+        random_agent_allnone_button_frame = customtkinter.CTkFrame(
+            random_agent_tab, width=500, height=100, fg_color="transparent"
+        )
+        random_agent_allnone_button_frame.pack(padx=20, pady=5)
+
+        self.random_agent_exclusiselect_button = customtkinter.CTkButton(
+            random_agent_allnone_button_frame,
+            width=60,
+            text="ExclusiSelect",
+            hover=False,
+            fg_color=f"{self.button_colors['enabled'] if self.random_agent_exclusiselect is True else self.button_colors['disabled']}",
+            command=self.toggle_random_agent_exclusiselect,
+        )
+        self.random_agent_exclusiselect_button.pack(
+            side="left", padx=(20, 0), fill=tk.Y, pady=5
+        )
+
+        invisible_button = customtkinter.CTkButton(
+            random_agent_allnone_button_frame,
+            width=90,
+            height=40,
+            hover=False,
+            text="",
+            text_color="",
+            bg_color="transparent",
+            fg_color="transparent",
+            state=tk.DISABLED,
+            command=lambda: None,
+        )
+        invisible_button.pack(side="right", padx=(0, 20), fill=tk.Y, pady=5)
+
         random_agent_all_none_toggle_frame = customtkinter.CTkFrame(
-            random_agent_tab, width=150, height=100
+            random_agent_allnone_button_frame, height=100, fg_color="#333333"
         )
         random_agent_all_none_toggle_frame.pack(padx=20, pady=5)
 
@@ -438,14 +473,14 @@ class Program(customtkinter.CTk):
             text="All",
             command=lambda: self.toggle_random_agent_status("all"),
         )
-        self.all_random_agent_radio_button.grid(row=0, column=0, padx=(20, 0), pady=10)
+        self.all_random_agent_radio_button.pack(side="left", padx=(20, 0), pady=10)
 
         self.none_random_agent_radio_button = customtkinter.CTkCheckBox(
             random_agent_all_none_toggle_frame,
             text="None",
             command=lambda: self.toggle_random_agent_status("none"),
         )
-        self.none_random_agent_radio_button.grid(row=0, column=1, pady=10)
+        self.none_random_agent_radio_button.pack(side="right", padx=0, pady=10)
 
         random_agent_role_toggle_frame = customtkinter.CTkFrame(random_agent_tab)
         random_agent_role_toggle_frame.pack(padx=0, pady=5)
@@ -693,24 +728,9 @@ class Program(customtkinter.CTk):
 
     # Updates random agent tab
     def update_random_agent_tab(self):
-        # Disables agents that are not unlocked
-        for agent in self.unlocked_agents_dict:
-            if (
-                agent not in self.default_agents
-                and self.unlocked_agents_dict[agent] is False
-            ):
-                self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].configure(
-                    state=tk.DISABLED
-                )
-                self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].deselect()
-            else:
-                self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].configure(
-                    state=tk.NORMAL
-                )
-
         # Selects enabled agents
-        for agent in self.random_agents_dict:
-            if self.random_agents_dict[agent] is True:
+        for agent, value in self.random_agents_dict.items():
+            if value is True:
                 self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].select()
             else:
                 self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].deselect()
@@ -745,6 +765,21 @@ class Program(customtkinter.CTk):
                 self.agent_role_checkboxes[role.lower()].select()
             else:
                 self.agent_role_checkboxes[role.lower()].deselect()
+
+        # Disables agents that are not unlocked
+        for agent in self.unlocked_agents_dict:
+            if (
+                agent not in self.default_agents
+                and self.unlocked_agents_dict[agent] is False
+            ):
+                self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].configure(
+                    state=tk.DISABLED
+                )
+                self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].deselect()
+            else:
+                self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].configure(
+                    state=tk.NORMAL
+                )
 
     # Updates map specific tab
     def update_map_specific_tab(self):
@@ -849,6 +884,19 @@ class Program(customtkinter.CTk):
         self.hover_mode = not self.hover_mode
         self.update_overview_tab()
 
+    def toggle_random_agent_exclusiselect(self):
+        self.random_agent_exclusiselect = not self.random_agent_exclusiselect
+
+        if self.random_agent_exclusiselect is True:
+            self.random_agents_dict_backup = self.random_agents_dict.copy()
+        else:
+            self.random_agents_dict = self.random_agents_dict_backup.copy()
+
+        self.random_agent_exclusiselect_button.configure(
+            fg_color=f"{self.button_colors['enabled'] if self.random_agent_exclusiselect is True else self.button_colors['disabled']}",
+        )
+        self.update_random_agent_tab()
+
     # endregion
 
     # region Config and Save Reading and Writing
@@ -888,9 +936,11 @@ class Program(customtkinter.CTk):
                 self.total_games_used = user_settings["TIMES_USED"]
                 self.time_to_lock_list = user_settings["TIME_TO_LOCK"]
 
-                if len(self.time_to_lock_list) != len(self.safe_mode_timing)+1:
-                    self.time_to_lock_list = list(list() for _ in range(len(self.safe_mode_timing)+1))
-                
+                if len(self.time_to_lock_list) != len(self.safe_mode_timing) + 1:
+                    self.time_to_lock_list = list(
+                        list() for _ in range(len(self.safe_mode_timing) + 1)
+                    )
+
             with open("data/user_settings.json", "w") as us:
                 user_settings_file_json = {
                     "ACTIVE_SAVE_FILE": self.current_save_file,
@@ -927,6 +977,7 @@ class Program(customtkinter.CTk):
             self.selected_agent = save_file_json["SELECTED_AGENT"]
             self.unlocked_agents_dict = save_file_json["UNLOCKED_AGENTS"]
             self.random_agents_dict = save_file_json["RANDOM_AGENTS"]
+            self.random_agents_dict_backup = self.random_agents_dict.copy()
             self.map_specific_agents_dict = save_file_json["MAP_SPECIFIC_AGENTS"]
 
         # Creates a list of all agents
@@ -1049,7 +1100,7 @@ class Program(customtkinter.CTk):
             config = json.load(config_file)
             config["TIMES_USED"] = self.total_games_used
             config["TIME_TO_LOCK"] = self.time_to_lock_list
-        with open("data/config.json", "w") as file:
+        with open("data/user_settings.json", "w") as file:
             file.write(json.dumps(config, indent=4))
 
     # endregion
@@ -1068,7 +1119,7 @@ class Program(customtkinter.CTk):
         match agent_name:
             case "all":
                 for agent in self.all_agents:
-                        self.unlocked_agents_dict[agent] = True
+                    self.unlocked_agents_dict[agent] = True
             case "none":
                 for agent in self.all_agents:
                     if agent not in self.default_agents:
@@ -1092,10 +1143,9 @@ class Program(customtkinter.CTk):
 
         self.update_gui()
         self.save_current_data()
-        
 
     # Toggles the agent in the random agent tab
-    def toggle_random_agent_status(self, agent_name):
+    def toggle_random_agent_status(self, agent_name, exclusiselect_toggle=False):
         if agent_name in [
             "all",
             "none",
@@ -1129,6 +1179,10 @@ class Program(customtkinter.CTk):
             self.random_agents_dict[agent_name] = not self.random_agents_dict[
                 agent_name
             ]
+
+        # Only updates the list if a checkbox is selected, not when the ExclusiSelect mode is toggled
+        if self.random_agent_exclusiselect is True and exclusiselect_toggle is False:
+            self.random_agents_dict_backup = self.random_agents_dict.copy()
 
         self.update_random_agent_tab()
         self.update_overview_tab()
@@ -1178,6 +1232,8 @@ class Program(customtkinter.CTk):
 
         if game_map is not None:
             self.locate_agent_screen(True)
+        else:
+            self.find_game_end()
 
     def locate_agent_screen(self, map_specific_toggle=False):
         total_confirmations = 0
@@ -1198,21 +1254,21 @@ class Program(customtkinter.CTk):
                 if total_confirmations >= self.locking_confirmations:
                     self.start_lock = time.time()
                     self.lock_agent()
-            
+
             else:
                 total_confirmations = 0
+        self.find_game_end()
 
     def lock_agent(self):
         if self.random_agent_mode is True:
-            self.find_agent_coords(
-                random.choice(
-                    list(
-                        agent
-                        for agent in self.random_agents_dict
-                        if self.random_agents_dict[agent] is True
-                    )
+            randomly_selected_agent = random.choice(
+                list(
+                    agent
+                    for agent in self.random_agents_dict
+                    if self.random_agents_dict[agent] is True
                 )
             )
+            self.find_agent_coords(randomly_selected_agent)
         if self.safe_mode is False:
             self.mouse.position = (self.agent_coords[0], self.agent_coords[1])
             time.sleep(0.01)
@@ -1222,7 +1278,6 @@ class Program(customtkinter.CTk):
             time.sleep(0.01)
 
             if self.hover_mode is False:
-                
                 self.mouse.click(pynmouse.Button.left, 1)
         else:
             low_timing = (
@@ -1248,6 +1303,12 @@ class Program(customtkinter.CTk):
             self.time_to_lock_list[self.safe_mode_strength].append(time_to_lock)
         else:
             self.time_to_lock_list[-1].append(time_to_lock)
+
+        if self.random_agent_mode is True and self.random_agent_exclusiselect is True:
+            self.toggle_random_agent_status(randomly_selected_agent, exclusiselect_toggle=True)
+            if all(value is False for value in self.random_agents_dict.values()):
+                self.toggle_random_agent_exclusiselect()
+
 
         self.locking = False
         self.total_games_used += 1
