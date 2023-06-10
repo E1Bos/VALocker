@@ -16,7 +16,7 @@ except ModuleNotFoundError:
     import pynput.mouse as pynmouse
 
 # Imports modules that are installed with Python
-import json, os, random, threading, time
+import json, os, random, threading, time, ctypes
 import tkinter as tk
 
 # endregion
@@ -111,10 +111,13 @@ class Program(customtkinter.CTk):
         }
 
         # Icon Images
-        self.tray_icons = (
+        self.icons = (
             PIL.Image.open("images/instalocker_enabled.ico"),
             PIL.Image.open("images/instalocker_disabled.ico"),
         )
+
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("myappid")
+
 
         # Loads data from save files
         self.load_data_from_files()
@@ -800,7 +803,7 @@ class Program(customtkinter.CTk):
     # Updates GUI and tray icons
     def update_icon(self):
         self.current_icon = (
-            self.tray_icons[0] if self.active is True else self.tray_icons[1]
+            self.icons[0] if self.active is True else self.icons[1]
         )
         try:
             self.icon.icon = self.current_icon
