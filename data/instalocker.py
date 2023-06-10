@@ -97,7 +97,7 @@ class Program(customtkinter.CTk):
         self.button_font = ("Arial", 14)  # Arial Size 14
         customtkinter.set_appearance_mode("Dark")
         customtkinter.set_default_color_theme("blue")
-        self.title("VaLocker")
+        self.title("VALocker")
         self.button_colors = {"enabled": "#259969", "disabled": "#b52d3b"}
         self.role_colors = {
             "controllers": "#f5a623",
@@ -116,7 +116,7 @@ class Program(customtkinter.CTk):
         locking = "images/icons/instalocker_enabled.ico",
         waiting = "images/icons/instalocker_enabled.ico"
         )
-
+        self.current_icon = self.icons["disabled"]
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("myappid")
 
 
@@ -600,14 +600,6 @@ class Program(customtkinter.CTk):
             pystray.MenuItem("Exit", lambda x: self.exit()),
         )
 
-    # Closes the window and runs the icon
-    def withdraw_window(self):
-        self.withdraw()
-        self.icon = pystray.Icon(
-            "VaLocker", self.current_icon, "VaLocker", self.icon_menu
-        )
-        self.icon.run()
-
     # endregion
 
     # region GUI  Updates
@@ -804,15 +796,15 @@ class Program(customtkinter.CTk):
     # Updates GUI and tray icons
     def update_icon(self):
         if self.active is False:
-            current_icon = self.icons["disabled"]
+            self.current_icon = self.icons["disabled"]
         elif self.locking is True:
-            current_icon = self.icons["locking"]
+            self.current_icon = self.icons["locking"]
         else:
-            current_icon = self.icons["waiting"]
+            self.current_icon = self.icons["waiting"]
         
-        self.wm_iconbitmap(current_icon)
+        self.wm_iconbitmap(self.current_icon)
         try:
-            self.icon.icon = current_icon
+            self.icon.icon = PIL.Image.open(self.current_icon)
         except AttributeError:
             pass
 
@@ -824,6 +816,14 @@ class Program(customtkinter.CTk):
             pass
         self.protocol("WM_DELETE_WINDOW", self.withdraw_window)
         self.after(0, self.deiconify)
+
+        # Closes the window and runs the icon
+    def withdraw_window(self):
+        self.withdraw()
+        self.icon = pystray.Icon(
+            "VALocker", PIL.Image.open(self.current_icon), "VALocker", self.icon_menu
+        )
+        self.icon.run()
 
     # endregion
 

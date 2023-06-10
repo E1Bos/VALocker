@@ -1,23 +1,24 @@
-# VaLocker - Valorant Agent Locker
+# VALocker - Valorant Agent Locker
 
-VaLocker is a Python program that allows you to automatically lock in your desired Valorant agent quickly and reliably. It helps you secure your favorite agent during the agent selection phase, saving you time and ensuring you don't miss out on playing your preferred character.
+VALocker is a Python program that allows you to automatically lock in your desired Valorant agent quickly and reliably. It helps you secure your favorite agent during the agent selection phase, saving you time and ensuring you don't miss out on playing your preferred character.
 
 ## Features
 
-- Installs all necessary dependencies automatically.
 - Provides a user-friendly GUI for easy interaction.
+- Installs all necessary dependencies automatically.
 - Allows the window to be minimized into an icon.
 - Load-to-lock time of 100ms on average.
+- Auto-detects game end screen for set-and-forget relocking.
 - Supports map-specific agent locking.
-- Safe mode adds random delays to the locking process for a more cautious approach.
-    - Low 300-500ms
-    - Medium 500-800ms
-    - High 800-1000ms
-- Hover mode allows you to select an agent without locking them.
 - Random agent mode allows random agent selection from a pool, adding variety and reducing repetition.
 - ExclusiSelect disables random agents after they're picked, ensuring a new agent every time.
-- Tracks and displays average time to lock in agents.
-- Auto-detects game end screen for set-and-forget relocking.
+- Hover mode allows you to select an agent without locking them.
+- Safe mode adds random delays to the locking process for a more cautious approach.
+  - Low 300-500ms
+  - Medium 500-800ms
+  - High 800-1000ms
+- Tracks and displays average time to lock and last lock in real time.
+- Selects random part of agent and locking button to deter detection.
 - Allows for multiple save files for different accounts and configurations.
 
 ## Installation
@@ -27,16 +28,16 @@ VaLocker is a Python program that allows you to automatically lock in your desir
 
 ## Usage
 
-1. Run the `VaLocker.pyw` file to launch the application. If it's your first time running the program, it will automatically install the necessary dependencies. Wait for the installation process to complete.
+1. Run the `VALocker.pyw` file to launch the application. If it's your first time running the program, it will automatically install the necessary dependencies. Wait for the installation process to complete.
 2. Enable all your unlocked agents in the toggle agent screen.
 2. Select your desired agent from the dropdown menu.
 3. Choose any additional options or settings based on your preference.
 4. Enable the instalocker by clicking on the button under "Instalocker" to initiate the agent locking process.
-5. During the agent selection phase in Valorant, VaLocker will automatically lock in your chosen agent.
+5. During the agent selection phase in Valorant, VALocker will automatically lock in your chosen agent.
 
 ## Configuration
 
-VaLocker provides a `user_settings.json` file in the data directory where you can customize certain aspects of the program. The `user_settings.json` file is created when running the program for the first time. The configuration file allows you to:
+VALocker provides a `user_settings.json` file in the data directory where you can customize certain aspects of the program. The `user_settings.json` file is created when running the program for the first time. The configuration file allows you to:
 
 - Toggle icon feature
 - Minimize on startup
@@ -47,7 +48,7 @@ VaLocker provides a `user_settings.json` file in the data directory where you ca
 
 ## Contributing
 
-Contributions to VaLocker are welcome! If you would like to contribute to the project, please follow these steps:
+Contributions to VALocker are welcome! If you would like to contribute to the project, please follow these steps:
 
 1. Fork the repository on GitHub.
 2. Create a new branch for your feature or bug fix.
@@ -57,7 +58,7 @@ Contributions to VaLocker are welcome! If you would like to contribute to the pr
 
 ## Acknowledgements
 
-VaLocker utilizes the following libraries:
+VALocker utilizes the following libraries:
 
 - [customtkinter](https://github.com/TomSchimansky/CustomTkinter) - Customized version of the tkinter library.
 - [PIL](https://python-pillow.org/) - Python Imaging Library for image manipulation.
@@ -79,4 +80,4 @@ For any questions, issues, or feedback, please contact the project maintainer:
 
 Discord: @e1bos
 
-Feel free to reach out with any inquiries or suggestions you may have. I appreciate your interest in VaLocker!
+Feel free to reach out with any inquiries or suggestions you may have. I appreciate your interest in VALocker!
