@@ -130,7 +130,7 @@ class Program(customtkinter.CTk):
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("myappid")
 
         # Loads data from save files
-        self.load_data_from_files()
+        self.load_data_from_files(first_run=True)
 
         # Finds all save files
         self.find_save_files()
@@ -917,9 +917,9 @@ class Program(customtkinter.CTk):
     # region Config and Save Reading and Writing
 
     # Loads all the data from the config.json and current save file
-    def load_data_from_files(self):
+    def load_data_from_files(self, first_run=False):
         # Loads the config.json file
-        if len(self.default_agents) == 0:
+        if first_run is True:
             with open(resource_path("data/config.json"), "r") as config_file:
                 config = json.load(config_file)
 
@@ -938,53 +938,53 @@ class Program(customtkinter.CTk):
                 except (PIL.UnidentifiedImageError, FileNotFoundError):
                     self.map_lookup[map_name] = None
 
-        # Loads the user_settings.json file, clears time_to_lock if new timings are added
-        try:
-            with open(resource_path("data/user_settings.json"), "r") as user_settings_file:
-                user_settings = json.load(user_settings_file)
-                self.current_save_file = user_settings["ACTIVE_SAVE_FILE"]
-                self.minimize_to_tray = user_settings["MINIMIZE_TO_TRAY"]
-                self.start_minimized = user_settings["START_MINIMIZED"]
-                self.active = user_settings["INSTALOCK_ON_START"]
-                self.safe_mode = user_settings["SAFE_MODE_ENABLED_ON_START"]
-                self.safe_mode_strength = user_settings["SAFE_MODE_STRENGTH_ON_START"]
-                self.total_games_used = user_settings["TIMES_USED"]
-                self.time_to_lock_list = user_settings["TIME_TO_LOCK"]
+            # Loads the user_settings.json file, clears time_to_lock if new timings are added
+            try:
+                with open(resource_path("data/user_settings.json"), "r") as user_settings_file:
+                    user_settings = json.load(user_settings_file)
+                    self.current_save_file = user_settings["ACTIVE_SAVE_FILE"]
+                    self.minimize_to_tray = user_settings["MINIMIZE_TO_TRAY"]
+                    self.start_minimized = user_settings["START_MINIMIZED"]
+                    self.active = user_settings["INSTALOCK_ON_START"]
+                    self.safe_mode = user_settings["SAFE_MODE_ENABLED_ON_START"]
+                    self.safe_mode_strength = user_settings["SAFE_MODE_STRENGTH_ON_START"]
+                    self.total_games_used = user_settings["TIMES_USED"]
+                    self.time_to_lock_list = user_settings["TIME_TO_LOCK"]
 
-                if len(self.time_to_lock_list) != len(self.safe_mode_timing) + 1:
-                    self.time_to_lock_list = list(
-                        list() for _ in range(len(self.safe_mode_timing) + 1)
-                    )
+                    if len(self.time_to_lock_list) != len(self.safe_mode_timing) + 1:
+                        self.time_to_lock_list = list(
+                            list() for _ in range(len(self.safe_mode_timing) + 1)
+                        )
 
-            with open(resource_path("data/user_settings.json"), "w") as us:
-                user_settings_file_json = {
-                    "ACTIVE_SAVE_FILE": self.current_save_file,
-                    "MINIMIZE_TO_TRAY": self.minimize_to_tray,
-                    "START_MINIMIZED": self.start_minimized,
-                    "INSTALOCK_ON_START": self.active,
-                    "SAFE_MODE_ENABLED_ON_START": self.safe_mode,
-                    "SAFE_MODE_STRENGTH_ON_START": self.safe_mode_strength,
-                    "TIMES_USED": self.total_games_used,
-                    "TIME_TO_LOCK": self.time_to_lock_list,
-                }
-                us.write(json.dumps(user_settings_file_json, indent=4))
+                with open(resource_path("data/user_settings.json"), "w") as us:
+                    user_settings_file_json = {
+                        "ACTIVE_SAVE_FILE": self.current_save_file,
+                        "MINIMIZE_TO_TRAY": self.minimize_to_tray,
+                        "START_MINIMIZED": self.start_minimized,
+                        "INSTALOCK_ON_START": self.active,
+                        "SAFE_MODE_ENABLED_ON_START": self.safe_mode,
+                        "SAFE_MODE_STRENGTH_ON_START": self.safe_mode_strength,
+                        "TIMES_USED": self.total_games_used,
+                        "TIME_TO_LOCK": self.time_to_lock_list,
+                    }
+                    us.write(json.dumps(user_settings_file_json, indent=4))
 
-        # Creates a new user_settings.json file if one does not exist
-        except FileNotFoundError:
-            self.minimize_to_tray = False
-            self.start_minimized = False
-            with open(resource_path("data/user_settings.json"), "w") as us:
-                user_settings_file_json = {
-                    "ACTIVE_SAVE_FILE": self.current_save_file,
-                    "MINIMIZE_TO_TRAY": self.minimize_to_tray,
-                    "START_MINIMIZED": self.start_minimized,
-                    "INSTALOCK_ON_START": self.active,
-                    "SAFE_MODE_ENABLED_ON_START": self.safe_mode,
-                    "SAFE_MODE_STRENGTH_ON_START": self.safe_mode_strength,
-                    "TIMES_USED": self.total_games_used,
-                    "TIME_TO_LOCK": self.time_to_lock_list,
-                }
-                us.write(json.dumps(user_settings_file_json, indent=4))
+            # Creates a new user_settings.json file if one does not exist
+            except FileNotFoundError:
+                self.minimize_to_tray = False
+                self.start_minimized = False
+                with open(resource_path("data/user_settings.json"), "w") as us:
+                    user_settings_file_json = {
+                        "ACTIVE_SAVE_FILE": self.current_save_file,
+                        "MINIMIZE_TO_TRAY": self.minimize_to_tray,
+                        "START_MINIMIZED": self.start_minimized,
+                        "INSTALOCK_ON_START": self.active,
+                        "SAFE_MODE_ENABLED_ON_START": self.safe_mode,
+                        "SAFE_MODE_STRENGTH_ON_START": self.safe_mode_strength,
+                        "TIMES_USED": self.total_games_used,
+                        "TIME_TO_LOCK": self.time_to_lock_list,
+                    }
+                    us.write(json.dumps(user_settings_file_json, indent=4))
 
         # Loads the save file data
         with open(resource_path(f"data/save_files/{self.current_save_file}.json"), "r") as sf:
@@ -1038,7 +1038,7 @@ class Program(customtkinter.CTk):
                 del self.map_specific_agents_dict[map_name]
 
         # Calculates location of box coords
-        if len(self.box_coords) == 0:
+        if first_run is True:
             self.box_coords = dict()
             for box_index in range(len(self.all_agents)):
                 position_x = self.box_info["TOPLEFT"][0] + (
