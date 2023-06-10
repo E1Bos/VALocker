@@ -909,7 +909,7 @@ class Program(customtkinter.CTk):
     # Loads all the data from the config.json and current save file
     def load_data_from_files(self):
         # Loads the config.json file
-        if self.default_agents is None:
+        if len(self.default_agents) == 0:
             with open("data/config.json", "r") as config_file:
                 config = json.load(config_file)
 
@@ -1028,7 +1028,7 @@ class Program(customtkinter.CTk):
                 del self.map_specific_agents_dict[map_name]
 
         # Calculates location of box coords
-        if self.box_coords is None:
+        if len(self.box_coords) == 0:
             self.box_coords = dict()
             for box_index in range(len(self.all_agents)):
                 position_x = self.box_info["TOPLEFT"][0] + (
