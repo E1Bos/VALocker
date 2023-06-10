@@ -110,10 +110,11 @@ class Program(customtkinter.CTk):
             "sentinels_disabled": "#317234",
         }
 
-        # Icon Images
-        self.icons = (
-            PIL.Image.open("images/instalocker_enabled.ico"),
-            PIL.Image.open("images/instalocker_disabled.ico"),
+        # Icons
+        self.icons = dict(
+        disabled = "images/icons/instalocker_disabled.ico",
+        locking = "images/icons/instalocker_enabled.ico",
+        waiting = "images/icons/instalocker_enabled.ico"
         )
 
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("myappid")
@@ -802,18 +803,18 @@ class Program(customtkinter.CTk):
 
     # Updates GUI and tray icons
     def update_icon(self):
-        self.current_icon = (
-            self.icons[0] if self.active is True else self.icons[1]
-        )
+        if self.active is False:
+            current_icon = self.icons["disabled"]
+        elif self.locking is True:
+            current_icon = self.icons["locking"]
+        else:
+            current_icon = self.icons["waiting"]
+        
+        self.wm_iconbitmap(current_icon)
         try:
-            self.icon.icon = self.current_icon
+            self.icon.icon = current_icon
         except AttributeError:
             pass
-
-        if self.active is True:
-            self.wm_iconbitmap("images/instalocker_enabled.ico")
-        else:
-            self.wm_iconbitmap("images/instalocker_disabled.ico")
 
     # Shows the window when icon is clicked
     def show_window(self):
@@ -840,6 +841,7 @@ class Program(customtkinter.CTk):
     def toggle_thread_mode(self):
         self.locking = not self.locking
         self.update_overview_tab()
+        self.update_icon()
 
     # Toggles the safe mode
     def toggle_safe_mode(self):
