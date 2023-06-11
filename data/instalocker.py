@@ -1246,7 +1246,7 @@ class Program(customtkinter.CTk):
             game_map = self.map_lookup.get(current_map)
 
         if game_map is not None:
-            self.selected_agent = self.map_specific_agents_dict[game_map]
+            self.find_agent_coords(self.map_specific_agents_dict[game_map])
             self.locate_agent_screen(True)
         else:
             self.find_game_end()
