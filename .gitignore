@@ -10,12 +10,15 @@ output
 
 # Data files
 __pycache__
-save_files/
 instalocker_beta.py
 
 # Other files
 screenshotter.py
 user_settings.json
 
+# All json
+*.json
+
 # Ignore necessary files
 !default.json
+!config.json
