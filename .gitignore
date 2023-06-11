@@ -1,11 +1,21 @@
-.gitignore
+# This file is used to specify files and folders that should be ignored by git.
+
+# Venv and VSCode settings
 .vscode
 venv
+
+# Building to exe and compiled files
+build_to_exe
 output
-build_config
-data/__pycache__
-data/screenshotter.py
-data/save_files
-data/user_settings.json
-data/instalocker_beta.py
+
+# Data files
+__pycache__
+save_files/
+instalocker_beta.py
+
+# Other files
+screenshotter.py
+user_settings.json
+
+# Ignore necessary files
 !default.json
