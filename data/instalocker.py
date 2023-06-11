@@ -49,12 +49,12 @@ class Program(customtkinter.CTk):
         self.locking_image_path = "images/agent_screen/agent_screen_bar.png"
         self.locking_confirmations = 2
         self.locking_button = None
-        self.agent_coords_offset = (5, 5)
+        self.agent_coords_offset = (15, 15)
         # self.locking_coords = (958, 866, 962, 870) # agent screen dot
         # self.locking_coords = (959, 867, 961, 869) # agent screen dot solid
 
         # Locking Images
-        self.agent_select_image = PIL.Image.open(self.locking_image_path).tobytes()
+        self.agent_select_image = PIL.Image.open(resource_path(self.locking_image_path)).tobytes()
         self.in_menu_images = [
             PIL.Image.open(resource_path("images/in_menu/in_menu_normal_bar.png")).tobytes(),
             PIL.Image.open(resource_path("images/in_menu/in_menu_comp_bar.png")).tobytes(),
@@ -127,7 +127,8 @@ class Program(customtkinter.CTk):
             waiting="images/icons/instalocker_enabled.ico",
         )
         self.current_icon = self.icons["disabled"]
-        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("myappid")
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("VALocker.GUI")
+
 
         # Loads data from save files
         self.load_data_from_files(first_run=True)
@@ -1088,6 +1089,8 @@ class Program(customtkinter.CTk):
         self.current_save_file = file_name
 
         if file_name not in self.save_files:
+            for agent in self.map_specific_agents_dict.copy():
+                self.map_specific_agents_dict[agent] = self.default_agents[0]
             self.save_current_data()
 
         with open(resource_path("data/user_settings.json"), "r") as config_file:
@@ -1379,19 +1382,18 @@ class Program(customtkinter.CTk):
             corner_coords = self.box_coords[f"Box{agent_index}"]
 
             # Box Offset
-            offset_x, offset_y = random.randint(
-                self.agent_coords_offset[0],
-                (self.box_info["SIZE"] - self.agent_coords_offset[0]),
-            ), random.randint(
-                self.agent_coords_offset[1],
-                (self.box_info["SIZE"] - self.agent_coords_offset[1]),
-            )
+            min_offset_x, max_offset_x = self.agent_coords_offset[0], self.box_info["SIZE"] - self.agent_coords_offset[0]
+            min_offset_y, max_offset_y = self.agent_coords_offset[1], self.box_info["SIZE"] - self.agent_coords_offset[1]
+            
+            offset_x = random.randint(min_offset_x, max_offset_x)
+            offset_y = random.randint(min_offset_y, max_offset_y)
 
             # Returns the coords of the agent with a random offset
             self.agent_coords = (
                 corner_coords[0] + offset_x,
-                corner_coords[1] + offset_y,
+                corner_coords[1] + offset_y
             )
+
         # Disable instalocking if the agent trying to be selected is not unlocked
         except ValueError:
             self.active = False
