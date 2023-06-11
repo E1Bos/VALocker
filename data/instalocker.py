@@ -934,9 +934,9 @@ class Program(customtkinter.CTk):
                     map_binary = PIL.Image.open(
                         resource_path(f"images/map_images/{map_name}.png")
                     ).tobytes()
-                    self.map_lookup[map_name] = map_binary
+                    self.map_lookup[map_binary] = map_name
                 except (PIL.UnidentifiedImageError, FileNotFoundError):
-                    self.map_lookup[map_name] = None
+                    self.map_lookup[None] = map_name
 
             # Loads the user_settings.json file, clears time_to_lock if new timings are added
             try:
@@ -1246,6 +1246,7 @@ class Program(customtkinter.CTk):
             game_map = self.map_lookup.get(current_map)
 
         if game_map is not None:
+            self.selected_agent = self.map_specific_agents_dict[game_map]
             self.locate_agent_screen(True)
         else:
             self.find_game_end()
