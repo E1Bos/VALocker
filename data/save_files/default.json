@@ -47,14 +47,14 @@
         "Yoru": false
     },
     "MAP_SPECIFIC_AGENTS": {
-        "Ascent": "Brimstone",
-        "Bind": "Brimstone",
-        "Breeze": "Brimstone",
-        "Fracture": "Brimstone",
-        "Haven": "Brimstone",
-        "Icebox": "Brimstone",
-        "Lotus": "Brimstone",
-        "Pearl": "Brimstone",
-        "Split": "Brimstone"
+        "Ascent": null,
+        "Bind": null,
+        "Breeze": null,
+        "Fracture": null,
+        "Haven": null,
+        "Icebox": null,
+        "Lotus": null,
+        "Pearl": null,
+        "Split": null
     }
 }
