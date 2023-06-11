@@ -686,20 +686,34 @@ class Program(customtkinter.CTk):
         )
         self.select_agent_dropdown.set(f"{self.selected_agent}")
 
-        # Disables random agent button if no random agents are selected
-        if (
-            any(agent is True for agent in self.random_agents_dict.values())
-            and self.map_specific_mode is False
-        ):
-            self.random_agent_button.configure(state=tk.NORMAL)
-        else:
-            self.random_agent_button.configure(state=tk.DISABLED)
-            self.random_agent_mode = False
-
         self.random_agent_button.configure(
             text=f"{'Enabled' if self.random_agent_mode is True else 'Disabled'}",
             fg_color=f"{self.button_colors['enabled'] if self.random_agent_mode is True else self.button_colors['disabled']}",
         )
+
+        # Disables random agent if map specific mode is enabled and vice versa
+        match self.map_specific_mode, self.random_agent_mode:
+            case False, False:
+                self.select_agent_dropdown.configure(state=tk.NORMAL)
+                if any(value is True for value in self.random_agents_dict.values()):
+                    self.random_agent_button.configure(state=tk.NORMAL)
+                else:
+                    self.random_agent_button.configure(state=tk.DISABLED)
+                if any(value is None for value in self.map_specific_agents_dict.values()):
+                    self.select_map_specific_button.configure(state=tk.DISABLED)
+                else:
+                    self.select_map_specific_button.configure(state=tk.NORMAL)
+            case True, False:
+                self.random_agent_button.configure(state=tk.DISABLED)
+                self.select_agent_dropdown.configure(state=tk.DISABLED)
+            case False, True:
+                self.select_map_specific_button.configure(state=tk.DISABLED)
+                self.select_agent_dropdown.configure(state=tk.DISABLED)
+            case True, True:
+                self.map_specific_mode = False
+                self.random_agent_mode = False
+                self.update_overview_tab()
+
 
     # Updates agent toggle tab
     def update_agent_toggle_tab(self):
@@ -790,18 +804,12 @@ class Program(customtkinter.CTk):
     # Updates map specific tab
     def update_map_specific_tab(self):
         for map_name in self.map_names:
-            self.map_dropdowns[map_name].configure(
-                state=tk.DISABLED if self.map_specific_mode is False else tk.NORMAL,
-                values=list(
-                    agent
-                    for agent, unlock_status in self.unlocked_agents_dict.items()
-                    if unlock_status is True
-                ),
-            )
-
-            self.map_dropdowns[map_name].set(
-                f"{self.map_specific_agents_dict[map_name]}"
-            )
+            if self.map_specific_agents_dict[map_name] is not None:
+                self.map_dropdowns[map_name].set(
+                    self.map_specific_agents_dict[map_name]
+                )
+            else:
+                self.map_dropdowns[map_name].set("None")
 
     # Updates GUI and tray icons
     def update_icon(self):
@@ -829,6 +837,7 @@ class Program(customtkinter.CTk):
 
         # Closes the window and runs the icon
 
+    # Hides the window then the [X] is clicked
     def withdraw_window(self):
         self.withdraw()
         self.icon = pystray.Icon(
@@ -870,29 +879,12 @@ class Program(customtkinter.CTk):
     # Toggles the map specific mode
     def toggle_map_specific(self):
         self.map_specific_mode = not self.map_specific_mode
-
-        if self.map_specific_mode is True:
-            self.random_agent_button.configure(state=tk.DISABLED)
-            self.select_agent_dropdown.configure(state=tk.DISABLED)
-        else:
-            if any(agent is True for agent in self.random_agents_dict):
-                self.random_agent_button.configure(state=tk.NORMAL)
-            self.select_agent_dropdown.configure(state=tk.NORMAL)
-
         self.update_overview_tab()
         self.update_map_specific_tab()
 
     # Toggles the random agent mode
     def toggle_random_agent_mode(self):
         self.random_agent_mode = not self.random_agent_mode
-
-        if self.random_agent_mode is True:
-            self.select_agent_dropdown.configure(state=tk.DISABLED)
-            self.select_map_specific_button.configure(state=tk.DISABLED)
-        else:
-            self.select_agent_dropdown.configure(state=tk.NORMAL)
-            self.select_map_specific_button.configure(state=tk.NORMAL)
-
         self.update_overview_tab()
 
     # Toggles the hover mode
@@ -1067,6 +1059,13 @@ class Program(customtkinter.CTk):
                 if unlock_status is True
             )[0]
 
+        # Sets map agents that are not unlocked to None
+        for map_name in self.map_specific_agents_dict.keys():
+            agent_name = self.map_specific_agents_dict[map_name]
+            if agent_name in self.unlocked_agents_dict:
+                if self.unlocked_agents_dict[agent_name] is False:
+                    self.map_specific_agents_dict[map_name] = None
+
         # Gets Coords for the selected agent
         self.find_agent_coords(self.selected_agent)
 
@@ -1090,7 +1089,7 @@ class Program(customtkinter.CTk):
 
         if file_name not in self.save_files:
             for agent in self.map_specific_agents_dict.copy():
-                self.map_specific_agents_dict[agent] = self.default_agents[0]
+                self.map_specific_agents_dict[agent] = None
             self.save_current_data()
 
         with open(resource_path("data/user_settings.json"), "r") as config_file:
@@ -1209,6 +1208,8 @@ class Program(customtkinter.CTk):
     # Toggles which agent is selected for a specific map
     def toggle_map_specific_agent(self, agent_name, map_name):
         self.map_specific_agents_dict[map_name] = agent_name
+        self.update_map_specific_tab()
+        self.update_overview_tab()
         self.save_current_data()
 
     # endregion
