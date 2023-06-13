@@ -36,9 +36,6 @@ class Program(customtkinter.CTk):
     def __init__(self):
         super().__init__()
 
-        # Default Save File
-        self.current_save_file = "default"
-
         # Locking Values
         self.active = False
         self.active_thread = True
@@ -128,12 +125,14 @@ class Program(customtkinter.CTk):
         self.current_icon = self.icons["disabled"]
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("VALocker.GUI")
 
-
-        # Loads data from save files
-        self.load_data_from_files(first_run=True)
+        # Default Save File
+        self.current_save_file = "default"
 
         # Finds all save files
         self.find_save_files()
+
+        # Loads data from save files
+        self.load_data_from_files(first_run=True)
 
         # Creates Mouse Controller
         self.mouse = pynmouse.Controller()
@@ -713,7 +712,6 @@ class Program(customtkinter.CTk):
                 self.random_agent_mode = False
                 self.update_overview_tab()
 
-
     # Updates agent toggle tab
     def update_agent_toggle_tab(self):
         for agent in self.all_agents:
@@ -805,11 +803,10 @@ class Program(customtkinter.CTk):
         unlocked_agents = list(
                 agent for agent, unlock_status in self.unlocked_agents_dict.items() if unlock_status is True
             )
-        
         for map_name in self.map_names:
-            self.map_dropdowns[map_name].configure(values=unlocked_agents, fg_color='#1f6aa5', button_color='#203a4f')
-
+            self.map_dropdowns[map_name].configure(values=unlocked_agents)
             if self.map_specific_agents_dict[map_name] is not None and self.map_specific_agents_dict[map_name] in unlocked_agents:
+                self.map_dropdowns[map_name].configure(fg_color='#1f6aa5', button_color='#203a4f')
                 self.map_dropdowns[map_name].set(
                     self.map_specific_agents_dict[map_name]
                 )
@@ -941,7 +938,7 @@ class Program(customtkinter.CTk):
             try:
                 with open(resource_path("data/user_settings.json"), "r") as user_settings_file:
                     user_settings = json.load(user_settings_file)
-                    self.current_save_file = user_settings["ACTIVE_SAVE_FILE"]
+                    self.current_save_file = user_settings["ACTIVE_SAVE_FILE"] if user_settings["ACTIVE_SAVE_FILE"] in self.save_files else 'default'
                     self.minimize_to_tray = user_settings["MINIMIZE_TO_TRAY"]
                     self.start_minimized = user_settings["START_MINIMIZED"]
                     self.active = user_settings["INSTALOCK_ON_START"]
