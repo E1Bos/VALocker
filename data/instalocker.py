@@ -888,6 +888,8 @@ class Program(customtkinter.CTk):
     # Toggles the random agent mode
     def toggle_random_agent_mode(self):
         self.random_agent_mode = not self.random_agent_mode
+        if self.random_agent_mode is False:
+            self.find_agent_coords(self.selected_agent)
         self.update_overview_tab()
 
     # Toggles the hover mode
@@ -1220,6 +1222,7 @@ class Program(customtkinter.CTk):
 
     # region Locking
 
+    # Inital locking thread
     def locking_thread(self):
         time.sleep(1)
         self.mss_instance = mss.mss()
@@ -1241,6 +1244,7 @@ class Program(customtkinter.CTk):
                 else:
                     self.locate_map_screen()
 
+    # Detects which map the game is on
     def locate_map_screen(self):
         game_map = None
         while (
@@ -1262,6 +1266,7 @@ class Program(customtkinter.CTk):
         else:
             self.find_game_end()
 
+    # Detects when in agent select screen
     def locate_agent_screen(self, map_specific_toggle=False):
         total_confirmations = 0
         self.start_lock = float()
@@ -1280,34 +1285,67 @@ class Program(customtkinter.CTk):
 
                 if total_confirmations >= self.locking_confirmations:
                     self.start_lock = time.time()
-                    self.lock_agent()
-
+                    
+                    if self.random_agent_mode is False:
+                        self.lock_agent()
+                    else:
+                        self.lock_random_agent()
             else:
                 total_confirmations = 0
+        else:
+            self.find_game_end()
+
+    # Starts the locking process
+    def lock_agent(self, randomly_selected_agent=None):
+        if self.safe_mode is False:
+            self.lock_agent_fast()
+        else:
+            self.lock_agent_safe()
+
+        time_to_lock = round((time.time() - self.start_lock) * 1000, 2)
+
+        if self.safe_mode is True:
+            self.time_to_lock_list[self.safe_mode_strength].append(time_to_lock)
+        else:
+            self.time_to_lock_list[-1].append(time_to_lock)
+
+        self.locking = False
+        self.total_games_used += 1
+
+        if randomly_selected_agent is not None and self.random_agent_exclusiselect is True:
+            self.toggle_random_agent_status(
+                randomly_selected_agent, exclusiselect_toggle=True
+            )
+            if all(value is False for value in self.random_agents_dict.values()):
+                self.toggle_random_agent_exclusiselect()
+
+        last_five_data_points = list()
+        for timing_list in self.time_to_lock_list:
+            if len(timing_list) >= 5:
+                last_five_data_points.append(timing_list[-5:])
+            else:
+                last_five_data_points.append(timing_list)
+        self.time_to_lock_list = last_five_data_points
+
+        self.update_overview_tab()
+        self.update_stats_in_user_settings()
         self.find_game_end()
 
-    def lock_agent(self):
-        randomly_selected_agent = str()
-        if self.random_agent_mode is True:
-            randomly_selected_agent = random.choice(
-                list(
-                    agent
-                    for agent in self.random_agents_dict
-                    if self.random_agents_dict[agent] is True
-                )
+    # Selects random agent then calls lock agent
+    def lock_random_agent(self):
+        randomly_selected_agent = random.choice(
+            list(
+                agent
+                for agent in self.random_agents_dict
+                if self.random_agents_dict[agent] is True
             )
-            self.find_agent_coords(randomly_selected_agent)
-        if self.safe_mode is False:
-            self.mouse.position = (self.agent_coords[0], self.agent_coords[1])
-            time.sleep(0.01)
-            self.mouse.click(pynmouse.Button.left, 1)
-            time.sleep(0.06)
-            self.mouse.position = (self.lock_button[0], self.lock_button[1])
-            time.sleep(0.01)
+        )
+        self.find_agent_coords(randomly_selected_agent)
 
-            if self.hover_mode is False:
-                self.mouse.click(pynmouse.Button.left, 1)
-        else:
+        self.lock_agent(randomly_selected_agent=randomly_selected_agent)
+
+    # Lock agent when safe mode is enabled
+    def lock_agent_safe(self):
             low_timing = (
                 list(self.safe_mode_timing.values())[self.safe_mode_strength][0] / 4
             )
@@ -1326,34 +1364,19 @@ class Program(customtkinter.CTk):
             if self.hover_mode is False:
                 self.mouse.click(pynmouse.Button.left, 1)
 
-        time_to_lock = round((time.time() - self.start_lock) * 1000, 2)
-        if self.safe_mode is True:
-            self.time_to_lock_list[self.safe_mode_strength].append(time_to_lock)
-        else:
-            self.time_to_lock_list[-1].append(time_to_lock)
+    # Lock agent when safe mode is disabled
+    def lock_agent_fast(self):
+            self.mouse.position = (self.agent_coords[0], self.agent_coords[1])
+            time.sleep(0.01)
+            self.mouse.click(pynmouse.Button.left, 1)
+            time.sleep(0.06)
+            self.mouse.position = (self.lock_button[0], self.lock_button[1])
+            time.sleep(0.01)
 
-        if self.random_agent_mode is True and self.random_agent_exclusiselect is True:
-            self.toggle_random_agent_status(
-                randomly_selected_agent, exclusiselect_toggle=True
-            )
-            if all(value is False for value in self.random_agents_dict.values()):
-                self.toggle_random_agent_exclusiselect()
+            if self.hover_mode is False:
+                self.mouse.click(pynmouse.Button.left, 1)
 
-        self.locking = False
-        self.total_games_used += 1
-
-        last_five_data_points = list()
-        for timing_list in self.time_to_lock_list:
-            if len(timing_list) >= 5:
-                last_five_data_points.append(timing_list[-5:])
-            else:
-                last_five_data_points.append(timing_list)
-        self.time_to_lock_list = last_five_data_points
-
-        self.update_overview_tab()
-        self.update_stats_in_user_settings()
-        self.find_game_end()
-
+    # Finds the end of the game
     def find_game_end(self):
         while (
             self.active is True and self.active_thread is True and self.locking is False
