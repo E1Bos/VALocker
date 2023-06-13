@@ -3,16 +3,14 @@
 # Imports all modules, if it fails it will install them
 try:
     # Modules that are not installed by default
-    import customtkinter, pystray
-    import PIL.Image, PIL.ImageGrab
+    import customtkinter, pystray, PIL.Image, mss
     import pynput.mouse as pynmouse
 except ModuleNotFoundError:
     # Installs missing modules if exception is raised
     import subprocess
 
     subprocess.run(["pip", "install", "-r", "requirements.txt"])
-    import customtkinter, pystray
-    import PIL.Image, PIL.ImageGrab
+    import customtkinter, pystray, PIL.Image, mss
     import pynput.mouse as pynmouse
 
 # Imports modules that are installed with Python
@@ -46,6 +44,7 @@ class Program(customtkinter.CTk):
         self.active_thread = True
         self.locking = True
         self.locking_coords = (945, 866, 955, 867)
+        self.map_selection_coords = (878, 437, 1047, 646)
         self.locking_image_path = "images/agent_screen/agent_screen_bar.png"
         self.locking_confirmations = 2
         self.locking_button = None
@@ -803,13 +802,20 @@ class Program(customtkinter.CTk):
 
     # Updates map specific tab
     def update_map_specific_tab(self):
+        unlocked_agents = list(
+                agent for agent, unlock_status in self.unlocked_agents_dict.items() if unlock_status is True
+            )
+        
         for map_name in self.map_names:
-            if self.map_specific_agents_dict[map_name] is not None:
+            self.map_dropdowns[map_name].configure(values=unlocked_agents, fg_color='#1f6aa5', button_color='#203a4f')
+
+            if self.map_specific_agents_dict[map_name] is not None and self.map_specific_agents_dict[map_name] in unlocked_agents:
                 self.map_dropdowns[map_name].set(
                     self.map_specific_agents_dict[map_name]
                 )
             else:
                 self.map_dropdowns[map_name].set("None")
+                self.map_dropdowns[map_name].configure(fg_color=self.button_colors["disabled"], button_color="#4e2126")
 
     # Updates GUI and tray icons
     def update_icon(self):
@@ -1219,6 +1225,7 @@ class Program(customtkinter.CTk):
 
     def locking_thread(self):
         time.sleep(1)
+        self.mss_instance = mss.mss()
         while self.active_thread is True:
             time.sleep(0.3)
             if (
@@ -1247,7 +1254,9 @@ class Program(customtkinter.CTk):
             and self.map_specific_mode is True
         ):
             time.sleep(0.1)
-            current_map = PIL.ImageGrab.grab(bbox=(878, 437, 1047, 646)).tobytes()
+
+            current_map_ss = self.mss_instance.grab(self.map_selection_coords)
+            current_map = PIL.Image.frombytes("RGB", current_map_ss.size, current_map_ss.bgra, "raw", "BGRX").tobytes()
             game_map = self.map_lookup.get(current_map)
 
         if game_map is not None:
@@ -1265,9 +1274,9 @@ class Program(customtkinter.CTk):
             and self.active is True
             and self.map_specific_mode is map_specific_toggle
         ):
-            agent_screen_section = PIL.ImageGrab.grab(
-                bbox=(self.locking_coords)
-            ).tobytes()
+            agent_screen_section_ss = self.mss_instance.grab(self.locking_coords)
+            agent_screen_section = PIL.Image.frombytes("RGB", agent_screen_section_ss.size, agent_screen_section_ss.bgra, "raw", "BGRX").tobytes()
+            
 
             if agent_screen_section == self.agent_select_image:
                 total_confirmations += 1
@@ -1353,8 +1362,13 @@ class Program(customtkinter.CTk):
             self.active is True and self.active_thread is True and self.locking is False
         ):
             time.sleep(1)
-            menu_screen_1 = PIL.ImageGrab.grab(bbox=(814, 243, 892, 244)).tobytes()
-            menu_screen_2 = PIL.ImageGrab.grab(bbox=(1330, 330, 1455, 353)).tobytes()
+            
+            menu_screen_1_ss = self.mss_instance.grab((814, 243, 892, 244))
+            menu_screen_2_ss = self.mss_instance.grab((1330, 330, 1455, 353))
+
+            menu_screen_1 = PIL.Image.frombytes("RGB", menu_screen_1_ss.size, menu_screen_1_ss.bgra, "raw", "BGRX").tobytes()
+            menu_screen_2 = PIL.Image.frombytes("RGB", menu_screen_2_ss.size, menu_screen_2_ss.bgra, "raw", "BGRX").tobytes()
+            
             if (
                 menu_screen_1 in self.in_menu_images
                 or menu_screen_2 in self.in_menu_images

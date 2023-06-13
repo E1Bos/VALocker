@@ -8,9 +8,8 @@ venv
 build_to_exe
 output
 
-# Data files
+# Folders
 __pycache__
-instalocker_beta.py
 
 # Other files
 screenshotter.py
