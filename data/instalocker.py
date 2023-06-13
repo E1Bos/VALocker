@@ -1179,6 +1179,7 @@ class Program(customtkinter.CTk):
                 case "none":
                     for agent in self.all_agents:
                         self.random_agents_dict[agent] = False
+                    self.random_agent_mode = False
                 case _:
                     if all(
                         self.random_agents_dict[agent] is True
