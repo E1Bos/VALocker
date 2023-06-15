@@ -19,18 +19,18 @@ import tkinter as tk
 
 # endregion
 
+
 # region PyInstaller Requirement
 def resource_path(relative):
-    return os.path.join(
-        os.environ.get(
-            "_MEIPASS2",
-            os.path.abspath(".")
-        ),
-        relative
-    )
+    return os.path.join(os.environ.get("_MEIPASS2", os.path.abspath(".")), relative)
+
+
 # endregion
 
-class Program(customtkinter.CTk):
+customtkinter.set_appearance_mode("Dark")
+customtkinter.set_default_color_theme("blue")
+
+class InstalockerGUIMain(customtkinter.CTk):
     # region Init and Exit Function
 
     def __init__(self):
@@ -50,12 +50,22 @@ class Program(customtkinter.CTk):
         # self.locking_coords = (959, 867, 961, 869) # agent screen dot solid
 
         # Locking Images
-        self.agent_select_image = PIL.Image.open(resource_path(self.locking_image_path)).tobytes()
+        self.agent_select_image = PIL.Image.open(
+            resource_path(self.locking_image_path)
+        ).tobytes()
         self.in_menu_images = [
-            PIL.Image.open(resource_path("images/in_menu/in_menu_normal_bar.png")).tobytes(),
-            PIL.Image.open(resource_path("images/in_menu/in_menu_comp_bar.png")).tobytes(),
-            PIL.Image.open(resource_path("images/in_menu/in_menu_progress_text_1.png")).tobytes(),
-            PIL.Image.open(resource_path("images/in_menu/in_menu_progress_text_2.png")).tobytes(),
+            PIL.Image.open(
+                resource_path("images/in_menu/in_menu_normal_bar.png")
+            ).tobytes(),
+            PIL.Image.open(
+                resource_path("images/in_menu/in_menu_comp_bar.png")
+            ).tobytes(),
+            PIL.Image.open(
+                resource_path("images/in_menu/in_menu_progress_text_1.png")
+            ).tobytes(),
+            PIL.Image.open(
+                resource_path("images/in_menu/in_menu_progress_text_2.png")
+            ).tobytes(),
         ]
 
         # Map Specific
@@ -95,16 +105,15 @@ class Program(customtkinter.CTk):
 
         # Save Files
         self.save_files = None
+        self.favorited_save_files = list()
 
         # GUI SETTINGS
         self.window_width = 550
         self.window_height = 500
         self.label_font = ("Arial", 16)  # Arial Size 16
         self.button_font = ("Arial", 14)  # Arial Size 14
-        customtkinter.set_appearance_mode("Dark")
-        customtkinter.set_default_color_theme("blue")
         self.title("VALocker")
-        self.button_colors = {"enabled": "#259969", "disabled": "#b52d3b"}
+        self.button_colors = {"enabled": "sea green", "disabled": "#b52d3b"}
         self.role_colors = {
             "controllers": "#f5a623",
             "controllers_disabled": "#ae7008",
@@ -147,7 +156,7 @@ class Program(customtkinter.CTk):
         if self.minimize_to_tray is True:
             self.protocol("WM_DELETE_WINDOW", self.withdraw_window)
 
-            self.create_icon()
+            self.create_tray_icon()
 
             if self.start_minimized is True:
                 self.withdraw_window()
@@ -167,7 +176,7 @@ class Program(customtkinter.CTk):
 
     # endregion
 
-    # region GUI Functions and Icon
+    # region GUI
 
     # region GUI Creation
     def create_gui(self):
@@ -186,6 +195,7 @@ class Program(customtkinter.CTk):
         agent_toggle_tab = tabs.add("Toggle Agents")
         random_agent_tab = tabs.add("Random Agents")
         map_specific_tab = tabs.add("Map Specific")
+        save_file_tab = tabs.add("Save File")
 
         # region Overview Tab
 
@@ -256,23 +266,21 @@ class Program(customtkinter.CTk):
             self.safe_mode_strength_button.pack_forget()
 
         current_save_label = customtkinter.CTkLabel(
-            current_status_frame, text="Current Save:", font=self.label_font
+            current_status_frame,
+            text=f"Current Save:",
+            font=self.label_font,
         )
         current_save_label.pack(padx=10, pady=(5, 0))
 
-        self.selected_save_file_combobox = customtkinter.CTkComboBox(
+        self.current_save_small_label = customtkinter.CTkLabel(
             current_status_frame,
-            values=self.save_files,
-            command=lambda x: self.change_current_save_file(x),
+            text=f"{self.current_save_file}",
+            font=self.button_font,
+            fg_color="grey16",
+            corner_radius=5,
+            width=140,
         )
-        self.selected_save_file_combobox.set(f"{self.current_save_file}")
-        self.selected_save_file_combobox.pack(padx=10, pady=(0, 5))
-        self.selected_save_file_combobox.bind(
-            "<Return>",
-            lambda x: self.change_current_save_file(
-                self.selected_save_file_combobox.get()
-            ),
-        )
+        self.current_save_small_label.pack(padx=10, pady=(0, 5))
 
         select_agent_frame = customtkinter.CTkFrame(overview_tab)
         select_agent_frame.grid(row=0, column=1)
@@ -476,7 +484,7 @@ class Program(customtkinter.CTk):
         invisible_button.pack(side="right", padx=(0, 20), fill=tk.Y, pady=5)
 
         random_agent_all_none_toggle_frame = customtkinter.CTkFrame(
-            random_agent_allnone_button_frame, height=100, fg_color="#333333"
+            random_agent_allnone_button_frame, height=100, fg_color="gray20"
         )
         random_agent_all_none_toggle_frame.pack(padx=20, pady=5)
 
@@ -525,7 +533,7 @@ class Program(customtkinter.CTk):
                 random_agent_individual_toggle_frame,
                 width=120,
                 height=100,
-                fg_color="#333333",
+                fg_color="gray20",
             )
             role_frames[role].grid(row=0, column=index % 4, padx=5, pady=5, sticky="n")
 
@@ -591,22 +599,115 @@ class Program(customtkinter.CTk):
 
         # endregion
 
-    def create_icon(self):
-        self.icon_menu = pystray.Menu(
-            pystray.MenuItem(
-                lambda x: f"Show GUI", lambda x: self.show_window(), default=True
-            ),
-            pystray.MenuItem(
-                lambda x: f'Status: {"Enabled" if self.active else "Disabled"}',
-                lambda x: self.toggle_active(),
-                checked=lambda x: self.active,
-            ),
-            pystray.MenuItem(
-                lambda x: f"Status: {'None' if self.active is False else 'Locking' if self.locking is True else 'In Game (Waiting)'}",
-                lambda x: self.toggle_thread_mode(),
-            ),
-            pystray.MenuItem("Exit", lambda x: self.exit()),
+        # region Save File Tab
+        self.save_file_scrollable_frame = customtkinter.CTkScrollableFrame(
+            save_file_tab, height=300
         )
+        self.save_file_scrollable_frame.pack(
+            fill=tk.X, expand=False, padx=10, pady=(10, 0)
+        )
+
+        self.save_file_frame_items = dict()
+        self.save_file_icons = dict(
+            favorite_empty=customtkinter.CTkImage(
+                dark_image=PIL.Image.open(
+                    resource_path("images/gui_icons/favorite_empty.png")
+                ),
+                size=(20, 20),
+            ),
+            favorite_filled=customtkinter.CTkImage(
+                dark_image=PIL.Image.open(
+                    resource_path("images/gui_icons/favorite_filled.png")
+                ),
+                size=(20, 20),
+            ),
+            rename=customtkinter.CTkImage(
+                dark_image=PIL.Image.open(resource_path("images/gui_icons/rename.png")),
+                size=(20, 20),
+            ),
+            delete=customtkinter.CTkImage(
+                dark_image=PIL.Image.open(resource_path("images/gui_icons/delete.png")),
+                size=(20, 20),
+            ),
+        )
+
+        ordered_save_files = self.favorited_save_files + [
+            save_file
+            for save_file in self.save_files
+            if save_file not in self.favorited_save_files
+        ]
+        for save_file in ordered_save_files:
+            self.individual_save_file_items(save_file)
+
+        new_save_file_button = customtkinter.CTkButton(
+            save_file_tab,
+            text="New Save File",
+            command=self.new_save_file,
+        )
+        new_save_file_button.pack(padx=10, pady=10, anchor=tk.NW)
+
+        # endregion
+
+    # Creates the list of save file items
+    def individual_save_file_items(self, file_name, just_icons=False):
+        if just_icons is False:
+            self.save_file_frame_items[f"{file_name}_frame"] = customtkinter.CTkFrame(
+                self.save_file_scrollable_frame,
+                height=50,
+                fg_color="grey18"
+                if file_name != self.current_save_file
+                else "dark green",
+            )
+            self.save_file_frame_items[f"{file_name}_frame"].pack(
+                fill=tk.X, padx=(5, 0), pady=3
+            )
+
+            self.save_file_frame_items[f"{file_name}_button"] = customtkinter.CTkButton(
+                self.save_file_frame_items[f"{file_name}_frame"],
+                text=f"{file_name}",
+                font=self.label_font,
+                fg_color="transparent",
+                hover_color="gray22",
+                hover=True if file_name != self.current_save_file else False,
+                command=lambda save_file=file_name: self.change_current_save_file(
+                    save_file
+                ),
+                anchor="w",
+            )
+            self.save_file_frame_items[f"{file_name}_button"].pack(
+                side=tk.LEFT, padx=10, pady=5
+            )
+
+        for icon_name in reversed(
+            ["favorite", "rename", "delete"]
+            if file_name != "default"
+            else ["favorite"]
+        ):
+            icon_image = (
+                self.save_file_icons[icon_name]
+                if icon_name != "favorite"
+                else self.save_file_icons[
+                    f"{icon_name}_{'filled' if file_name in self.favorited_save_files else 'empty'}"
+                ]
+            )
+            self.save_file_frame_items[
+                f"{file_name}_{icon_name}"
+            ] = customtkinter.CTkButton(
+                self.save_file_frame_items[f"{file_name}_frame"],
+                image=icon_image,
+                text="",
+                fg_color="transparent",
+                hover_color="gray22",
+                width=20,
+                height=20,
+                command=lambda save_file=file_name, icon_name=icon_name: eval(
+                    f"self.{icon_name}_save_file(save_file)",
+                    {"self": self, "save_file": save_file},
+                ),
+            )
+            self.save_file_frame_items[f"{file_name}_{icon_name}"].pack(
+                side=tk.RIGHT, padx=(0, 5), pady=5
+            )
 
     # endregion
 
@@ -615,6 +716,7 @@ class Program(customtkinter.CTk):
     # Updates All GUI Elements
     def update_gui(self):
         try:
+            self.update_save_file_tab()
             self.update_overview_tab()
             self.update_agent_toggle_tab()
             self.update_random_agent_tab()
@@ -662,7 +764,7 @@ class Program(customtkinter.CTk):
             text=f"{list(self.safe_mode_timing.keys())[self.safe_mode_strength]}"
         )
 
-        self.selected_save_file_combobox.configure(values=self.save_files)
+        self.current_save_small_label.configure(text=f"{self.current_save_file}")
 
         # Buttons Middle Column
         self.hover_mode_button.configure(
@@ -697,7 +799,9 @@ class Program(customtkinter.CTk):
                     self.random_agent_button.configure(state=tk.NORMAL)
                 else:
                     self.random_agent_button.configure(state=tk.DISABLED)
-                if any(value is None for value in self.map_specific_agents_dict.values()):
+                if any(
+                    value is None for value in self.map_specific_agents_dict.values()
+                ):
                     self.select_map_specific_button.configure(state=tk.DISABLED)
                 else:
                     self.select_map_specific_button.configure(state=tk.NORMAL)
@@ -801,18 +905,82 @@ class Program(customtkinter.CTk):
     # Updates map specific tab
     def update_map_specific_tab(self):
         unlocked_agents = list(
-                agent for agent, unlock_status in self.unlocked_agents_dict.items() if unlock_status is True
-            )
+            agent
+            for agent, unlock_status in self.unlocked_agents_dict.items()
+            if unlock_status is True
+        )
         for map_name in self.map_names:
             self.map_dropdowns[map_name].configure(values=unlocked_agents)
-            if self.map_specific_agents_dict[map_name] is not None and self.map_specific_agents_dict[map_name] in unlocked_agents:
-                self.map_dropdowns[map_name].configure(fg_color='#1f6aa5', button_color='#203a4f')
+            if (
+                self.map_specific_agents_dict[map_name] is not None
+                and self.map_specific_agents_dict[map_name] in unlocked_agents
+            ):
+                self.map_dropdowns[map_name].configure(
+                    fg_color="#1f6aa5", button_color="#203a4f"
+                )
                 self.map_dropdowns[map_name].set(
                     self.map_specific_agents_dict[map_name]
                 )
             else:
                 self.map_dropdowns[map_name].set("None")
-                self.map_dropdowns[map_name].configure(fg_color=self.button_colors["disabled"], button_color="#4e2126")
+                self.map_dropdowns[map_name].configure(
+                    fg_color=self.button_colors["disabled"], button_color="#4e2126"
+                )
+
+    # Updates the save file tab
+    def update_save_file_tab(self):
+        ordered_save_files = self.favorited_save_files + [
+            save_file
+            for save_file in self.save_files
+            if save_file not in self.favorited_save_files
+        ]
+        for save_file in self.save_files:
+            self.save_file_frame_items[f"{save_file}_frame"].configure(
+                fg_color="grey18"
+                if save_file != self.current_save_file
+                else "dark green"
+            )
+            self.save_file_frame_items[f"{save_file}_button"].configure(
+                hover=True if save_file != self.current_save_file else False
+            )
+
+            if save_file in self.favorited_save_files:
+                self.save_file_frame_items[f"{save_file}_favorite"].configure(
+                    image=self.save_file_icons["favorite_filled"]
+                )
+            else:
+                self.save_file_frame_items[f"{save_file}_favorite"].configure(
+                    image=self.save_file_icons["favorite_empty"]
+                )
+            self.save_file_frame_items[f"{save_file}_frame"].pack_forget()
+        for save_file in ordered_save_files:
+            self.save_file_frame_items[f"{save_file}_frame"].pack(
+                fill=tk.X, padx=(5, 0), pady=3
+            )
+
+    # endregion
+
+    # endregion
+
+    # region Icon
+
+    # Creates the tray icon
+    def create_tray_icon(self):
+        self.icon_menu = pystray.Menu(
+            pystray.MenuItem(
+                lambda x: f"Show GUI", lambda x: self.show_window(), default=True
+            ),
+            pystray.MenuItem(
+                lambda x: f'Status: {"Enabled" if self.active else "Disabled"}',
+                lambda x: self.toggle_active(),
+                checked=lambda x: self.active,
+            ),
+            pystray.MenuItem(
+                lambda x: f"Status: {'None' if self.active is False else 'Locking' if self.locking is True else 'In Game (Waiting)'}",
+                lambda x: self.toggle_thread_mode(),
+            ),
+            pystray.MenuItem("Exit", lambda x: self.exit()),
+        )
 
     # Updates GUI and tray icons
     def update_icon(self):
@@ -838,17 +1006,16 @@ class Program(customtkinter.CTk):
         self.protocol("WM_DELETE_WINDOW", self.withdraw_window)
         self.after(0, self.deiconify)
 
-        # Closes the window and runs the icon
-
     # Hides the window then the [X] is clicked
     def withdraw_window(self):
         self.withdraw()
         self.icon = pystray.Icon(
-            "VALocker", PIL.Image.open(resource_path(self.current_icon)), "VALocker", self.icon_menu
+            "VALocker",
+            PIL.Image.open(resource_path(self.current_icon)),
+            "VALocker",
+            self.icon_menu,
         )
         self.icon.run()
-
-    # endregion
 
     # endregion
 
@@ -912,7 +1079,7 @@ class Program(customtkinter.CTk):
 
     # endregion
 
-    # region Config and Save Reading and Writing
+    # region Config Files
 
     # Loads all the data from the config.json and current save file
     def load_data_from_files(self, first_run=False):
@@ -938,14 +1105,23 @@ class Program(customtkinter.CTk):
 
             # Loads the user_settings.json file, clears time_to_lock if new timings are added
             try:
-                with open(resource_path("data/user_settings.json"), "r") as user_settings_file:
+                with open(
+                    resource_path("data/user_settings.json"), "r"
+                ) as user_settings_file:
                     user_settings = json.load(user_settings_file)
-                    self.current_save_file = user_settings["ACTIVE_SAVE_FILE"] if user_settings["ACTIVE_SAVE_FILE"] in self.save_files else 'default'
+                    self.current_save_file = (
+                        user_settings["ACTIVE_SAVE_FILE"]
+                        if user_settings["ACTIVE_SAVE_FILE"] in self.save_files
+                        else "default"
+                    )
                     self.minimize_to_tray = user_settings["MINIMIZE_TO_TRAY"]
                     self.start_minimized = user_settings["START_MINIMIZED"]
                     self.active = user_settings["INSTALOCK_ON_START"]
                     self.safe_mode = user_settings["SAFE_MODE_ENABLED_ON_START"]
-                    self.safe_mode_strength = user_settings["SAFE_MODE_STRENGTH_ON_START"]
+                    self.safe_mode_strength = user_settings[
+                        "SAFE_MODE_STRENGTH_ON_START"
+                    ]
+                    self.favorited_save_files = user_settings["FAVORITED_SAVE_FILES"]
                     self.total_games_used = user_settings["TIMES_USED"]
                     self.time_to_lock_list = user_settings["TIME_TO_LOCK"]
 
@@ -954,18 +1130,19 @@ class Program(customtkinter.CTk):
                             list() for _ in range(len(self.safe_mode_timing) + 1)
                         )
 
-                with open(resource_path("data/user_settings.json"), "w") as us:
-                    user_settings_file_json = {
-                        "ACTIVE_SAVE_FILE": self.current_save_file,
-                        "MINIMIZE_TO_TRAY": self.minimize_to_tray,
-                        "START_MINIMIZED": self.start_minimized,
-                        "INSTALOCK_ON_START": self.active,
-                        "SAFE_MODE_ENABLED_ON_START": self.safe_mode,
-                        "SAFE_MODE_STRENGTH_ON_START": self.safe_mode_strength,
-                        "TIMES_USED": self.total_games_used,
-                        "TIME_TO_LOCK": self.time_to_lock_list,
-                    }
-                    us.write(json.dumps(user_settings_file_json, indent=4))
+                        with open(resource_path("data/user_settings.json"), "w") as us:
+                            user_settings_file_json = {
+                                "ACTIVE_SAVE_FILE": self.current_save_file,
+                                "MINIMIZE_TO_TRAY": self.minimize_to_tray,
+                                "START_MINIMIZED": self.start_minimized,
+                                "INSTALOCK_ON_START": self.active,
+                                "SAFE_MODE_ENABLED_ON_START": self.safe_mode,
+                                "SAFE_MODE_STRENGTH_ON_START": self.safe_mode_strength,
+                                "FAVORITED_SAVE_FILES": self.favorited_save_files,
+                                "TIMES_USED": self.total_games_used,
+                                "TIME_TO_LOCK": self.time_to_lock_list,
+                            }
+                            us.write(json.dumps(user_settings_file_json, indent=4))
 
             # Creates a new user_settings.json file if one does not exist
             except FileNotFoundError:
@@ -979,13 +1156,16 @@ class Program(customtkinter.CTk):
                         "INSTALOCK_ON_START": self.active,
                         "SAFE_MODE_ENABLED_ON_START": self.safe_mode,
                         "SAFE_MODE_STRENGTH_ON_START": self.safe_mode_strength,
+                        "FAVORITED_SAVE_FILES": self.favorited_save_files,
                         "TIMES_USED": self.total_games_used,
                         "TIME_TO_LOCK": self.time_to_lock_list,
                     }
                     us.write(json.dumps(user_settings_file_json, indent=4))
 
         # Loads the save file data
-        with open(resource_path(f"data/save_files/{self.current_save_file}.json"), "r") as sf:
+        with open(
+            resource_path(f"data/save_files/{self.current_save_file}.json"), "r"
+        ) as sf:
             save_file_json = json.load(sf)
             self.selected_agent = save_file_json["SELECTED_AGENT"]
             self.unlocked_agents_dict = save_file_json["UNLOCKED_AGENTS"]
@@ -1079,7 +1259,9 @@ class Program(customtkinter.CTk):
 
     # Saves all the data to the current save file
     def save_current_data(self):
-        with open(resource_path(f"data/save_files/{self.current_save_file}.json"), "w") as sf:
+        with open(
+            resource_path(f"data/save_files/{self.current_save_file}.json"), "w"
+        ) as sf:
             save_file_json = {
                 "SELECTED_AGENT": self.selected_agent,
                 "UNLOCKED_AGENTS": self.unlocked_agents_dict,
@@ -1088,14 +1270,23 @@ class Program(customtkinter.CTk):
             }
             sf.write(json.dumps(save_file_json, indent=4))
 
+    # Updates the stats in config.json
+    def update_user_settings(self):
+        with open(resource_path("data/user_settings.json"), "r") as config_file:
+            config = json.load(config_file)
+            config["FAVORITED_SAVE_FILES"] = self.favorited_save_files
+            config["TIMES_USED"] = self.total_games_used
+            config["TIME_TO_LOCK"] = self.time_to_lock_list
+        with open(resource_path("data/user_settings.json"), "w") as file:
+            file.write(json.dumps(config, indent=4))
+
+    # endregion
+
+    # region Save Files
+
     # Changes the current active save file
     def change_current_save_file(self, file_name):
         self.current_save_file = file_name
-
-        if file_name not in self.save_files:
-            for agent in self.map_specific_agents_dict.copy():
-                self.map_specific_agents_dict[agent] = None
-            self.save_current_data()
 
         with open(resource_path("data/user_settings.json"), "r") as config_file:
             config = json.load(config_file)
@@ -1109,21 +1300,181 @@ class Program(customtkinter.CTk):
 
         self.update_gui()
 
+    # Favorites the save file indicated by the file_name
+    def favorite_save_file(self, file_name):
+        if file_name in self.favorited_save_files.copy():
+            self.favorited_save_files.remove(file_name)
+        else:
+            self.favorited_save_files.append(file_name)
+        self.update_save_file_tab()
+        self.update_user_settings()
+
+    # Renames the save file indicated by the old_file_name
+    def rename_save_file(self, old_file_name):
+        new_file_name = InputPopup(
+            window_geometry=self.winfo_geometry(),
+            title="Rename Save File",
+            file_name=old_file_name,
+            colors=self.button_colors,
+            is_new_file=False
+        ).get_input()
+
+        if new_file_name == "":
+            ErrorPopup(
+                window_geometry=self.winfo_geometry(),
+                message="File Name Cannot Be Empty",
+                colors=self.button_colors,
+            )
+            return
+
+        if new_file_name in self.save_files:
+            ErrorPopup(
+                window_geometry=self.winfo_geometry(),
+                message="File Name Already Exists",
+                colors=self.button_colors,
+            )
+            return
+
+        if new_file_name == old_file_name or new_file_name is None:
+            return
+
+        # Configures the button to use the new file name
+        self.save_file_frame_items[f"{old_file_name}_button"].configure(
+            text=new_file_name,
+            command=lambda save_file=new_file_name: self.change_current_save_file(
+                save_file
+            ),
+        )
+
+        # Renames the button and frame to use the new file name
+        self.save_file_frame_items[
+            f"{new_file_name}_frame"
+        ] = self.save_file_frame_items.pop(f"{old_file_name}_frame")
+        self.save_file_frame_items[
+            f"{new_file_name}_button"
+        ] = self.save_file_frame_items.pop(f"{old_file_name}_button")
+
+        for icon_name in ["favorite", "rename", "delete"]:
+            self.save_file_frame_items[f"{old_file_name}_{icon_name}"].destroy()
+
+        # Removes old icons and adds new icons with the new name
+        self.individual_save_file_items(new_file_name, just_icons=True)
+
+        # Updates the current save file if it was renamed
+        if old_file_name == self.current_save_file:
+            self.current_save_file = new_file_name
+
+        # Updates the favorited save files if it was renamed
+        if old_file_name in self.favorited_save_files:
+            self.favorited_save_files[
+                self.favorited_save_files.index(old_file_name)
+            ] = new_file_name
+            self.update_user_settings()
+
+        # Renames the save file in the save_files folder
+        os.rename(
+            resource_path(f"./data/save_files/{old_file_name}.json"),
+            resource_path(f"./data/save_files/{new_file_name}.json"),
+        )
+
+        # Updates the list of files and the save file tab
+        self.find_save_files()
+        self.update_save_file_tab()
+        self.update_overview_tab()
+
+    # Deletes the save file indicated by the file_name
+    def delete_save_file(self, file_name):
+
+        # Does not delete the save file if it is favorited
+        if file_name in self.favorited_save_files:
+            return
+        
+        # Failsafe to make sure the user does not delete the default save file or the current one
+        if file_name == self.current_save_file or file_name == "default":
+            return
+        
+        is_confirmed = ConfirmationPopup(
+            window_geometry=self.winfo_geometry(),
+            file_name=file_name,
+            colors=self.button_colors,
+        ).get_input()
+
+        # Does not delete the save file if the user cancels
+        if is_confirmed is not True:
+            return
+        
+        # Removes the save file from the favorited save files
+        if file_name in self.favorited_save_files.copy():
+            self.favorited_save_files.remove(file_name)
+            self.update_user_settings()
+        
+        # Removes the save file from the save file tab
+        self.save_file_frame_items[f"{file_name}_frame"].destroy()
+
+        # Deletes the save file from the save_files folder
+        os.remove(resource_path(f"./data/save_files/{file_name}.json"))
+        
+        # Updates the list of files and the save file tab
+        self.find_save_files()
+        self.update_save_file_tab()
+
+    # Creates a new save file
+    def new_save_file(self):
+        file_name = InputPopup(
+            window_geometry=self.winfo_geometry(),
+            title="Create New Save File",
+            file_name="",
+            colors=self.button_colors,
+            is_new_file=True
+        ).get_input()
+
+        # Does not create a new save file if the file name is empty
+        if file_name == "":
+            ErrorPopup(
+                window_geometry=self.winfo_geometry(),
+                message="File Name Cannot Be Empty",
+                colors=self.button_colors,
+            )
+            return
+        
+        # Does not create a new save file if the file name already exists
+        if file_name in self.save_files:
+            ErrorPopup(
+                window_geometry=self.winfo_geometry(),
+                message="File Name Already Exists",
+                colors=self.button_colors,
+            )
+            return
+        
+        # Does not create a new save file if the user cancels
+        if file_name is None:
+            return
+        
+        # Creates the new save file
+        with open(resource_path(f"./data/save_files/{file_name}.json"), "w") as sf:
+            empty_map_specific_agents_dict = self.map_specific_agents_dict.copy()
+            for map_name in empty_map_specific_agents_dict:
+                empty_map_specific_agents_dict[map_name] = None
+            
+            save_file_json = {
+                "SELECTED_AGENT": self.selected_agent,
+                "UNLOCKED_AGENTS": self.unlocked_agents_dict,
+                "RANDOM_AGENTS": self.random_agents_dict,
+                "MAP_SPECIFIC_AGENTS": empty_map_specific_agents_dict,
+            }
+            sf.write(json.dumps(save_file_json, indent=4))
+        
+        # Finds the save file and adds it to the list
+        self.individual_save_file_items(file_name)
+        self.find_save_files()
+        self.update_save_file_tab()
+
     # Finds all save files in data/save_files
     def find_save_files(self):
         self.save_files = ["default"]
         for file in os.listdir(resource_path("./data/save_files")):
             if file.endswith(".json") and file.startswith("default") is False:
                 self.save_files.append(file.removesuffix(".json"))
-
-    # Updates the stats in config.json
-    def update_stats_in_user_settings(self):
-        with open(resource_path("data/user_settings.json"), "r") as config_file:
-            config = json.load(config_file)
-            config["TIMES_USED"] = self.total_games_used
-            config["TIME_TO_LOCK"] = self.time_to_lock_list
-        with open(resource_path("data/user_settings.json"), "w") as file:
-            file.write(json.dumps(config, indent=4))
 
     # endregion
 
@@ -1257,7 +1608,9 @@ class Program(customtkinter.CTk):
             time.sleep(0.1)
 
             current_map_ss = self.mss_instance.grab(self.map_selection_coords)
-            current_map = PIL.Image.frombytes("RGB", current_map_ss.size, current_map_ss.bgra, "raw", "BGRX").tobytes()
+            current_map = PIL.Image.frombytes(
+                "RGB", current_map_ss.size, current_map_ss.bgra, "raw", "BGRX"
+            ).tobytes()
             game_map = self.map_lookup.get(current_map)
 
         if game_map is not None:
@@ -1277,8 +1630,13 @@ class Program(customtkinter.CTk):
             and self.map_specific_mode is map_specific_toggle
         ):
             agent_screen_section_ss = self.mss_instance.grab(self.locking_coords)
-            agent_screen_section = PIL.Image.frombytes("RGB", agent_screen_section_ss.size, agent_screen_section_ss.bgra, "raw", "BGRX").tobytes()
-            
+            agent_screen_section = PIL.Image.frombytes(
+                "RGB",
+                agent_screen_section_ss.size,
+                agent_screen_section_ss.bgra,
+                "raw",
+                "BGRX",
+            ).tobytes()
 
             if agent_screen_section == self.agent_select_image:
                 total_confirmations += 1
@@ -1356,7 +1714,7 @@ class Program(customtkinter.CTk):
         self.time_to_lock_list = last_five_data_points
 
         self.update_overview_tab()
-        self.update_stats_in_user_settings()
+        self.update_user_settings()
         self.find_game_end()
 
     # Finds the end of the game
@@ -1365,13 +1723,17 @@ class Program(customtkinter.CTk):
             self.active is True and self.active_thread is True and self.locking is False
         ):
             time.sleep(1)
-            
+
             menu_screen_1_ss = self.mss_instance.grab((814, 243, 892, 244))
             menu_screen_2_ss = self.mss_instance.grab((1330, 330, 1455, 353))
 
-            menu_screen_1 = PIL.Image.frombytes("RGB", menu_screen_1_ss.size, menu_screen_1_ss.bgra, "raw", "BGRX").tobytes()
-            menu_screen_2 = PIL.Image.frombytes("RGB", menu_screen_2_ss.size, menu_screen_2_ss.bgra, "raw", "BGRX").tobytes()
-            
+            menu_screen_1 = PIL.Image.frombytes(
+                "RGB", menu_screen_1_ss.size, menu_screen_1_ss.bgra, "raw", "BGRX"
+            ).tobytes()
+            menu_screen_2 = PIL.Image.frombytes(
+                "RGB", menu_screen_2_ss.size, menu_screen_2_ss.bgra, "raw", "BGRX"
+            ).tobytes()
+
             if (
                 menu_screen_1 in self.in_menu_images
                 or menu_screen_2 in self.in_menu_images
@@ -1401,16 +1763,22 @@ class Program(customtkinter.CTk):
             corner_coords = self.box_coords[f"Box{agent_index}"]
 
             # Box Offset
-            min_offset_x, max_offset_x = self.agent_coords_offset[0], self.box_info["SIZE"] - self.agent_coords_offset[0]
-            min_offset_y, max_offset_y = self.agent_coords_offset[1], self.box_info["SIZE"] - self.agent_coords_offset[1]
-            
+            min_offset_x, max_offset_x = (
+                self.agent_coords_offset[0],
+                self.box_info["SIZE"] - self.agent_coords_offset[0],
+            )
+            min_offset_y, max_offset_y = (
+                self.agent_coords_offset[1],
+                self.box_info["SIZE"] - self.agent_coords_offset[1],
+            )
+
             offset_x = random.randint(min_offset_x, max_offset_x)
             offset_y = random.randint(min_offset_y, max_offset_y)
 
             # Returns the coords of the agent with a random offset
             self.agent_coords = (
                 corner_coords[0] + offset_x,
-                corner_coords[1] + offset_y
+                corner_coords[1] + offset_y,
             )
 
         # Disable instalocking if the agent trying to be selected is not unlocked
@@ -1419,7 +1787,215 @@ class Program(customtkinter.CTk):
 
     # endregion
 
+# region Popups
+
+# Error popup when save renamed incorrectly
+class ErrorPopup(customtkinter.CTkToplevel):
+    def __init__(self, window_geometry, message, colors):
+        super().__init__()
+        self.title("Rename Error")
+        _, x, y = window_geometry.split("+")
+        self.main_window_x, self.main_window_y = int(x), int(y)
+        self.small_window_width, self.small_window_height = map(int, self.geometry().split("+")[0].split("x"))
+        self.message = message
+        self.colors = colors
+
+        # GUI Settings
+        self.lift()  # lift window on top
+        self.attributes("-topmost", True)  # keep window on top
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.resizable(False, False)
+        self.grab_set()  # make other windows not clickable
+
+        self.create_error_message()
+
+    def create_error_message(self):
+        self.geometry("200x100")
+        self.geometry("+%d+%d" % (self.main_window_x + self.small_window_width/2, self.main_window_y+self.small_window_height/2))
+        self.message = customtkinter.CTkLabel(
+            self, text=self.message, font=("Arial", 14)
+        )
+        self.message.pack(padx=10, pady=10)
+
+        self.ok_button = customtkinter.CTkButton(
+            master=self,
+            width=100,
+            border_width=0,
+            text="Ok",
+            fg_color=self.colors["disabled"],
+            command=self.on_closing,
+        )
+        self.ok_button.pack(padx=20, pady=10)
+
+    def on_closing(self):
+        self.grab_release()
+        self.destroy()
+
+# Input popup when renaming saves
+class InputPopup(customtkinter.CTkToplevel):
+    def __init__(self, window_geometry, title, file_name, colors, is_new_file=False):
+        super().__init__()
+        self.title(title)
+        _, x, y = window_geometry.split("+")
+        self.main_window_x, self.main_window_y = int(x), int(y)
+        self.small_window_width, self.small_window_height = map(int, self.geometry().split("+")[0].split("x"))
+        self.file_name = file_name
+        self.colors = colors
+        self.is_new_file = is_new_file
+
+        # GUI Settings
+        self.lift()  # lift window on top
+        self.attributes("-topmost", True)  # keep window on top
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.resizable(False, False)
+        self.grab_set()  # make other windows not clickable
+
+        self.user_input = None
+
+        self.create_input_popup()
+
+    def create_input_popup(self):
+        self.geometry("+%d+%d" % (self.main_window_x + self.small_window_width/2, self.main_window_y+self.small_window_height/2))
+        self.grid_columnconfigure((0, 1), weight=1)
+        self.rowconfigure(0, weight=1)
+
+        if self.is_new_file is False:
+            message = f"Rename {self.file_name}:"
+        else:
+            message = "New File Name:"
+
+        self.label = customtkinter.CTkLabel(
+            master=self,
+            text=message,
+            width=300,
+            wraplength=300,
+            font=("Arial", 16),
+        )
+        self.label.grid(row=0, column=0, columnspan=2, padx=20, pady=20, sticky="ew")
+
+        self.entry = customtkinter.CTkEntry(master=self, width=230)
+        self.entry.grid(
+            row=1, column=0, columnspan=2, padx=20, pady=(0, 20), sticky="ew"
+        )
+        self.entry.insert(0, self.file_name)
+
+        self.ok_button = customtkinter.CTkButton(
+            master=self,
+            width=100,
+            border_width=0,
+            text="Ok",
+            fg_color=self.colors["enabled"],
+            command=self.ok_event,
+        )
+        self.ok_button.grid(
+            row=2, column=0, columnspan=1, padx=(20, 10), pady=(0, 20), sticky="ew"
+        )
+
+        self.cancel_button = customtkinter.CTkButton(
+            master=self,
+            width=100,
+            border_width=0,
+            text="Cancel",
+            fg_color=self.colors["disabled"],
+            command=self.cancel_event,
+        )
+        self.cancel_button.grid(
+            row=2, column=1, columnspan=1, padx=(10, 20), pady=(0, 20), sticky="ew"
+        )
+
+        self.after(150, lambda: self.entry.focus())
+        self.entry.bind("<Return>", self.ok_event)
+
+    def on_closing(self):
+        self.grab_release()
+        self.destroy()
+
+    def ok_event(self, event=None):
+        self.user_input = self.entry.get()
+        self.grab_release()
+        self.destroy()
+
+    def cancel_event(self):
+        self.user_input = None
+        self.grab_release()
+        self.destroy()
+
+    def get_input(self):
+        self.wait_window()
+        return self.user_input
+
+# Confirmation popup when deleting saves
+class ConfirmationPopup(customtkinter.CTkToplevel):
+    def __init__(self, window_geometry, file_name, colors):
+        super().__init__()
+        _, x, y = window_geometry.split("+")
+        self.main_window_x, self.main_window_y = int(x), int(y)
+        self.small_window_width, self.small_window_height = map(int, self.geometry().split("+")[0].split("x"))
+        self.title("Confirm Deletion")
+        self.file_name = file_name
+        self.colors = colors
+
+        # GUI Settings
+        self.lift()  # lift window on top
+        self.attributes("-topmost", True)  # keep window on top
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.resizable(False, False)
+        self.grab_set()  # make other windows not clickable
+
+        self.user_input = False
+
+        self.create_confirmation_popup()
+
+    def confirm_event(self):
+        self.user_input = True
+        self.grab_release()
+        self.destroy()
+
+    def cancel_event(self):
+        self.user_input = False
+        self.grab_release()
+        self.destroy()
+
+    def on_closing(self):
+        self.grab_release()
+        self.destroy()
+
+    def get_input(self):
+        self.wait_window()
+        return self.user_input
+
+    def create_confirmation_popup(self):
+        self.geometry("400x200")
+        self.geometry("+%d+%d" % (self.main_window_x + self.small_window_width/2, self.main_window_y+self.small_window_height/2))
+        message = customtkinter.CTkLabel(
+            self,
+            text=f"You are about to delete:\n{self.file_name}\nAre you sure?\n\nThis action cannot be undone.",
+            font=("Arial", 16),
+        )
+        message.pack(padx=10, pady=10)
+
+        self.ok_button = customtkinter.CTkButton(
+            master=self,
+            width=100,
+            border_width=0,
+            text="Ok",
+            fg_color=self.colors["disabled"],
+            command=self.confirm_event,
+        )
+        self.ok_button.pack(padx=20, pady=10, side=tk.LEFT)
+
+        self.cancel_button = customtkinter.CTkButton(
+            master=self,
+            width=100,
+            border_width=0,
+            text="Cancel",
+            fg_color=self.colors["enabled"],
+            command=self.cancel_event,
+        )
+        self.cancel_button.pack(padx=20, pady=10, side=tk.RIGHT)
+
+#endregion
 
 if __name__ == "__main__":
-    program = Program()
-    program.mainloop()
+    main_gui = InstalockerGUIMain()
+    main_gui.mainloop()

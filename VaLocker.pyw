@@ -1,5 +1,5 @@
 if __name__ == "__main__":
     from data.instalocker import *
 
-    p = Program()
-    p.mainloop()
+    gui_main = InstalockerGUIMain()
+    gui_main.mainloop()
