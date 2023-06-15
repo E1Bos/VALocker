@@ -601,10 +601,10 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         # region Save File Tab
         self.save_file_scrollable_frame = customtkinter.CTkScrollableFrame(
-            save_file_tab, height=300
+            save_file_tab
         )
         self.save_file_scrollable_frame.pack(
-            fill=tk.X, expand=False, padx=10, pady=(10, 0)
+            fill=tk.BOTH, expand=True, padx=10, pady=(10, 0)
         )
 
         self.save_file_frame_items = dict()
@@ -616,9 +616,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                 size=(20, 20),
             ),
             favorite_filled=customtkinter.CTkImage(
-                dark_image=PIL.Image.open(
-                    resource_path("images/gui_icons/favorite_filled.png")
-                ),
+                dark_image=PIL.Image.open(resource_path("images/gui_icons/favorite_filled.png")),
                 size=(20, 20),
             ),
             rename=customtkinter.CTkImage(
@@ -627,6 +625,10 @@ class InstalockerGUIMain(customtkinter.CTk):
             ),
             delete=customtkinter.CTkImage(
                 dark_image=PIL.Image.open(resource_path("images/gui_icons/delete.png")),
+                size=(20, 20),
+            ),
+            new_file = customtkinter.CTkImage(
+                dark_image=PIL.Image.open(resource_path("images/gui_icons/new_file.png")),
                 size=(20, 20),
             ),
         )
@@ -641,10 +643,15 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         new_save_file_button = customtkinter.CTkButton(
             save_file_tab,
-            text="New Save File",
+            text="",
+            image = self.save_file_icons["new_file"],
             command=self.new_save_file,
+            fg_color="transparent",
+            hover_color="gray22",
+            width=20,
+            height=20,
         )
-        new_save_file_button.pack(padx=10, pady=10, anchor=tk.NW)
+        new_save_file_button.pack(padx=10, pady=(3,0), anchor=tk.NE)
 
         # endregion
 
@@ -1862,7 +1869,7 @@ class InputPopup(customtkinter.CTkToplevel):
         if self.is_new_file is False:
             message = f"Rename {self.file_name}:"
         else:
-            message = "New File Name:"
+            message = "New file name:"
 
         self.label = customtkinter.CTkLabel(
             master=self,

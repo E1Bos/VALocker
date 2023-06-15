@@ -1,7 +1,12 @@
 Changelog
 =========
 
-## 2023-06-15
+## [1.0.1] 2023-06-15
+
+### Changes
+- [Update] Text of new save button has been replaced with an icon.
+
+## [1.0.0] 2023-06-15
 
 ### Added
 - [Feature] New save file tab. All save files are displayed in a scrollable window.
