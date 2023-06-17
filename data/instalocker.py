@@ -1587,8 +1587,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         while self.active_thread is True:
             time.sleep(0.3)
             if (
-                self.locking is True
-                and self.active is True
+                self.active is True
                 and self.active_thread is True
             ):
                 self.lock_button = (
@@ -1597,10 +1596,13 @@ class InstalockerGUIMain(customtkinter.CTk):
                     self.box_info["LOCK_COORDS"][1]
                     + random.randint(0, self.box_info["LOCK_SIZE"][1]),
                 )
-                if self.map_specific_mode is False:
-                    self.locate_agent_screen()
+                if self.locking is True:
+                    if self.map_specific_mode is False:
+                        self.locate_agent_screen()
+                    else:
+                        self.locate_map_screen()
                 else:
-                    self.locate_map_screen()
+                    self.find_game_end()
 
     # Detects which map the game is on
     def locate_map_screen(self):
@@ -1635,7 +1637,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             and self.locking is True
             and self.active is True
             and self.map_specific_mode is map_specific_toggle
-        ):
+            ):
             agent_screen_section_ss = self.mss_instance.grab(self.locking_coords)
             agent_screen_section = PIL.Image.frombytes(
                 "RGB",
@@ -1751,7 +1753,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                     self.icon.update_menu()
                 except AttributeError:
                     pass
-                self.locking_thread()
+                break
 
     # Returns the coords for the agent selected
     def find_agent_coords(self, agent_name):
@@ -1834,7 +1836,10 @@ class ErrorPopup(customtkinter.CTkToplevel):
         )
         self.ok_button.pack(padx=20, pady=10)
 
-    def on_closing(self):
+        self.bind("<Return>", self.on_closing)
+        self.bind("<Escape>", self.on_closing)
+
+    def on_closing(self, event=None):
         self.grab_release()
         self.destroy()
 
@@ -1958,7 +1963,7 @@ class ConfirmationPopup(customtkinter.CTkToplevel):
         self.grab_release()
         self.destroy()
 
-    def cancel_event(self):
+    def cancel_event(self, event=None):
         self.user_input = False
         self.grab_release()
         self.destroy()
@@ -2000,6 +2005,9 @@ class ConfirmationPopup(customtkinter.CTkToplevel):
             command=self.cancel_event,
         )
         self.cancel_button.pack(padx=20, pady=10, side=tk.RIGHT)
+
+        self.bind("<Return>", self.cancel_event)
+        self.bind("<Escape>", self.cancel_event)
 
 #endregion
 

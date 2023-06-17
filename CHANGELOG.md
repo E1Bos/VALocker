@@ -1,6 +1,11 @@
 Changelog
 =========
 
+## [1.0.2] 2023-06-17
+
+### Fixed
+- [Bug] Fixed bug where when instalocker is waiting for the end of a game, and the instalocker is stopped, it will stop searching for the end of the game when re enabled.
+
 ## [1.0.1] 2023-06-15
 
 ### Changes
