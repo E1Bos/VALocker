@@ -1,6 +1,12 @@
 Changelog
 =========
 
+## [1.1.0] 2023-06-19
+
+### Changes
+- [Update] Updating the GUI uses match-case statements. GUI updates are much faster.
+- [Update] The label for the current save file is now a button and when clicked, it will open the save file tab.
+
 ## [1.0.2] 2023-06-17
 
 ### Fixed

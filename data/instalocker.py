@@ -183,19 +183,19 @@ class InstalockerGUIMain(customtkinter.CTk):
         self.geometry(f"{self.window_width}x{self.window_height}")
         self.resizable(False, False)
 
-        tabs = customtkinter.CTkTabview(
+        self.tabs = customtkinter.CTkTabview(
             self,
             corner_radius=10,
             width=self.window_width,
             height=self.window_height - 20,
         )
-        tabs.pack(padx=10, pady=5, fill=tk.BOTH)
+        self.tabs.pack(padx=10, pady=5, fill=tk.BOTH)
 
-        overview_tab = tabs.add("Overview")
-        agent_toggle_tab = tabs.add("Toggle Agents")
-        random_agent_tab = tabs.add("Random Agents")
-        map_specific_tab = tabs.add("Map Specific")
-        save_file_tab = tabs.add("Save File")
+        overview_tab = self.tabs.add("Overview")
+        agent_toggle_tab = self.tabs.add("Toggle Agents")
+        random_agent_tab = self.tabs.add("Random Agents")
+        map_specific_tab = self.tabs.add("Map Specific")
+        save_file_tab = self.tabs.add("Save File")
 
         # region Overview Tab
 
@@ -272,15 +272,17 @@ class InstalockerGUIMain(customtkinter.CTk):
         )
         current_save_label.pack(padx=10, pady=(5, 0))
 
-        self.current_save_small_label = customtkinter.CTkLabel(
+        self.current_save_button = customtkinter.CTkButton(
             current_status_frame,
             text=f"{self.current_save_file}",
-            font=self.button_font,
+            hover=False,
             fg_color="grey16",
             corner_radius=5,
             width=140,
+            font=self.button_font,
+            command=lambda tab_name="Save File": self.change_visible_tab(tab_name=tab_name),
         )
-        self.current_save_small_label.pack(padx=10, pady=(0, 5))
+        self.current_save_button.pack(padx=10, pady=(0, 5))
 
         select_agent_frame = customtkinter.CTkFrame(overview_tab)
         select_agent_frame.grid(row=0, column=1)
@@ -718,17 +720,20 @@ class InstalockerGUIMain(customtkinter.CTk):
 
     # endregion
 
-    # region GUI  Updates
+    # region GUI Updates
 
     # Updates All GUI Elements
-    def update_gui(self):
+    def update_gui(self, from_agent_tab=False, from_save_tab=False):
         try:
-            self.update_save_file_tab()
+            if from_save_tab is True:
+                self.update_save_file_tab()
+            if from_agent_tab is False:
+                self.update_agent_toggle_tab()
+                self.update_random_agent_tab()
+                self.update_icon()
             self.update_overview_tab()
-            self.update_agent_toggle_tab()
-            self.update_random_agent_tab()
             self.update_map_specific_tab()
-            self.update_icon()
+            
         except AttributeError:
             pass
 
@@ -771,7 +776,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             text=f"{list(self.safe_mode_timing.keys())[self.safe_mode_strength]}"
         )
 
-        self.current_save_small_label.configure(text=f"{self.current_save_file}")
+        self.current_save_button.configure(text=f"{self.current_save_file}")
 
         # Buttons Middle Column
         self.hover_mode_button.configure(
@@ -824,90 +829,253 @@ class InstalockerGUIMain(customtkinter.CTk):
                 self.update_overview_tab()
 
     # Updates agent toggle tab
-    def update_agent_toggle_tab(self):
-        for agent in self.all_agents:
-            if agent not in self.default_agents:
-                if self.unlocked_agents_dict[agent] is True:
-                    self.agent_checkboxes[f"self.{agent}_checkbox"].select()
+    def update_agent_toggle_tab(self, agent_name=None):
+        match agent_name:
+            case 'all':
+                self.toggle_all_agent_button.configure(state=tk.DISABLED)
+                self.toggle_none_agent_button.deselect()
+                self.toggle_none_agent_button.configure(state=tk.NORMAL)
+
+                for agent in self.unlocked_agents_dict:
+                    if agent not in self.default_agents:
+                        self.agent_checkboxes[f"self.{agent}_checkbox"].select()
+
+            case 'none':
+                self.toggle_none_agent_button.configure(state=tk.DISABLED)
+                self.toggle_all_agent_button.deselect()
+                self.toggle_all_agent_button.configure(state=tk.NORMAL)
+
+                for agent in self.unlocked_agents_dict:
+                    if agent not in self.default_agents:
+                        self.agent_checkboxes[f"self.{agent}_checkbox"].deselect()
+
+            case None: # Updates the entire tab, used only when the tab is first created or when loading a new save file
+                for agent in self.all_agents:
+                    if agent not in self.default_agents:
+                        if self.unlocked_agents_dict[agent] is True:
+                            self.agent_checkboxes[f"self.{agent}_checkbox"].select()
+                        else:
+                            self.agent_checkboxes[f"self.{agent}_checkbox"].deselect()
+
+                if all(
+                    value is True
+                    for agent, value in self.unlocked_agents_dict.items()
+                    if agent not in self.default_agents
+                ):
+                    self.toggle_all_agent_button.select()
+                    self.toggle_all_agent_button.configure(state=tk.DISABLED)
                 else:
-                    self.agent_checkboxes[f"self.{agent}_checkbox"].deselect()
+                    self.toggle_all_agent_button.deselect()
+                    self.toggle_all_agent_button.configure(state=tk.NORMAL)
 
-        if all(
-            value is True
-            for agent, value in self.unlocked_agents_dict.items()
-            if agent not in self.default_agents
-        ):
-            self.toggle_all_agent_button.select()
-            self.toggle_all_agent_button.configure(state=tk.DISABLED)
-        else:
-            self.toggle_all_agent_button.deselect()
-            self.toggle_all_agent_button.configure(state=tk.NORMAL)
+                if all(
+                    value is False
+                    for agent, value in self.unlocked_agents_dict.items()
+                    if agent not in self.default_agents
+                ):
+                    self.toggle_none_agent_button.select()
+                    self.toggle_none_agent_button.configure(state=tk.DISABLED)
+                else:
+                    self.toggle_none_agent_button.deselect()
+                    self.toggle_none_agent_button.configure(state=tk.NORMAL)
+            
+            case _: # Updates a single agent
+                all_agents_selected = all(
+                    self.unlocked_agents_dict[agent] is True
+                    for agent in self.unlocked_agents_dict)
+                no_agents_selected = all(
+                    self.unlocked_agents_dict[agent] is False
+                    for agent in self.unlocked_agents_dict
+                    if agent not in self.default_agents)
+                
+                if all_agents_selected is True:
+                    self.toggle_all_agent_button.select()
+                    self.toggle_all_agent_button.configure(state=tk.DISABLED)
+                else:
+                    self.toggle_all_agent_button.deselect()
+                    self.toggle_all_agent_button.configure(state=tk.NORMAL)
 
-        if all(
-            value is False
-            for agent, value in self.unlocked_agents_dict.items()
-            if agent not in self.default_agents
-        ):
-            self.toggle_none_agent_button.select()
-            self.toggle_none_agent_button.configure(state=tk.DISABLED)
-        else:
-            self.toggle_none_agent_button.deselect()
-            self.toggle_none_agent_button.configure(state=tk.NORMAL)
-
+                if no_agents_selected is True:
+                    self.toggle_none_agent_button.select()
+                    self.toggle_none_agent_button.configure(state=tk.DISABLED)
+                else:
+                    self.toggle_none_agent_button.deselect()
+                    self.toggle_none_agent_button.configure(state=tk.NORMAL)
+               
     # Updates random agent tab
-    def update_random_agent_tab(self):
-        # Selects enabled agents
-        for agent, value in self.random_agents_dict.items():
-            if value is True:
-                self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].select()
-            else:
-                self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].deselect()
+    def update_random_agent_tab(self, agent_name=None, toggled_agent_name=None):
+        match agent_name:
+            case 'all':
+                self.all_random_agent_radio_button.configure(state=tk.DISABLED)
+                self.none_random_agent_radio_button.deselect()
+                self.none_random_agent_radio_button.configure(state=tk.NORMAL)
 
-        # Select none if no agents are selected
-        if all(value is False for value in self.random_agents_dict.values()):
-            self.none_random_agent_radio_button.select()
-            self.none_random_agent_radio_button.configure(state=tk.DISABLED)
-        else:
-            self.none_random_agent_radio_button.deselect()
-            self.none_random_agent_radio_button.configure(state=tk.NORMAL)
+                for agent in self.random_agents_dict:
+                    if self.unlocked_agents_dict[agent] is True:
+                        self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].select()
 
-        # Select all if all possible agents are selected
-        if all(
-            self.random_agents_dict[agent] is True
-            for agent in self.unlocked_agents_dict
-            if self.unlocked_agents_dict[agent] is True
-        ):
-            self.all_random_agent_radio_button.select()
-            self.all_random_agent_radio_button.configure(state=tk.DISABLED)
-        else:
-            self.all_random_agent_radio_button.deselect()
-            self.all_random_agent_radio_button.configure(state=tk.NORMAL)
+                for role in self.config_file_agents:
+                    self.agent_role_checkboxes[role.lower()].select()
+            
+            case 'none':
+                self.all_random_agent_radio_button.deselect()
+                self.all_random_agent_radio_button.configure(state=tk.NORMAL)
+                self.none_random_agent_radio_button.configure(state=tk.DISABLED)
 
-        # Selects enabled roles (controller/duelist/initiator/sentinel)
-        for role in self.config_file_agents:
-            if all(
-                self.random_agents_dict[agent] is True
-                for agent in self.config_file_agents[role]
-                if self.unlocked_agents_dict[agent] is True
-            ):
-                self.agent_role_checkboxes[role.lower()].select()
-            else:
-                self.agent_role_checkboxes[role.lower()].deselect()
+                for agent in self.random_agents_dict:
+                    if self.unlocked_agents_dict[agent] is True:
+                        self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].deselect()
+                
+                for role in self.config_file_agents:
+                    self.agent_role_checkboxes[role.lower()].deselect()
+            
+            case 'controllers' | 'duelists' | 'initiators' | 'sentinels':
+                role = agent_name.upper()
+                all_role_agents_selected = all(self.random_agents_dict[agent] is True for agent in self.config_file_agents[role] if self.unlocked_agents_dict[agent] is True)
+                if all_role_agents_selected is True:
+                    for agent in self.config_file_agents[role]:
+                        self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].select()
+                else:
+                    for agent in self.config_file_agents[role]:
+                        self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].deselect()
 
-        # Disables agents that are not unlocked
-        for agent in self.unlocked_agents_dict:
-            if (
-                agent not in self.default_agents
-                and self.unlocked_agents_dict[agent] is False
-            ):
-                self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].configure(
-                    state=tk.DISABLED
-                )
-                self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].deselect()
-            else:
-                self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].configure(
-                    state=tk.NORMAL
-                )
+            case 'toggle_unlocked_agent_status':
+                print(toggled_agent_name)
+                match toggled_agent_name:
+                    case 'all':
+                        for agent in self.unlocked_agents_dict:
+                            if agent not in self.default_agents:
+                                self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].configure(state=tk.NORMAL)
+                    case 'none':
+                        for agent in self.unlocked_agents_dict:
+                            if agent not in self.default_agents:
+                                self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].configure(state=tk.DISABLED)
+                                self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].deselect()
+                    case None:
+                        pass
+                    case _:
+                        if self.unlocked_agents_dict[toggled_agent_name] is True:
+                            self.random_agent_checkboxes[f"self.{toggled_agent_name}_random_checkbox"].configure(state=tk.NORMAL)
+                        else:
+                            self.random_agent_checkboxes[f"self.{toggled_agent_name}_random_checkbox"].configure(state=tk.DISABLED)
+                            self.random_agent_checkboxes[f"self.{toggled_agent_name}_random_checkbox"].deselect()
+
+                if toggled_agent_name in ["all", "none"]:
+                    if all(
+                        self.random_agents_dict[agent] is True
+                        for agent in self.unlocked_agents_dict
+                        if self.unlocked_agents_dict[agent] is True
+                    ):
+                        self.all_random_agent_radio_button.select()
+                        self.all_random_agent_radio_button.configure(state=tk.DISABLED)
+                    else:
+                        self.all_random_agent_radio_button.deselect()
+                        self.all_random_agent_radio_button.configure(state=tk.NORMAL)
+
+                    # Select none if no agents are selected
+                    if all(value is False for value in self.random_agents_dict.values()):
+                        self.none_random_agent_radio_button.select()
+                        self.none_random_agent_radio_button.configure(state=tk.DISABLED)
+                    else:
+                        self.none_random_agent_radio_button.deselect()
+                        self.none_random_agent_radio_button.configure(state=tk.NORMAL)
+
+                    # Selects all roles if all possible agents are selected
+                    for role in self.config_file_agents:
+                        if all(
+                            self.random_agents_dict[agent] is True
+                            for agent in self.config_file_agents[role]
+                            if self.unlocked_agents_dict[agent] is True
+                        ):
+                            self.agent_role_checkboxes[role.lower()].select()
+                        else:
+                            self.agent_role_checkboxes[role.lower()].deselect()
+
+            case None: # Updates the entire tab, used only when the tab is first created or when loading a new save file
+                # Selects selected agents
+                for agent, value in self.random_agents_dict.items():
+                    if value is True:
+                        self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].select()
+                    else:
+                        self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].deselect()
+
+                # Select all if all possible agents are selected
+                if all(
+                    self.random_agents_dict[agent] is True
+                    for agent in self.unlocked_agents_dict
+                    if self.unlocked_agents_dict[agent] is True
+                ):
+                    self.all_random_agent_radio_button.select()
+                    self.all_random_agent_radio_button.configure(state=tk.DISABLED)
+                else:
+                    self.all_random_agent_radio_button.deselect()
+                    self.all_random_agent_radio_button.configure(state=tk.NORMAL)
+
+                # Select none if no agents are selected
+                if all(value is False for value in self.random_agents_dict.values()):
+                    self.none_random_agent_radio_button.select()
+                    self.none_random_agent_radio_button.configure(state=tk.DISABLED)
+                else:
+                    self.none_random_agent_radio_button.deselect()
+                    self.none_random_agent_radio_button.configure(state=tk.NORMAL)
+
+                # Selects all roles if all possible agents are selected
+                for role in self.config_file_agents:
+                    if all(
+                        self.random_agents_dict[agent] is True
+                        for agent in self.config_file_agents[role]
+                        if self.unlocked_agents_dict[agent] is True
+                    ):
+                        self.agent_role_checkboxes[role.lower()].select()
+                    else:
+                        self.agent_role_checkboxes[role.lower()].deselect()
+                
+                # Disables agents that are not unlocked
+                for agent in self.unlocked_agents_dict:
+                    if (
+                        agent not in self.default_agents
+                        and self.unlocked_agents_dict[agent] is False
+                    ):
+                        self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].configure(
+                            state=tk.DISABLED
+                        )
+                        self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].deselect()
+                    else:
+                        self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].configure(
+                            state=tk.NORMAL
+                        )
+
+            case _: # Updates the tab when a single agent is selected
+                # Select none if no agents are selected
+                if all(value is False for value in self.random_agents_dict.values()):
+                    self.none_random_agent_radio_button.select()
+                    self.none_random_agent_radio_button.configure(state=tk.DISABLED)
+                else:
+                    self.none_random_agent_radio_button.deselect()
+                    self.none_random_agent_radio_button.configure(state=tk.NORMAL)
+
+                # Select all if all possible agents are selected
+                if all(
+                    self.random_agents_dict[agent] is True
+                    for agent in self.unlocked_agents_dict
+                    if self.unlocked_agents_dict[agent] is True
+                ):
+                    self.all_random_agent_radio_button.select()
+                    self.all_random_agent_radio_button.configure(state=tk.DISABLED)
+                else:
+                    self.all_random_agent_radio_button.deselect()
+                    self.all_random_agent_radio_button.configure(state=tk.NORMAL)
+
+                # Selects role if all agents in role are selected
+                for role in self.config_file_agents:
+                    if all(
+                        self.random_agents_dict[agent] is True
+                        for agent in self.config_file_agents[role]
+                        if self.unlocked_agents_dict[agent] is True
+                    ):
+                        self.agent_role_checkboxes[role.lower()].select()
+                    else:
+                        self.agent_role_checkboxes[role.lower()].deselect()
 
     # Updates map specific tab
     def update_map_specific_tab(self):
@@ -1071,6 +1239,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         self.hover_mode = not self.hover_mode
         self.update_overview_tab()
 
+    # Toggles exclusiselect mode
     def toggle_random_agent_exclusiselect(self):
         self.random_agent_exclusiselect = not self.random_agent_exclusiselect
 
@@ -1082,7 +1251,12 @@ class InstalockerGUIMain(customtkinter.CTk):
         self.random_agent_exclusiselect_button.configure(
             fg_color=f"{self.button_colors['enabled'] if self.random_agent_exclusiselect is True else self.button_colors['disabled']}",
         )
-        self.update_random_agent_tab()
+
+    # Toggles which tab is shown/displayed
+    def change_visible_tab(self, tab_name):
+        self.tabs.set(tab_name)
+
+
 
     # endregion
 
@@ -1301,11 +1475,9 @@ class InstalockerGUIMain(customtkinter.CTk):
         with open(resource_path("data/user_settings.json"), "w") as file:
             file.write(json.dumps(config, indent=4))
 
-        self.find_save_files()
-
         self.load_data_from_files()
 
-        self.update_gui()
+        self.update_gui(from_save_tab=True)
 
     # Favorites the save file indicated by the file_name
     def favorite_save_file(self, file_name):
@@ -1504,10 +1676,13 @@ class InstalockerGUIMain(customtkinter.CTk):
                 for agent in self.all_agents:
                     if agent not in self.default_agents:
                         self.unlocked_agents_dict[agent] = False
+                        self.random_agents_dict[agent] = False
             case _:
                 self.unlocked_agents_dict[agent_name] = not self.unlocked_agents_dict[
                     agent_name
                 ]
+                if self.unlocked_agents_dict[agent_name] is False:
+                    self.random_agents_dict[agent_name] = False
 
         # Makes sure selected agent is unlocked
         if self.unlocked_agents_dict[self.selected_agent] is False:
@@ -1517,55 +1692,45 @@ class InstalockerGUIMain(customtkinter.CTk):
                 if unlock_status is True
             )[0]
 
-        for agent in self.all_agents:
-            if self.unlocked_agents_dict[agent] is False:
-                self.random_agents_dict[agent] = False
-
-        self.update_gui()
+        self.update_agent_toggle_tab(agent_name)
+        self.update_random_agent_tab('toggle_unlocked_agent_status', toggled_agent_name=agent_name)
+        self.update_gui(from_agent_tab=True)
         self.save_current_data()
 
     # Toggles the agent in the random agent tab
     def toggle_random_agent_status(self, agent_name, exclusiselect_toggle=False):
-        if agent_name in [
-            "all",
-            "none",
-            "controllers",
-            "duelists",
-            "initiators",
-            "sentinels",
-        ]:
-            match agent_name:
-                case "all":
-                    for agent in self.all_agents:
+        match agent_name:
+            case "all":
+                for agent in self.all_agents:
+                    if self.unlocked_agents_dict[agent] is True:
+                        self.random_agents_dict[agent] = True
+            case "none":
+                for agent in self.all_agents:
+                    self.random_agents_dict[agent] = False
+                self.random_agent_mode = False
+            case "controllers" | "duelists" | "initiators" | "sentinels":
+                if all(
+                    self.random_agents_dict[agent] is True
+                    for agent in self.config_file_agents[agent_name.upper()]
+                    if self.unlocked_agents_dict[agent] is True
+                ):
+                    for agent in self.config_file_agents[agent_name.upper()]:
+                        if self.unlocked_agents_dict[agent] is True:
+                            self.random_agents_dict[agent] = False
+                else:
+                    for agent in self.config_file_agents[agent_name.upper()]:
                         if self.unlocked_agents_dict[agent] is True:
                             self.random_agents_dict[agent] = True
-                case "none":
-                    for agent in self.all_agents:
-                        self.random_agents_dict[agent] = False
-                    self.random_agent_mode = False
-                case _:
-                    if all(
-                        self.random_agents_dict[agent] is True
-                        for agent in self.config_file_agents[agent_name.upper()]
-                        if self.unlocked_agents_dict[agent] is True
-                    ):
-                        for agent in self.config_file_agents[agent_name.upper()]:
-                            if self.unlocked_agents_dict[agent] is True:
-                                self.random_agents_dict[agent] = False
-                    else:
-                        for agent in self.config_file_agents[agent_name.upper()]:
-                            if self.unlocked_agents_dict[agent] is True:
-                                self.random_agents_dict[agent] = True
-        else:
-            self.random_agents_dict[agent_name] = not self.random_agents_dict[
-                agent_name
-            ]
+            case _:
+                self.random_agents_dict[agent_name] = not self.random_agents_dict[
+                    agent_name
+                ]
 
         # Only updates the list if a checkbox is selected, not when the ExclusiSelect mode is toggled
         if self.random_agent_exclusiselect is True and exclusiselect_toggle is False:
             self.random_agents_dict_backup = self.random_agents_dict.copy()
 
-        self.update_random_agent_tab()
+        self.update_random_agent_tab(agent_name)
         self.update_overview_tab()
         self.save_current_data()
 
@@ -1580,7 +1745,7 @@ class InstalockerGUIMain(customtkinter.CTk):
 
     # region Locking
 
-    # Inital locking thread
+    # Starts the locking thread, calls the locking function based on the mode
     def locking_thread(self):
         time.sleep(1)
         self.mss_instance = mss.mss()
@@ -1628,7 +1793,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         else:
             self.find_game_end()
 
-    # Detects when in agent select screen
+    # Detects when in the agent select screen
     def locate_agent_screen(self, map_specific_toggle=False):
         total_confirmations = 0
         self.start_lock = float()
@@ -1659,6 +1824,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         else:
             self.find_game_end()
 
+    # Locks the agent
     def lock_agent(self):
         if self.random_agent_mode is True:
             randomly_selected_agent = random.choice(
