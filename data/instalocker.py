@@ -939,6 +939,24 @@ class InstalockerGUIMain(customtkinter.CTk):
                     for agent in self.config_file_agents[role]:
                         self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].deselect()
 
+                if all(
+                    self.random_agents_dict[agent] is True
+                    for agent in self.unlocked_agents_dict
+                    if self.unlocked_agents_dict[agent] is True
+                ):
+                    self.all_random_agent_radio_button.select()
+                    self.all_random_agent_radio_button.configure(state=tk.DISABLED)
+                else:
+                    self.all_random_agent_radio_button.deselect()
+                    self.all_random_agent_radio_button.configure(state=tk.NORMAL)
+
+                if all(value is False for value in self.random_agents_dict.values()):
+                    self.none_random_agent_radio_button.select()
+                    self.none_random_agent_radio_button.configure(state=tk.DISABLED)
+                else:
+                    self.none_random_agent_radio_button.deselect()
+                    self.none_random_agent_radio_button.configure(state=tk.NORMAL)
+
             case 'toggle_unlocked_agent_status':
                 print(toggled_agent_name)
                 match toggled_agent_name:

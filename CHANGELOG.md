@@ -1,6 +1,13 @@
 Changelog
 =========
 
+## [1.1.1] 2023-06-19
+
+### Fixed
+- [Bug] Fixed bug where the "All" checkbox would not update if random agents are selected by role.
+- [Bug] Fixed bug where the "None" checkbox would not update if random agents are selected by role.
+
+
 ## [1.1.0] 2023-06-19
 
 ### Changes
