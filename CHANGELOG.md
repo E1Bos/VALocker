@@ -1,6 +1,22 @@
 Changelog
 =========
 
+## [1.2.0] 2023-06-19
+
+### Changes
+- [Update] Map selection has been changed to use PyTesseract (OCR) to read the map name from the screen. This should be much more reliable than the previous method of reading the map name by comparing it to screenshots. This means that if the map selection screen is updated by the VALORANT Devs, the program will still work without having to re-screenshot map images.
+- [Update] The requirements for the program have been updated. The program now requires PyTesseract, numpy, and cv2 to be installed. The program will check if these are already installed and if not, it will install them automatically.
+- [Update] Readme includes the new imports under "Acknowledgements".
+
+### Fixed
+- [Bug] Fixed bug where in certain circumstances, the locking thread would exit if manually switched from Waiting to Locking.
+
+### Removed
+- [Image] All map-related images have been removed since OCR is now used to read the map name from the screen.
+- [Code] Map images are no longer loaded into memory as they have been removed.
+
+
+
 ## [1.1.1] 2023-06-19
 
 ### Fixed

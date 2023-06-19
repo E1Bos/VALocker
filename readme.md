@@ -60,18 +60,19 @@ Contributions to VALocker are welcome! If you would like to contribute to the pr
 
 VALocker utilizes the following libraries:
 
+- [cv2](https://opencv.org/) - OpenCV library for computer vision tasks.
 - [customtkinter](https://github.com/TomSchimansky/CustomTkinter) - Customized version of the tkinter library.
-- [PIL](https://python-pillow.org/) - Python Imaging Library for image manipulation.
-- [pynput](https://pypi.org/project/pynput/) - Library for controlling and monitoring input devices.
-- [pystray](https://github.com/moses-palmer/pystray) - Library for creating system tray icons.
-- [tkinter](https://docs.python.org/3/library/tkinter.html) - Python's standard GUI library.
-- [random](https://docs.python.org/3/library/random.html) - Built-in Python library for random number generation.
-- [threading](https://docs.python.org/3/library/threading.html) - Built-in Python library for multi-threading.
 - [json](https://docs.python.org/3/library/json.html) - Built-in Python library for working with JSON data.
+- [numpy](https://numpy.org/) - Library for numerical computing in Python.
 - [os](https://docs.python.org/3/library/os.html) - Built-in Python library for interacting with the operating system.
+- [PIL](https://python-pillow.org/) - Python Imaging Library for image manipulation.
+- [pystray](https://github.com/moses-palmer/pystray) - Library for creating system tray icons.
+- [pynput](https://pypi.org/project/pynput/) - Library for controlling and monitoring input devices.
+- [pytesseract](https://github.com/madmaze/pytesseract) - OCR (Optical Character Recognition) tool for Python.
 - [random](https://docs.python.org/3/library/random.html) - Built-in Python library for random number generation.
 - [threading](https://docs.python.org/3/library/threading.html) - Built-in Python library for multi-threading.
 - [time](https://docs.python.org/3/library/time.html) - Built-in Python library for time-related functions.
+- [tkinter](https://docs.python.org/3/library/tkinter.html) - Python's standard GUI library.
 
 
 ## Contact
