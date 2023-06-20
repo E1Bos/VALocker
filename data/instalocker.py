@@ -3,18 +3,18 @@
 # Imports all modules, if it fails it will install them
 try:
     # Modules that are not installed by default
-    import customtkinter, pystray, PIL.Image, mss, pytesseract, cv2, numpy
+    import customtkinter, pystray, PIL.Image, mss
     import pynput.mouse as pynmouse
 except ModuleNotFoundError:
     # Installs missing modules if exception is raised
     import subprocess
 
     subprocess.run(["pip", "install", "-r", "requirements.txt"])
-    import customtkinter, pystray, PIL.Image, mss, pytesseract, cv2, numpy
+    import customtkinter, pystray, PIL.Image, mss
     import pynput.mouse as pynmouse
 
 # Imports modules that are installed with Python
-import json, os, random, threading, time, ctypes, string
+import json, os, random, threading, time, ctypes
 import tkinter as tk
 
 # endregion
@@ -41,13 +41,11 @@ class InstalockerGUIMain(customtkinter.CTk):
         self.active_thread = True
         self.locking = True
         self.locking_coords = (945, 866, 955, 867)
-        self.map_roi = (500, 450, 1400, 660)
-        self.OCR_config = r'--oem 3 --psm 8 -l eng'
+        self.map_selection_coords = (878, 437, 1047, 646)
         self.locking_image_path = "images/agent_screen/agent_screen_bar.png"
         self.locking_confirmations = 2
         self.locking_button = None
         self.agent_coords_offset = (15, 15)
-        
         # self.locking_coords = (958, 866, 962, 870) # agent screen dot
         # self.locking_coords = (959, 867, 961, 869) # agent screen dot solid
 
@@ -72,6 +70,7 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         # Map Specific
         self.map_specific_mode = False
+        self.map_lookup = dict()
 
         # Safe Mode
         self.safe_mode = True
@@ -1293,6 +1292,16 @@ class InstalockerGUIMain(customtkinter.CTk):
                 self.config_file_agents = config["ALL_AGENTS"]
                 self.map_names = config["MAPS"]
 
+            # Loads the map images
+            for map_name in self.map_names:
+                try:
+                    map_binary = PIL.Image.open(
+                        resource_path(f"images/map_images/{map_name}.png")
+                    ).tobytes()
+                    self.map_lookup[map_binary] = map_name
+                except (PIL.UnidentifiedImageError, FileNotFoundError):
+                    self.map_lookup[None] = map_name
+
             # Loads the user_settings.json file, clears time_to_lock if new timings are added
             try:
                 with open(
@@ -1782,24 +1791,20 @@ class InstalockerGUIMain(customtkinter.CTk):
     # Detects which map the game is on
     def locate_map_screen(self):
         game_map = None
-        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5,5))
         while (
-            self.active_thread is True
+            game_map == None
+            and self.active_thread is True
             and self.locking is True
             and self.active is True
             and self.map_specific_mode is True
         ):
-            map_roi_ss = self.mss_instance.grab(self.map_roi)
-            img_array = numpy.array(map_roi_ss)
-            img_gray = cv2.cvtColor(img_array, cv2.COLOR_BGR2GRAY)
-            img_thresh = cv2.threshold(img_gray, 235, 255, cv2.THRESH_BINARY_INV)[1]
-            img_dilate = cv2.dilate(img_thresh, kernel, iterations=1)
-            result = pytesseract.image_to_string(img_dilate, config=self.OCR_config).replace("|", "I")
-            result = ''.join(char for char in result if char in string.ascii_letters).capitalize()
+            time.sleep(0.1)
 
-            if result in self.map_names:
-                game_map = result
-                break
+            current_map_ss = self.mss_instance.grab(self.map_selection_coords)
+            current_map = PIL.Image.frombytes(
+                "RGB", current_map_ss.size, current_map_ss.bgra, "raw", "BGRX"
+            ).tobytes()
+            game_map = self.map_lookup.get(current_map)
 
         if game_map is not None:
             self.find_agent_coords(self.map_specific_agents_dict[game_map])
@@ -1834,6 +1839,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                     self.lock_agent()
             else:
                 total_confirmations = 0
+
         else:
             self.find_game_end()
 
@@ -1932,8 +1938,8 @@ class InstalockerGUIMain(customtkinter.CTk):
                 except AttributeError:
                     pass
                 break
-        self.locking_main()
-        
+            self.locking_main()
+
     # Returns the coords for the agent selected
     def find_agent_coords(self, agent_name):
         try:

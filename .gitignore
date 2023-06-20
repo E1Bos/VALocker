@@ -5,7 +5,8 @@
 venv
 
 # Building to exe and compiled files
-build_to_exe
+build-to-exe
+valocker-no-ocr
 output
 
 # Folders
