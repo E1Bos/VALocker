@@ -1,6 +1,7 @@
 name: Build and Cache File
 
 on:
+  workflow_dispatch:
   push:
     tags:
       - "v*"
