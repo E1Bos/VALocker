@@ -35,9 +35,9 @@ jobs:
       - name: Create ZIP file
         run: |
           mkdir temp_folder
-          cp -r dist/VALocker.exe temp_folder/
-          cp -r data temp_folder/ -Recurse
-          cp -r images temp_folder/ -Recurse
+          cp dist/VALocker.exe temp_folder/ -Recurse
+          cp data temp_folder/ -Recurse
+          cp images temp_folder/ -Recurse
           rm temp_folder/data/instalocker.py
           Compress-Archive -Path temp_folder/* -DestinationPath VALocker.zip
           rm temp_folder -Recurse -Force
