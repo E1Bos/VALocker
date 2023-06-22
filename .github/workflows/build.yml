@@ -1,7 +1,6 @@
 name: Build and Cache File
 
 on:
-  workflow_dispatch:
   push:
     tags:
       - "v*"
@@ -40,10 +39,10 @@ jobs:
 
       - name: Create ZIP file
         run: |
-            zip -r VALocker.zip images/ save_files/default.json config.json
+          Compress-Archive -Path "images/", "save_files/default.json", "config.json", "dist/VALocker.exe" -DestinationPath dist/VALocker.zip
 
       - name: Upload ZIP file
         uses: actions/upload-artifact@v2
         with:
           name: VALocker-zip
-          path: VALocker.zip
+          path: dist/VALocker.zip
