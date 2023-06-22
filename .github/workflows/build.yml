@@ -1,0 +1,39 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 'latest'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Build and cache file
+        run: |
+          # Set the cache path dynamically based on the runner workspace
+          cache_path=${{ runner.workspace }}/cached-file
+
+          pyinstaller --noconfirm --onefile --windowed --icon "images/icons/instalocker_enabled.ico" --add-data "data;data/" --add-data "images;images/" --collect-all "customtkinter"  "VALocker.pyw"
+
+          echo "::set-output name=cache-path::$cache_path"  # Set the cache path as an output
+
+      - name: Cache file
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.build.outputs.cache-path }}  # Use the cache path from the output
+          key: ${{ runner.os }}-file-${{ hashFiles(steps.build.outputs.cache-path) }}
