@@ -1559,32 +1559,22 @@ class InstalockerGUIMain(customtkinter.CTk):
 
     # Renames the save file indicated by the old_file_name
     def rename_save_file(self, old_file_name):
-        new_file_name = InputPopup(
-            window_geometry=self.winfo_geometry(),
-            title="Rename Save File",
-            file_name=old_file_name,
-            colors=self.button_colors,
-            is_new_file=False,
-        ).get_input()
-
-        if new_file_name == "":
-            ErrorPopup(
+        new_file_name = None
+        is_valid_file_name = False
+        while is_valid_file_name is False:
+            new_file_name = InputPopup(
                 window_geometry=self.winfo_geometry(),
-                message="File Name Cannot Be Empty",
+                title="Rename Save File",
+                filled_in_text=new_file_name,
+                file_name=old_file_name,
                 colors=self.button_colors,
-            )
-            return
+                is_new_file=False,
+            ).get_input()
 
-        if new_file_name in self.save_files:
-            ErrorPopup(
-                window_geometry=self.winfo_geometry(),
-                message="File Name Already Exists",
-                colors=self.button_colors,
-            )
-            return
+            is_valid_file_name = self.valid_file_name(new_file_name)
 
-        if new_file_name == old_file_name or new_file_name is None:
-            return
+            if is_valid_file_name is None:
+                return
 
         # Configures the button to use the new file name
         self.save_file_frame_items[f"{old_file_name}_button"].configure(
@@ -1667,35 +1657,22 @@ class InstalockerGUIMain(customtkinter.CTk):
 
     # Creates a new save file
     def new_save_file(self):
-        file_name = InputPopup(
-            window_geometry=self.winfo_geometry(),
-            title="Create New Save File",
-            file_name="",
-            colors=self.button_colors,
-            is_new_file=True,
-        ).get_input()
-
-        # Does not create a new save file if the file name is empty
-        if file_name == "":
-            ErrorPopup(
+        is_valid_file_name = False
+        file_name = None
+        while is_valid_file_name is False:
+            file_name = InputPopup(
                 window_geometry=self.winfo_geometry(),
-                message="File Name Cannot Be Empty",
+                title="Create New Save File",
+                file_name="",
+                filled_in_text=file_name,
                 colors=self.button_colors,
-            )
-            return
+                is_new_file=True,
+            ).get_input()
 
-        # Does not create a new save file if the file name already exists
-        if file_name in self.save_files:
-            ErrorPopup(
-                window_geometry=self.winfo_geometry(),
-                message="File Name Already Exists",
-                colors=self.button_colors,
-            )
-            return
+            is_valid_file_name = self.valid_file_name(file_name)
 
-        # Does not create a new save file if the user cancels
-        if file_name is None:
-            return
+            if is_valid_file_name is None:
+                return
 
         # Creates the new save file
         with open(resource_path(f"./data/save_files/{file_name}.json"), "w") as sf:
@@ -1715,6 +1692,41 @@ class InstalockerGUIMain(customtkinter.CTk):
         self.individual_save_file_items(file_name)
         self.find_save_files()
         self.update_save_file_tab()
+
+    # Checks the name of the save file to make sure it is valid
+    def valid_file_name(self, new_file_name):
+        if new_file_name is None:
+            return None
+
+        if new_file_name == "":
+            cancel_event = ErrorPopup(
+                window_geometry=self.winfo_geometry(),
+                title="Invalid File Name",
+                message="File Name Cannot Be Empty",
+                colors=self.button_colors,
+            ).get_input()
+            return cancel_event
+
+        if new_file_name in self.save_files:
+            cancel_event = ErrorPopup(
+                window_geometry=self.winfo_geometry(),
+                title="Invalid File Name",
+                message="File Name Already Exists",
+                colors=self.button_colors,
+            ).get_input()
+            return cancel_event
+
+        for disallowed_char in ["/", "\\", ":", "*", "?", '"', "<", ">", "|"]:
+            if disallowed_char in new_file_name:
+                cancel_event = ErrorPopup(
+                    window_geometry=self.winfo_geometry(),
+                    title="Invalid File Name",
+                    message='File Name Cannot Contain:\n/ \\ : * ? " < > |',
+                    colors=self.button_colors,
+                ).get_input()
+                return cancel_event
+
+        return True
 
     # Finds all save files in data/save_files
     def find_save_files(self):
@@ -2041,9 +2053,9 @@ class InstalockerGUIMain(customtkinter.CTk):
 
 # Error popup when save renamed incorrectly
 class ErrorPopup(customtkinter.CTkToplevel):
-    def __init__(self, window_geometry, message, colors):
+    def __init__(self, window_geometry, title, message, colors):
         super().__init__()
-        self.title("Rename Error")
+        self.title(title)
         _, x, y = window_geometry.split("+")
         self.main_window_x, self.main_window_y = int(x), int(y)
         self.small_window_width, self.small_window_height = map(
@@ -2055,14 +2067,16 @@ class ErrorPopup(customtkinter.CTkToplevel):
         # GUI Settings
         self.lift()  # lift window on top
         self.attributes("-topmost", True)  # keep window on top
-        self.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.protocol("WM_DELETE_WINDOW", self.cancel_event)
         self.resizable(False, False)
         self.grab_set()  # make other windows not clickable
+
+        self.is_cancel_action = False
 
         self.create_error_message()
 
     def create_error_message(self):
-        self.geometry("200x100")
+        self.geometry("300x120")
         self.geometry(
             "+%d+%d"
             % (
@@ -2070,32 +2084,69 @@ class ErrorPopup(customtkinter.CTkToplevel):
                 self.main_window_y + self.small_window_height / 2,
             )
         )
+        self.grid_columnconfigure((0, 1), weight=1)
+        self.rowconfigure(0, weight=1)
+
         self.message = customtkinter.CTkLabel(
             self, text=self.message, font=("Arial", 14)
         )
-        self.message.pack(padx=10, pady=10)
+        self.message.grid(
+            row=1, column=0, columnspan=2, padx=0, pady=(20, 0), sticky="ew"
+        )
+
+        self.cancel_button = customtkinter.CTkButton(
+            master=self,
+            width=100,
+            border_width=0,
+            text="Cancel",
+            fg_color=self.colors["disabled"],
+            command=self.cancel_event,
+        )
+        self.cancel_button.grid(
+            row=2, column=0, columnspan=1, padx=10, pady=20, sticky="ew"
+        )
 
         self.ok_button = customtkinter.CTkButton(
             master=self,
             width=100,
             border_width=0,
             text="Ok",
-            fg_color=self.colors["disabled"],
-            command=self.on_closing,
+            fg_color=self.colors["enabled"],
+            command=self.okay_event,
         )
-        self.ok_button.pack(padx=20, pady=10)
+        self.ok_button.grid(
+            row=2, column=1, columnspan=1, padx=10, pady=20, sticky="ew"
+        )
 
-        self.bind("<Return>", self.on_closing)
-        self.bind("<Escape>", self.on_closing)
+        self.bind("<Return>", self.okay_event)
+        self.bind("<Escape>", self.cancel_event)
 
-    def on_closing(self, event=None):
+    def okay_event(self, event=None):
+        self.is_cancel_action = False
         self.grab_release()
         self.destroy()
+
+    def cancel_event(self, event=None):
+        self.is_cancel_action = None
+        self.grab_release()
+        self.destroy()
+
+    def get_input(self):
+        self.wait_window()
+        return self.is_cancel_action
 
 
 # Input popup when renaming saves
 class InputPopup(customtkinter.CTkToplevel):
-    def __init__(self, window_geometry, title, file_name, colors, is_new_file=False):
+    def __init__(
+        self,
+        window_geometry,
+        title,
+        file_name,
+        colors,
+        is_new_file=False,
+        filled_in_text=None,
+    ):
         super().__init__()
         self.title(title)
         _, x, y = window_geometry.split("+")
@@ -2106,11 +2157,12 @@ class InputPopup(customtkinter.CTkToplevel):
         self.file_name = file_name
         self.colors = colors
         self.is_new_file = is_new_file
+        self.filled_in_text = filled_in_text
 
         # GUI Settings
         self.lift()  # lift window on top
         self.attributes("-topmost", True)  # keep window on top
-        self.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.protocol("WM_DELETE_WINDOW", self.cancel_event)
         self.resizable(False, False)
         self.grab_set()  # make other windows not clickable
 
@@ -2144,22 +2196,11 @@ class InputPopup(customtkinter.CTkToplevel):
         self.label.grid(row=0, column=0, columnspan=2, padx=20, pady=20, sticky="ew")
 
         self.entry = customtkinter.CTkEntry(master=self, width=230)
-        self.entry.grid(
-            row=1, column=0, columnspan=2, padx=20, pady=(0, 20), sticky="ew"
-        )
-        self.entry.insert(0, self.file_name)
-
-        self.ok_button = customtkinter.CTkButton(
-            master=self,
-            width=100,
-            border_width=0,
-            text="Ok",
-            fg_color=self.colors["enabled"],
-            command=self.ok_event,
-        )
-        self.ok_button.grid(
-            row=2, column=0, columnspan=1, padx=(20, 10), pady=(0, 20), sticky="ew"
-        )
+        self.entry.grid(row=1, column=0, columnspan=2, padx=20, pady=0, sticky="ew")
+        if self.filled_in_text is None:
+            self.entry.insert(0, self.file_name)
+        else:
+            self.entry.insert(0, self.filled_in_text)
 
         self.cancel_button = customtkinter.CTkButton(
             master=self,
@@ -2170,22 +2211,31 @@ class InputPopup(customtkinter.CTkToplevel):
             command=self.cancel_event,
         )
         self.cancel_button.grid(
-            row=2, column=1, columnspan=1, padx=(10, 20), pady=(0, 20), sticky="ew"
+            row=2, column=0, columnspan=1, padx=20, pady=20, sticky="ew"
+        )
+
+        self.ok_button = customtkinter.CTkButton(
+            master=self,
+            width=100,
+            border_width=0,
+            text="Ok",
+            fg_color=self.colors["enabled"],
+            command=self.ok_event,
+        )
+        self.ok_button.grid(
+            row=2, column=1, columnspan=1, padx=20, pady=20, sticky="ew"
         )
 
         self.after(150, lambda: self.entry.focus())
         self.entry.bind("<Return>", self.ok_event)
-
-    def on_closing(self):
-        self.grab_release()
-        self.destroy()
+        self.entry.bind("<Escape>", self.cancel_event)
 
     def ok_event(self, event=None):
         self.user_input = self.entry.get()
         self.grab_release()
         self.destroy()
 
-    def cancel_event(self):
+    def cancel_event(self, event=None):
         self.user_input = None
         self.grab_release()
         self.destroy()
