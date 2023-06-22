@@ -34,8 +34,9 @@ jobs:
 
       - name: Create ZIP file
         run: |
-          $excludeFiles = @("data/instalocker.py")
-          Compress-Archive -Path "images/", "data/", "dist/VALocker.exe" -DestinationPath VALocker.zip -Exclude $excludeFiles
+          $exclude = @("instalocker.py")
+          $data_files = Get-ChildItem -Path "data/" -Recurse -Exclude $exclude
+          Compress-Archive -Path "images/", $data_files, "dist/VALocker.exe" -DestinationPath VALocker.zip -Exclude $excludeFiles
 
       - name: Upload ZIP file
         uses: actions/upload-artifact@v3
