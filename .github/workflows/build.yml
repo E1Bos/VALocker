@@ -40,7 +40,7 @@ jobs:
 
       - name: Create ZIP file
         run: |
-          Compress-Archive -Path "images/", "${{ github.workspace }}/save_files/default.json", "config.json", "dist/VALocker.exe" -DestinationPath dist/VALocker.zip
+          Compress-Archive -Path "images/", "save_files/default.json", "config.json", "dist/VALocker.exe" -DestinationPath dist/VALocker.zip
 
       - name: Upload ZIP file
         uses: actions/upload-artifact@v2
