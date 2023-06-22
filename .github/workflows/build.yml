@@ -33,9 +33,14 @@ jobs:
           pyinstaller --noconfirm --onefile --windowed --icon "images/icons/instalocker_enabled.ico" --add-data "data;data/" --add-data "images;images/" --collect-all "customtkinter" --distpath dist/ VALocker.pyw
 
       - name: Create ZIP file
-        uses: edgarrc/action-7z@v1
-        with:
-          args: 7z a -r VALocker.zip data/* images/* dist/Valocker.exe -x!data/instalocker.py
+        run: |
+          mkdir temp_folder
+          cp -r dist/VALocker.exe temp_folder/
+          cp -r data temp_folder/ -Recurse
+          cp -r images temp_folder/ -Recurse
+          rm temp_folder/data/instalocker.py
+          Compress-Archive -Path temp_folder/* -DestinationPath VALocker.zip
+          rm temp_folder -Recurse -Force
         
 
       - name: Upload ZIP file
