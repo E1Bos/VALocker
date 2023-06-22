@@ -12,10 +12,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: '3.x'
 
@@ -34,10 +34,11 @@ jobs:
 
       - name: Create ZIP file
         run: |
-          Compress-Archive -Path "images/", "data/save_files/default.json", "data/config.json", "dist/VALocker.exe" -DestinationPath VALocker.zip
+          $excludeFiles = @("data/instalocker.py")
+          Compress-Archive -Path "images/", "data/", "dist/VALocker.exe" -DestinationPath VALocker.zip -Exclude $excludeFiles
 
       - name: Upload ZIP file
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
-          name: VALocker-zip
+          name: VALocker
           path: VALocker.zip
