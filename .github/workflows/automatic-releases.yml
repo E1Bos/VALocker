@@ -8,7 +8,7 @@ on:
 
 
 jobs:
-  build:
+  tagged-release:
     runs-on: windows-latest
 
     steps:
@@ -43,13 +43,8 @@ jobs:
           Compress-Archive -Path temp_folder/* -DestinationPath VALocker.zip
           rm temp_folder -Recurse -Force
   
-  release:
-    name: Automatic Release
-    needs: build
-    runs-on: ubuntu-latest
-  
-    steps:
-      - uses: marvinpinto/action-automatic-releases@v1.2.1
+      - name: Create Release
+        uses: marvinpinto/action-automatic-releases@v1.2.1
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
