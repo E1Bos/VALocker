@@ -3,7 +3,7 @@ name: Automatic Release with Zip
 on:
   workflow_dispatch:
   workflow_run:
-    workflows: [Build and Cache File]
+    workflows: [Build and Zip File]
     types:
       - completed
 

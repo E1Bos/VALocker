@@ -1,4 +1,4 @@
-name: Build and Cache File
+name: Build and Zip File
 
 on:
   workflow_dispatch:
@@ -33,11 +33,9 @@ jobs:
           pyinstaller --noconfirm --onefile --windowed --icon "images/icons/instalocker_enabled.ico" --add-data "data;data/" --add-data "images;images/" --collect-all "customtkinter" --distpath dist/ VALocker.pyw
 
       - name: Create ZIP file
-        run: |
-          $sourcePaths = "images/", "data/", "dist/VALocker.exe"
-          $destinationPath = "VALocker.zip"
-          
-          Get-ChildItem -Path $sourcePaths -Recurse | Where-Object { $_.FullName -ne "data/instalocker.py" } | Compress-Archive -DestinationPath $destinationPath
+        uses: edgarrc/action-7z@v1
+        with:
+          args: 7z a -r VALocker.zip data/* images/* dist/Valocker.exe -x!data/instalocker.py
         
 
       - name: Upload ZIP file
