@@ -1,4 +1,4 @@
-name: Build
+name: Build and Cache File
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
@@ -23,18 +23,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Build and cache file
+      - name: Build file with PyInstaller
         run: |
-          # Set the cache path dynamically based on the runner workspace
-          cache_path="build/"
+          pyinstaller --noconfirm --onefile --windowed --icon "images/icons/instalocker_enabled.ico" --add-data "data;data/" --add-data "images;images/" --collect-all "customtkinter" --distpath dist/ your_script.py
 
-          pyinstaller --noconfirm --onefile --windowed --icon "images/icons/instalocker_enabled.ico" --add-data "data;data/" --add-data "images;images/" --collect-all "customtkinter" --distpath "$cache_path" "VALocker.pyw"
-
-          echo "::set-output name=cache-path::$cache_path"  # Set the cache path as an output
-
-          - name: Cache file
-          uses: actions/cache@v2
-          with:
-            path: build/
-            key: ${{ runner.os }}-file-${{ hashFiles('build/') }}
-        
+      - name: Cache file
+        uses: actions/cache@v2
+        with:
+          path: dist/
+          key: ${{ runner.os }}-file-${{ hashFiles('dist/') }}
