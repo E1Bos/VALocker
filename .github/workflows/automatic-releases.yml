@@ -1,26 +1,54 @@
-name: Automatic Release with Zip
+name: Tagged Release
+
 
 on:
-  workflow_run:
-    workflows: [Build and Zip File]
-    types:
-      - completed
+  push:
+    tags:
+      - "v*"
 
-jobs:        
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install requirements
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+        
+      - name: Install PyInstaller
+        run: |
+          pip install pyinstaller
+
+      - name: Build file with PyInstaller
+        run: |
+          pyinstaller --noconfirm --onefile --windowed --icon "images/icons/instalocker_enabled.ico" --add-data "data;data/" --add-data "images;images/" --collect-all "customtkinter" --distpath dist/ VALocker.pyw
+
+      - name: Create ZIP file
+        run: |
+          mkdir temp_folder
+          cp dist/VALocker.exe temp_folder/ -Recurse
+          cp data temp_folder/ -Recurse
+          cp images temp_folder/ -Recurse
+          rm temp_folder/data/instalocker.py
+          Compress-Archive -Path temp_folder/* -DestinationPath VALocker.zip
+          rm temp_folder -Recurse -Force
+  
   release:
     name: Automatic Release
+    needs: build
     runs-on: ubuntu-latest
   
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-  
-      - name: Download ZIP file
-        uses: dawidd6/action-download-artifact@v2
-        with:
-          github_token: ${{secrets.GITHUB_TOKEN}}
-          workflow: build.yml
-  
       - uses: marvinpinto/action-automatic-releases@v1.2.1
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"

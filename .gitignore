@@ -7,10 +7,6 @@ venv
 # Building to exe and compiled files
 build-to-exe
 output
-_actions
-_tool
-_temp
-_PipelineMapping
 
 # Folders
 __pycache__
