@@ -5,6 +5,7 @@ VALocker is a Python program that allows you to automatically lock in your desir
 ## Features
 
 - Provides a user-friendly GUI for easy interaction.
+- Can be run as an executable, no Python installation required.
 - Installs all necessary dependencies automatically.
 - Allows the window to be minimized into an icon.
 - Load-to-lock time of 100ms on average.
