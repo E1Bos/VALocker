@@ -4,8 +4,8 @@ name: Release
 # Run on every commit tag which begins with "v"
 on:
   push:
-    tags:
-      - "v*"
+    branches:
+      - "master"
 
 # Automatically create a GitHub Release
 jobs:
