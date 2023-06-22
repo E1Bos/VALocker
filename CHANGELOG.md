@@ -1,21 +1,14 @@
 Changelog
 =========
 
-## [1.2.0] 2023-06-19
+## [1.2.1] 2023-06
 
-### Changes
-- [Update] Map selection has been changed to use PyTesseract (OCR) to read the map name from the screen. This should be much more reliable than the previous method of reading the map name by comparing it to screenshots. This means that if the map selection screen is updated by the VALORANT Devs, the program will still work without having to re-screenshot map images.
-- [Update] The requirements for the program have been updated. The program now requires PyTesseract, numpy, and cv2 to be installed. The program will check if these are already installed and if not, it will install them automatically.
-- [Update] Readme includes the new imports under "Acknowledgements".
+### Added
+- [Feature] Added "PERSISTENT_RANDOM_AGENTS" to user settings. When enabled, adjusting your random agents while exclusiselect is enabled will revert to the selected agents prior to enabling exclusiselect. When disabled, adjusting your random agents while exclusiselect is enabled will update the random agent list and will keep any changes made by exclusiselect.
 
 ### Fixed
-- [Bug] Fixed bug where in certain circumstances, the locking thread would exit if manually switched from Waiting to Locking.
-
-### Removed
-- [Image] All map-related images have been removed since OCR is now used to read the map name from the screen.
-- [Code] Map images are no longer loaded into memory as they have been removed.
-
-
+- [Bug] Fixed bug where exclusiselect would not update the GUI when selecting an agent.
+- [Bug] Fixed bug where exclusiselect would not deselect randomly selected agent checkbox.
 
 ## [1.1.1] 2023-06-19
 

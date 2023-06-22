@@ -30,6 +30,7 @@ def resource_path(relative):
 customtkinter.set_appearance_mode("Dark")
 customtkinter.set_default_color_theme("blue")
 
+
 class InstalockerGUIMain(customtkinter.CTk):
     # region Init and Exit Function
 
@@ -281,7 +282,9 @@ class InstalockerGUIMain(customtkinter.CTk):
             corner_radius=5,
             width=140,
             font=self.button_font,
-            command=lambda tab_name="Save File": self.change_visible_tab(tab_name=tab_name),
+            command=lambda tab_name="Save File": self.change_visible_tab(
+                tab_name=tab_name
+            ),
         )
         self.current_save_button.pack(padx=10, pady=(0, 5))
 
@@ -619,7 +622,9 @@ class InstalockerGUIMain(customtkinter.CTk):
                 size=(20, 20),
             ),
             favorite_filled=customtkinter.CTkImage(
-                dark_image=PIL.Image.open(resource_path("images/gui_icons/favorite_filled.png")),
+                dark_image=PIL.Image.open(
+                    resource_path("images/gui_icons/favorite_filled.png")
+                ),
                 size=(20, 20),
             ),
             rename=customtkinter.CTkImage(
@@ -630,8 +635,10 @@ class InstalockerGUIMain(customtkinter.CTk):
                 dark_image=PIL.Image.open(resource_path("images/gui_icons/delete.png")),
                 size=(20, 20),
             ),
-            new_file = customtkinter.CTkImage(
-                dark_image=PIL.Image.open(resource_path("images/gui_icons/new_file.png")),
+            new_file=customtkinter.CTkImage(
+                dark_image=PIL.Image.open(
+                    resource_path("images/gui_icons/new_file.png")
+                ),
                 size=(20, 20),
             ),
         )
@@ -647,14 +654,14 @@ class InstalockerGUIMain(customtkinter.CTk):
         new_save_file_button = customtkinter.CTkButton(
             save_file_tab,
             text="",
-            image = self.save_file_icons["new_file"],
+            image=self.save_file_icons["new_file"],
             command=self.new_save_file,
             fg_color="transparent",
             hover_color="gray22",
             width=20,
             height=20,
         )
-        new_save_file_button.pack(padx=10, pady=(3,0), anchor=tk.NE)
+        new_save_file_button.pack(padx=10, pady=(3, 0), anchor=tk.NE)
 
         # endregion
 
@@ -689,9 +696,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             )
 
         for icon_name in reversed(
-            ["favorite", "rename", "delete"]
-            if file_name != "default"
-            else ["favorite"]
+            ["favorite", "rename", "delete"] if file_name != "default" else ["favorite"]
         ):
             icon_image = (
                 self.save_file_icons[icon_name]
@@ -734,7 +739,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                 self.update_icon()
             self.update_overview_tab()
             self.update_map_specific_tab()
-            
+
         except AttributeError:
             pass
 
@@ -832,7 +837,7 @@ class InstalockerGUIMain(customtkinter.CTk):
     # Updates agent toggle tab
     def update_agent_toggle_tab(self, agent_name=None):
         match agent_name:
-            case 'all':
+            case "all":
                 self.toggle_all_agent_button.configure(state=tk.DISABLED)
                 self.toggle_none_agent_button.deselect()
                 self.toggle_none_agent_button.configure(state=tk.NORMAL)
@@ -841,7 +846,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                     if agent not in self.default_agents:
                         self.agent_checkboxes[f"self.{agent}_checkbox"].select()
 
-            case 'none':
+            case "none":
                 self.toggle_none_agent_button.configure(state=tk.DISABLED)
                 self.toggle_all_agent_button.deselect()
                 self.toggle_all_agent_button.configure(state=tk.NORMAL)
@@ -850,7 +855,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                     if agent not in self.default_agents:
                         self.agent_checkboxes[f"self.{agent}_checkbox"].deselect()
 
-            case None: # Updates the entire tab, used only when the tab is first created or when loading a new save file
+            case None:  # Updates the entire tab, used only when the tab is first created or when loading a new save file
                 for agent in self.all_agents:
                     if agent not in self.default_agents:
                         if self.unlocked_agents_dict[agent] is True:
@@ -879,16 +884,18 @@ class InstalockerGUIMain(customtkinter.CTk):
                 else:
                     self.toggle_none_agent_button.deselect()
                     self.toggle_none_agent_button.configure(state=tk.NORMAL)
-            
-            case _: # Updates a single agent
+
+            case _:  # Updates a single agent
                 all_agents_selected = all(
                     self.unlocked_agents_dict[agent] is True
-                    for agent in self.unlocked_agents_dict)
+                    for agent in self.unlocked_agents_dict
+                )
                 no_agents_selected = all(
                     self.unlocked_agents_dict[agent] is False
                     for agent in self.unlocked_agents_dict
-                    if agent not in self.default_agents)
-                
+                    if agent not in self.default_agents
+                )
+
                 if all_agents_selected is True:
                     self.toggle_all_agent_button.select()
                     self.toggle_all_agent_button.configure(state=tk.DISABLED)
@@ -902,43 +909,57 @@ class InstalockerGUIMain(customtkinter.CTk):
                 else:
                     self.toggle_none_agent_button.deselect()
                     self.toggle_none_agent_button.configure(state=tk.NORMAL)
-               
+
     # Updates random agent tab
-    def update_random_agent_tab(self, agent_name=None, toggled_agent_name=None):
+    def update_random_agent_tab(
+        self, agent_name=None, toggled_agent_name=None, exclusiselect_mode=False
+    ):
         match agent_name:
-            case 'all':
+            case "all":
                 self.all_random_agent_radio_button.configure(state=tk.DISABLED)
                 self.none_random_agent_radio_button.deselect()
                 self.none_random_agent_radio_button.configure(state=tk.NORMAL)
 
                 for agent in self.random_agents_dict:
                     if self.unlocked_agents_dict[agent] is True:
-                        self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].select()
+                        self.random_agent_checkboxes[
+                            f"self.{agent}_random_checkbox"
+                        ].select()
 
                 for role in self.config_file_agents:
                     self.agent_role_checkboxes[role.lower()].select()
-            
-            case 'none':
+
+            case "none":
                 self.all_random_agent_radio_button.deselect()
                 self.all_random_agent_radio_button.configure(state=tk.NORMAL)
                 self.none_random_agent_radio_button.configure(state=tk.DISABLED)
 
                 for agent in self.random_agents_dict:
                     if self.unlocked_agents_dict[agent] is True:
-                        self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].deselect()
-                
+                        self.random_agent_checkboxes[
+                            f"self.{agent}_random_checkbox"
+                        ].deselect()
+
                 for role in self.config_file_agents:
                     self.agent_role_checkboxes[role.lower()].deselect()
-            
-            case 'controllers' | 'duelists' | 'initiators' | 'sentinels':
+
+            case "controllers" | "duelists" | "initiators" | "sentinels":
                 role = agent_name.upper()
-                all_role_agents_selected = all(self.random_agents_dict[agent] is True for agent in self.config_file_agents[role] if self.unlocked_agents_dict[agent] is True)
+                all_role_agents_selected = all(
+                    self.random_agents_dict[agent] is True
+                    for agent in self.config_file_agents[role]
+                    if self.unlocked_agents_dict[agent] is True
+                )
                 if all_role_agents_selected is True:
                     for agent in self.config_file_agents[role]:
-                        self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].select()
+                        self.random_agent_checkboxes[
+                            f"self.{agent}_random_checkbox"
+                        ].select()
                 else:
                     for agent in self.config_file_agents[role]:
-                        self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].deselect()
+                        self.random_agent_checkboxes[
+                            f"self.{agent}_random_checkbox"
+                        ].deselect()
 
                 if all(
                     self.random_agents_dict[agent] is True
@@ -958,25 +979,37 @@ class InstalockerGUIMain(customtkinter.CTk):
                     self.none_random_agent_radio_button.deselect()
                     self.none_random_agent_radio_button.configure(state=tk.NORMAL)
 
-            case 'toggle_unlocked_agent_status':
+            case "toggle_unlocked_agent_status":
                 match toggled_agent_name:
-                    case 'all':
+                    case "all":
                         for agent in self.unlocked_agents_dict:
                             if agent not in self.default_agents:
-                                self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].configure(state=tk.NORMAL)
-                    case 'none':
+                                self.random_agent_checkboxes[
+                                    f"self.{agent}_random_checkbox"
+                                ].configure(state=tk.NORMAL)
+                    case "none":
                         for agent in self.unlocked_agents_dict:
                             if agent not in self.default_agents:
-                                self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].configure(state=tk.DISABLED)
-                                self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].deselect()
+                                self.random_agent_checkboxes[
+                                    f"self.{agent}_random_checkbox"
+                                ].configure(state=tk.DISABLED)
+                                self.random_agent_checkboxes[
+                                    f"self.{agent}_random_checkbox"
+                                ].deselect()
                     case None:
                         pass
                     case _:
                         if self.unlocked_agents_dict[toggled_agent_name] is True:
-                            self.random_agent_checkboxes[f"self.{toggled_agent_name}_random_checkbox"].configure(state=tk.NORMAL)
+                            self.random_agent_checkboxes[
+                                f"self.{toggled_agent_name}_random_checkbox"
+                            ].configure(state=tk.NORMAL)
                         else:
-                            self.random_agent_checkboxes[f"self.{toggled_agent_name}_random_checkbox"].configure(state=tk.DISABLED)
-                            self.random_agent_checkboxes[f"self.{toggled_agent_name}_random_checkbox"].deselect()
+                            self.random_agent_checkboxes[
+                                f"self.{toggled_agent_name}_random_checkbox"
+                            ].configure(state=tk.DISABLED)
+                            self.random_agent_checkboxes[
+                                f"self.{toggled_agent_name}_random_checkbox"
+                            ].deselect()
 
                 if toggled_agent_name in ["all", "none"]:
                     if all(
@@ -991,7 +1024,9 @@ class InstalockerGUIMain(customtkinter.CTk):
                         self.all_random_agent_radio_button.configure(state=tk.NORMAL)
 
                     # Select none if no agents are selected
-                    if all(value is False for value in self.random_agents_dict.values()):
+                    if all(
+                        value is False for value in self.random_agents_dict.values()
+                    ):
                         self.none_random_agent_radio_button.select()
                         self.none_random_agent_radio_button.configure(state=tk.DISABLED)
                     else:
@@ -1009,14 +1044,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                         else:
                             self.agent_role_checkboxes[role.lower()].deselect()
 
-            case None: # Updates the entire tab, used only when the tab is first created or when loading a new save file
-                # Selects selected agents
-                for agent, value in self.random_agents_dict.items():
-                    if value is True:
-                        self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].select()
-                    else:
-                        self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].deselect()
-
+            case None:  # Updates the entire tab, used only when the tab is first created or loading a new save file
                 # Select all if all possible agents are selected
                 if all(
                     self.random_agents_dict[agent] is True
@@ -1039,6 +1067,15 @@ class InstalockerGUIMain(customtkinter.CTk):
 
                 # Selects all roles if all possible agents are selected
                 for role in self.config_file_agents:
+                    for agent in self.config_file_agents[role]:
+                        if self.random_agents_dict[agent] is True:
+                            self.random_agent_checkboxes[
+                                f"self.{agent}_random_checkbox"
+                            ].select()
+                        else:
+                            self.random_agent_checkboxes[
+                                f"self.{agent}_random_checkbox"
+                            ].deselect()
                     if all(
                         self.random_agents_dict[agent] is True
                         for agent in self.config_file_agents[role]
@@ -1047,23 +1084,31 @@ class InstalockerGUIMain(customtkinter.CTk):
                         self.agent_role_checkboxes[role.lower()].select()
                     else:
                         self.agent_role_checkboxes[role.lower()].deselect()
-                
-                # Disables agents that are not unlocked
-                for agent in self.unlocked_agents_dict:
-                    if (
-                        agent not in self.default_agents
-                        and self.unlocked_agents_dict[agent] is False
-                    ):
-                        self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].configure(
-                            state=tk.DISABLED
-                        )
-                        self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].deselect()
-                    else:
-                        self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].configure(
-                            state=tk.NORMAL
-                        )
 
-            case _: # Updates the tab when a single agent is selected
+                # Disables agents that are not unlocked
+                if exclusiselect_mode is False:
+                    for agent in self.unlocked_agents_dict:
+                        if (
+                            agent not in self.default_agents
+                            and self.unlocked_agents_dict[agent] is False
+                        ):
+                            self.random_agent_checkboxes[
+                                f"self.{agent}_random_checkbox"
+                            ].configure(state=tk.DISABLED)
+                            self.random_agent_checkboxes[
+                                f"self.{agent}_random_checkbox"
+                            ].deselect()
+                        else:
+                            self.random_agent_checkboxes[
+                                f"self.{agent}_random_checkbox"
+                            ].configure(state=tk.NORMAL)
+
+            case _:  # Updates the tab when a single agent is selected
+                if exclusiselect_mode is True:
+                    self.random_agent_checkboxes[
+                        f"self.{agent_name}_random_checkbox"
+                    ].deselect()
+
                 # Select none if no agents are selected
                 if all(value is False for value in self.random_agents_dict.values()):
                     self.none_random_agent_radio_button.select()
@@ -1270,11 +1315,11 @@ class InstalockerGUIMain(customtkinter.CTk):
             fg_color=f"{self.button_colors['enabled'] if self.random_agent_exclusiselect is True else self.button_colors['disabled']}",
         )
 
+        self.update_random_agent_tab(exclusiselect_mode=True)
+
     # Toggles which tab is shown/displayed
     def change_visible_tab(self, tab_name):
         self.tabs.set(tab_name)
-
-
 
     # endregion
 
@@ -1320,6 +1365,9 @@ class InstalockerGUIMain(customtkinter.CTk):
                     self.safe_mode_strength = user_settings[
                         "SAFE_MODE_STRENGTH_ON_START"
                     ]
+                    self.persistent_random_agents = user_settings[
+                        "PERSISTENT_RANDOM_AGENTS"
+                    ]
                     self.favorited_save_files = user_settings["FAVORITED_SAVE_FILES"]
                     self.total_games_used = user_settings["TIMES_USED"]
                     self.time_to_lock_list = user_settings["TIME_TO_LOCK"]
@@ -1337,6 +1385,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                                 "INSTALOCK_ON_START": self.active,
                                 "SAFE_MODE_ENABLED_ON_START": self.safe_mode,
                                 "SAFE_MODE_STRENGTH_ON_START": self.safe_mode_strength,
+                                "PERSISTENT_RANDOM_AGENTS": self.persistent_random_agents,
                                 "FAVORITED_SAVE_FILES": self.favorited_save_files,
                                 "TIMES_USED": self.total_games_used,
                                 "TIME_TO_LOCK": self.time_to_lock_list,
@@ -1347,6 +1396,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             except FileNotFoundError:
                 self.minimize_to_tray = False
                 self.start_minimized = False
+                self.persistent_random_agents = False
                 with open(resource_path("data/user_settings.json"), "w") as us:
                     user_settings_file_json = {
                         "ACTIVE_SAVE_FILE": self.current_save_file,
@@ -1355,6 +1405,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                         "INSTALOCK_ON_START": self.active,
                         "SAFE_MODE_ENABLED_ON_START": self.safe_mode,
                         "SAFE_MODE_STRENGTH_ON_START": self.safe_mode_strength,
+                        "PERSISTENT_RANDOM_AGENTS": self.persistent_random_agents,
                         "FAVORITED_SAVE_FILES": self.favorited_save_files,
                         "TIMES_USED": self.total_games_used,
                         "TIME_TO_LOCK": self.time_to_lock_list,
@@ -1513,7 +1564,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             title="Rename Save File",
             file_name=old_file_name,
             colors=self.button_colors,
-            is_new_file=False
+            is_new_file=False,
         ).get_input()
 
         if new_file_name == "":
@@ -1581,15 +1632,14 @@ class InstalockerGUIMain(customtkinter.CTk):
 
     # Deletes the save file indicated by the file_name
     def delete_save_file(self, file_name):
-
         # Does not delete the save file if it is favorited
         if file_name in self.favorited_save_files:
             return
-        
+
         # Failsafe to make sure the user does not delete the default save file or the current one
         if file_name == self.current_save_file or file_name == "default":
             return
-        
+
         is_confirmed = ConfirmationPopup(
             window_geometry=self.winfo_geometry(),
             file_name=file_name,
@@ -1599,18 +1649,18 @@ class InstalockerGUIMain(customtkinter.CTk):
         # Does not delete the save file if the user cancels
         if is_confirmed is not True:
             return
-        
+
         # Removes the save file from the favorited save files
         if file_name in self.favorited_save_files.copy():
             self.favorited_save_files.remove(file_name)
             self.update_user_settings()
-        
+
         # Removes the save file from the save file tab
         self.save_file_frame_items[f"{file_name}_frame"].destroy()
 
         # Deletes the save file from the save_files folder
         os.remove(resource_path(f"./data/save_files/{file_name}.json"))
-        
+
         # Updates the list of files and the save file tab
         self.find_save_files()
         self.update_save_file_tab()
@@ -1622,7 +1672,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             title="Create New Save File",
             file_name="",
             colors=self.button_colors,
-            is_new_file=True
+            is_new_file=True,
         ).get_input()
 
         # Does not create a new save file if the file name is empty
@@ -1633,7 +1683,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                 colors=self.button_colors,
             )
             return
-        
+
         # Does not create a new save file if the file name already exists
         if file_name in self.save_files:
             ErrorPopup(
@@ -1642,17 +1692,17 @@ class InstalockerGUIMain(customtkinter.CTk):
                 colors=self.button_colors,
             )
             return
-        
+
         # Does not create a new save file if the user cancels
         if file_name is None:
             return
-        
+
         # Creates the new save file
         with open(resource_path(f"./data/save_files/{file_name}.json"), "w") as sf:
             empty_map_specific_agents_dict = self.map_specific_agents_dict.copy()
             for map_name in empty_map_specific_agents_dict:
                 empty_map_specific_agents_dict[map_name] = None
-            
+
             save_file_json = {
                 "SELECTED_AGENT": self.selected_agent,
                 "UNLOCKED_AGENTS": self.unlocked_agents_dict,
@@ -1660,7 +1710,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                 "MAP_SPECIFIC_AGENTS": empty_map_specific_agents_dict,
             }
             sf.write(json.dumps(save_file_json, indent=4))
-        
+
         # Finds the save file and adds it to the list
         self.individual_save_file_items(file_name)
         self.find_save_files()
@@ -1711,7 +1761,9 @@ class InstalockerGUIMain(customtkinter.CTk):
             )[0]
 
         self.update_agent_toggle_tab(agent_name)
-        self.update_random_agent_tab('toggle_unlocked_agent_status', toggled_agent_name=agent_name)
+        self.update_random_agent_tab(
+            "toggle_unlocked_agent_status", toggled_agent_name=agent_name
+        )
         self.update_gui(from_agent_tab=True)
         self.save_current_data()
 
@@ -1745,10 +1797,16 @@ class InstalockerGUIMain(customtkinter.CTk):
                 ]
 
         # Only updates the list if a checkbox is selected, not when the ExclusiSelect mode is toggled
-        if self.random_agent_exclusiselect is True and exclusiselect_toggle is False:
-            self.random_agents_dict_backup = self.random_agents_dict.copy()
+        if self.persistent_random_agents is False:
+            if (
+                self.random_agent_exclusiselect is True
+                and exclusiselect_toggle is False
+            ):
+                self.random_agents_dict_backup = self.random_agents_dict.copy()
 
-        self.update_random_agent_tab(agent_name)
+        self.update_random_agent_tab(
+            agent_name, exclusiselect_mode=exclusiselect_toggle
+        )
         self.update_overview_tab()
         self.save_current_data()
 
@@ -1770,10 +1828,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             self.mss_instance = mss.mss()
         while self.active_thread is True:
             time.sleep(0.3)
-            if (
-                self.active is True
-                and self.active_thread is True
-            ):
+            if self.active is True and self.active_thread is True:
                 self.lock_button = (
                     self.box_info["LOCK_COORDS"][0]
                     + random.randint(0, self.box_info["LOCK_SIZE"][0]),
@@ -1821,7 +1876,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             and self.locking is True
             and self.active is True
             and self.map_specific_mode is map_specific_toggle
-            ):
+        ):
             agent_screen_section_ss = self.mss_instance.grab(self.locking_coords)
             agent_screen_section = PIL.Image.frombytes(
                 "RGB",
@@ -1938,7 +1993,6 @@ class InstalockerGUIMain(customtkinter.CTk):
                 except AttributeError:
                     pass
                 break
-            self.locking_main()
 
     # Returns the coords for the agent selected
     def find_agent_coords(self, agent_name):
@@ -1981,7 +2035,9 @@ class InstalockerGUIMain(customtkinter.CTk):
 
     # endregion
 
+
 # region Popups
+
 
 # Error popup when save renamed incorrectly
 class ErrorPopup(customtkinter.CTkToplevel):
@@ -1990,7 +2046,9 @@ class ErrorPopup(customtkinter.CTkToplevel):
         self.title("Rename Error")
         _, x, y = window_geometry.split("+")
         self.main_window_x, self.main_window_y = int(x), int(y)
-        self.small_window_width, self.small_window_height = map(int, self.geometry().split("+")[0].split("x"))
+        self.small_window_width, self.small_window_height = map(
+            int, self.geometry().split("+")[0].split("x")
+        )
         self.message = message
         self.colors = colors
 
@@ -2005,7 +2063,13 @@ class ErrorPopup(customtkinter.CTkToplevel):
 
     def create_error_message(self):
         self.geometry("200x100")
-        self.geometry("+%d+%d" % (self.main_window_x + self.small_window_width/2, self.main_window_y+self.small_window_height/2))
+        self.geometry(
+            "+%d+%d"
+            % (
+                self.main_window_x + self.small_window_width / 2,
+                self.main_window_y + self.small_window_height / 2,
+            )
+        )
         self.message = customtkinter.CTkLabel(
             self, text=self.message, font=("Arial", 14)
         )
@@ -2028,6 +2092,7 @@ class ErrorPopup(customtkinter.CTkToplevel):
         self.grab_release()
         self.destroy()
 
+
 # Input popup when renaming saves
 class InputPopup(customtkinter.CTkToplevel):
     def __init__(self, window_geometry, title, file_name, colors, is_new_file=False):
@@ -2035,7 +2100,9 @@ class InputPopup(customtkinter.CTkToplevel):
         self.title(title)
         _, x, y = window_geometry.split("+")
         self.main_window_x, self.main_window_y = int(x), int(y)
-        self.small_window_width, self.small_window_height = map(int, self.geometry().split("+")[0].split("x"))
+        self.small_window_width, self.small_window_height = map(
+            int, self.geometry().split("+")[0].split("x")
+        )
         self.file_name = file_name
         self.colors = colors
         self.is_new_file = is_new_file
@@ -2052,7 +2119,13 @@ class InputPopup(customtkinter.CTkToplevel):
         self.create_input_popup()
 
     def create_input_popup(self):
-        self.geometry("+%d+%d" % (self.main_window_x + self.small_window_width/2, self.main_window_y+self.small_window_height/2))
+        self.geometry(
+            "+%d+%d"
+            % (
+                self.main_window_x + self.small_window_width / 2,
+                self.main_window_y + self.small_window_height / 2,
+            )
+        )
         self.grid_columnconfigure((0, 1), weight=1)
         self.rowconfigure(0, weight=1)
 
@@ -2121,13 +2194,16 @@ class InputPopup(customtkinter.CTkToplevel):
         self.wait_window()
         return self.user_input
 
+
 # Confirmation popup when deleting saves
 class ConfirmationPopup(customtkinter.CTkToplevel):
     def __init__(self, window_geometry, file_name, colors):
         super().__init__()
         _, x, y = window_geometry.split("+")
         self.main_window_x, self.main_window_y = int(x), int(y)
-        self.small_window_width, self.small_window_height = map(int, self.geometry().split("+")[0].split("x"))
+        self.small_window_width, self.small_window_height = map(
+            int, self.geometry().split("+")[0].split("x")
+        )
         self.title("Confirm Deletion")
         self.file_name = file_name
         self.colors = colors
@@ -2163,7 +2239,13 @@ class ConfirmationPopup(customtkinter.CTkToplevel):
 
     def create_confirmation_popup(self):
         self.geometry("400x200")
-        self.geometry("+%d+%d" % (self.main_window_x + self.small_window_width/2, self.main_window_y+self.small_window_height/2))
+        self.geometry(
+            "+%d+%d"
+            % (
+                self.main_window_x + self.small_window_width / 2,
+                self.main_window_y + self.small_window_height / 2,
+            )
+        )
         message = customtkinter.CTkLabel(
             self,
             text=f"You are about to delete:\n{self.file_name}\nAre you sure?\n\nThis action cannot be undone.",
@@ -2194,7 +2276,8 @@ class ConfirmationPopup(customtkinter.CTkToplevel):
         self.bind("<Return>", self.cancel_event)
         self.bind("<Escape>", self.cancel_event)
 
-#endregion
+
+# endregion
 
 if __name__ == "__main__":
     main_gui = InstalockerGUIMain()
