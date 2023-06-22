@@ -1,11 +1,11 @@
 # Name of the workflow
 name: "release"
 
-# Run on every commit tag which begins with "v"
+# Run on every commit pushed to master
 on:
   push:
-    tags:
-      - "v*"
+    branches:
+      - "master"
 
 # Automatically create a GitHub Release
 jobs:
@@ -17,3 +17,4 @@ jobs:
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
+          automatic_release_tag: "latest"
