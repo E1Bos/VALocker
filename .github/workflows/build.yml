@@ -36,8 +36,8 @@ jobs:
         uses: TheDoctor0/zip-release@0.7.1
         with:
           filename: "VALocker.zip"
-          path: "data/ images/ dist/VALocker.exe"
-          exclusions: "instalocker.py"
+          path: "data/* images/* dist/VALocker.exe"
+          exclusions: "data/instalocker.py"
         
 
       - name: Upload ZIP file
