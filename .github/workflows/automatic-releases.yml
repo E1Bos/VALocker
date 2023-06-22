@@ -1,6 +1,7 @@
 name: Automatic Release with Zip
 
 on:
+  workflow_dispatch:
   workflow_run:
     workflows: [Build and Cache File]
     types:
@@ -9,7 +10,7 @@ on:
 jobs:        
   release:
     name: Automatic Release
-    runs-on: "ubuntu-latest"
+    runs-on: self-hosted
   
     steps:
       - name: Checkout code
@@ -19,12 +20,12 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: VALocker-zip
-          path: VALocker.zip
+          path: artifacts/
   
       - uses: marvinpinto/action-automatic-releases@v1.2.1
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
           files: |
-            VALocker.zip
+            artifacts/VALocker.zip
           
