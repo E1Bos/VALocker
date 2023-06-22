@@ -1,14 +1,13 @@
 name: Build and Zip File
 
 on:
-  workflow_dispatch:
   push:
     tags:
       - "v*"
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: windows-latest
 
     steps:
       - name: Checkout repository
@@ -46,5 +45,5 @@ jobs:
       - name: Upload ZIP file
         uses: actions/upload-artifact@v3
         with:
-          name: VALocker
+          name: VALocker-zip
           path: VALocker.zip

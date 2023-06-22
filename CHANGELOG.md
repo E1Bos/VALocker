@@ -1,7 +1,12 @@
 Changelog
 =========
 
-## v1.2.2 | 2021-10-2
+## v1.2.3 | 2023-10-2
+
+### Added
+- [Release] Added automatic releases and automatic compilation to exe. Releases can be found [here](https://github.com/E1Bos/VALocker/releases)
+
+## v1.2.2 | 2023-10-2
 
 ### Added
 - [Feature] Error dialogue boxes now show "Ok" and "Cancel". Ok will reopen the input box, and cancel will close the input box, allowing the user to try again if they wish.

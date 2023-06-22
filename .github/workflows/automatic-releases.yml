@@ -1,7 +1,6 @@
 name: Automatic Release with Zip
 
 on:
-  workflow_dispatch:
   workflow_run:
     workflows: [Build and Zip File]
     types:
@@ -10,7 +9,7 @@ on:
 jobs:        
   release:
     name: Automatic Release
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
   
     steps:
       - name: Checkout code
