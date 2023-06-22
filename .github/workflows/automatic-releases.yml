@@ -19,7 +19,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: VALocker-zip
-          path: VALocker.zip
+          path: dist/VALocker.zip
   
       - uses: marvinpinto/action-automatic-releases@v1.2.1
         with:
