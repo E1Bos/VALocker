@@ -2,8 +2,8 @@ name: Build and Cache File
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - "v*"
 
 jobs:
   build:
@@ -36,3 +36,13 @@ jobs:
         with:
           path: dist/
           key: ${{ runner.os }}-file-${{ hashFiles('dist/') }}
+
+      - name: Create ZIP file
+        run: |
+            zip -r VALocker.zip images/ save_files/default.json config.json
+
+      - name: Upload ZIP file
+        uses: actions/upload-artifact@v2
+        with:
+          name: VALocker-zip
+          path: VALocker.zip

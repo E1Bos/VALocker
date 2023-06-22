@@ -1,16 +1,30 @@
-name: "Automatic Release"
+name: Automatic Release with Zip
 
 on:
-  push:
-    tags:
-      - "v*"
+  workflow_run:
+    workflows: [Build and Cache File]
+    types:
+      - completed
 
-jobs:
+jobs:        
   release:
-    name: "Automatic Release"
-    runs-on: "windows-latest"
+    name: Automatic Release
+    runs-on: "ubuntu-latest"
+  
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+  
+      - name: Download ZIP file
+        uses: actions/download-artifact@v2
+        with:
+          name: VALocker-zip
+          path: VALocker.zip
+  
       - uses: marvinpinto/action-automatic-releases@v1.2.1
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
+          files: |
+            VALocker.zip
+          
