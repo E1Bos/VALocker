@@ -10,8 +10,10 @@ except ModuleNotFoundError:
     import subprocess
 
     subprocess.run(["pip", "install", "-r", "requirements.txt"])
+    
     import customtkinter, pystray, PIL.Image, mss
     import pynput.mouse as pynmouse
+
 
 # Imports modules that are installed with Python
 import json, os, random, threading, time, ctypes
@@ -952,9 +954,10 @@ class InstalockerGUIMain(customtkinter.CTk):
                 )
                 if all_role_agents_selected is True:
                     for agent in self.config_file_agents[role]:
-                        self.random_agent_checkboxes[
-                            f"self.{agent}_random_checkbox"
-                        ].select()
+                        if self.unlocked_agents_dict[agent] is True:
+                            self.random_agent_checkboxes[
+                                f"self.{agent}_random_checkbox"
+                            ].select()
                 else:
                     for agent in self.config_file_agents[role]:
                         self.random_agent_checkboxes[
