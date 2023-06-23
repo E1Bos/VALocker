@@ -1,12 +1,16 @@
 Changelog
 =========
 
-## v1.2.3 | 2023-10-2
+Date Format: YYYY-MM-DD
+
+---
+## Version 1.2.3 - 2023-06-23
 
 ### Added
-- [Release] Added automatic releases and automatic compilation to exe. Releases can be found [here](https://github.com/E1Bos/VALocker/releases)
+- [Feature] Added automatic releases and automatic compilation to exe. Releases can be found [here](https://github.com/E1Bos/VALocker/releases).
 
-## v1.2.2 | 2023-10-2
+---
+## Version 1.2.2 - 2023-06-22
 
 ### Added
 - [Feature] Error dialogue boxes now show "Ok" and "Cancel". Ok will reopen the input box, and cancel will close the input box, allowing the user to try again if they wish.
@@ -15,7 +19,8 @@ Changelog
 ### Updated
 - [Feature] Updated renaming and creating save files. If input is valid, previous input will be displayed in the input box. Also added error for unsupported characters. i.e. \ / : * ? " < > |
 
-## v1.2.1 | 2023-06-22
+---
+## Version 1.2.1 | 2023-06-22
 
 ### Added
 - [Feature] Added "PERSISTENT_RANDOM_AGENTS" to user settings. When enabled, adjusting your random agents while exclusiselect is enabled will revert to the selected agents prior to enabling exclusiselect. When disabled, adjusting your random agents while exclusiselect is enabled will update the random agent list and will keep any changes made by exclusiselect.
@@ -24,30 +29,34 @@ Changelog
 - [Bug] Fixed bug where exclusiselect would not update the GUI when selecting an agent.
 - [Bug] Fixed bug where exclusiselect would not deselect randomly selected agent checkbox.
 
-## v1.1.1 | 2023-06-19
+---
+## Version 1.1.1 | 2023-06-19
 
 ### Fixed
 - [Bug] Fixed bug where the "All" checkbox would not update if random agents are selected by role.
 - [Bug] Fixed bug where the "None" checkbox would not update if random agents are selected by role.
 
-
-## v1.1.0 | 2023-06-19
+---
+## Version 1.1.0 | 2023-06-19
 
 ### Changes
 - [Update] Updating the GUI uses match-case statements. GUI updates are much faster.
 - [Update] The label for the current save file is now a button and when clicked, it will open the save file tab.
 
-## v1.0.2 | 2023-06-17
+---
+## Version 1.0.2 | 2023-06-17
 
 ### Fixed
 - [Bug] Fixed bug where when instalocker is waiting for the end of a game, and the instalocker is stopped, it will stop searching for the end of the game when re enabled.
 
-## v1.0.1 | 2023-06-15
+---
+## Version 1.0.1 | 2023-06-15
 
 ### Changes
 - [Update] Text of new save button has been replaced with an icon.
 
-## v1.0.0 | 2023-06-15
+---
+## Version 1.0.0 | 2023-06-15
 
 ### Added
 - [Feature] New save file tab. All save files are displayed in a scrollable window.
