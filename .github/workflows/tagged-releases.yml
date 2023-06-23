@@ -35,16 +35,16 @@ jobs:
 
       - name: Create ZIP file
         run: |
-          mkdir temp_folder
-          cp dist/VALocker.exe temp_folder/ -Recurse
-          cp data temp_folder/ -Recurse
-          cp images temp_folder/ -Recurse
-          rm temp_folder/data/instalocker.py
-          Compress-Archive -Path temp_folder/* -DestinationPath VALocker.zip
-          rm temp_folder -Recurse -Force
-  
+          mkdir zip_content/VALocker
+          cp dist/VALocker.exe zip_content/VALocker/
+          cp data zip_content/VALocker/ -Recurse
+          cp images zip_content/VALocker/ -Recurse
+          rm zip_content/VALocker/data/instalocker.py
+          Compress-Archive -Path zip_content/* -DestinationPath VALocker.zip
+          rm zip_content -Recurse -Force
+
       - name: Create Release
-        uses: marvinpinto/action-automatic-releases@v1.2.1
+        uses: marvinpinto/action-automatic-releases@latest
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
