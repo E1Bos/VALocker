@@ -41,7 +41,7 @@ jobs:
           cp images zip_content/VALocker/ -Recurse
           rm zip_content/VALocker/data/instalocker.py
           rm zip_content/VALocker/images/readme_images/ -Recurse
-          Compress-Archive -Path zip_content/ -DestinationPath VALocker.zip
+          Compress-Archive -Path zip_content/VALocker/ -DestinationPath VALocker.zip
           rm zip_content -Recurse -Force
 
       - name: Create Release
