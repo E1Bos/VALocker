@@ -1,6 +1,6 @@
 # VALocker - Valorant Agent Locker
 
-VALocker is a Python program that allows you to automatically lock in your desired Valorant agent quickly and reliably. It helps you secure your favorite agent during the agent selection phase, saving you time and ensuring you don't miss out on playing your preferred character.
+VALocker is a program written in Python that allows you to automatically lock any Valorant agent quickly and reliably. It helps you secure your favorite agent during the agent selection phase, saving you time and ensuring you don't miss out on playing your preferred character.
 
 ## Features
 
@@ -8,7 +8,7 @@ VALocker is a Python program that allows you to automatically lock in your desir
 - Can be run as an executable, no Python installation required.
 - Installs all necessary dependencies automatically.
 - Allows the window to be minimized into an icon.
-- Load-to-lock time of 100ms on average.
+- Load-to-lock time of less than 100ms on average.
 - Auto-detects game end screen for set-and-forget relocking.
 - Supports map-specific agent locking.
 - Random agent mode allows random agent selection from a pool, adding variety and reducing repetition.
@@ -20,21 +20,29 @@ VALocker is a Python program that allows you to automatically lock in your desir
   - High 800-1000ms
 - Tracks and displays average time to lock and last lock in real time.
 - Selects random part of agent and locking button to deter detection.
-- Allows for multiple save files for different accounts and configurations.
+- Allows for multiple save files for different accounts and/or configurations.
 
 ## Installation
 
+### Executable
+1. Download the latest zip file from the [releases](https://github.com/E1Bos/VALocker/releases) page.
+2. Extract the zip file to a location of your choice.
+3. Run `VALocker.exe` to launch the application.
+
+### Python
 1. Clone the repository to your local machine.
 2. Make sure you have Python 3.x installed.
+3. Run `VALocker.pyw` to launch the application, dependancies will be installed automatically.
 
 ## Usage
 
-1. Run `VALocker.pyw` to launch the application. If it's your first time running the program, it will automatically install the necessary dependencies. Wait for the installation process to complete. If using the executable, simply run `VALocker.exe`.
+1. Run `VALocker.exe` to launch the application. If you are running the Python version, run `VALocker.pyw` instead, dependancies will be installed automatically.
 2. Enable all your unlocked agents in the toggle agent screen.
 3. Select your desired agent from the dropdown menu.
 4. Choose any additional options or settings based on your preference.
-5. Enable the instalocker by clicking on the button under "Instalocker" to initiate the agent locking process.
+5. Enable the instalocker by clicking on the button under "Instalocker" to initiate the agent locking process, the button should switch from "Stopped" to "Running", and the button titled "Current Task" should change to "Locking Agent".
 6. During the agent selection phase in Valorant, VALocker will automatically lock in your chosen agent.
+7. Once the agent is locked, the button under "Current Task" will change to "In Game", once it detects the end of the game, it will automatically switch to "Locking". The mode can be changed at any time by clicking on the button.
 
 ## Configuration
 
@@ -71,6 +79,9 @@ VALocker utilizes the following libraries:
 - [threading](https://docs.python.org/3/library/threading.html) - Built-in Python library for multi-threading.
 - [time](https://docs.python.org/3/library/time.html) - Built-in Python library for time-related functions.
 - [tkinter](https://docs.python.org/3/library/tkinter.html) - Python's standard GUI library.
+
+## Images
+
 
 
 ## Contact
