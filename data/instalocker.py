@@ -2156,7 +2156,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             self.find_agent_coords(randomly_selected_agent)
         if self.safe_mode is False:
             self.mouse.position = (self.agent_coords[0], self.agent_coords[1])
-            time.sleep(0.01)
+            time.sleep(0.02)
             self.mouse.click(pynmouse.Button.left, 1)
             time.sleep(0.06)
             self.mouse.position = (self.lock_button[0], self.lock_button[1])
