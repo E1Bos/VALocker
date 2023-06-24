@@ -1,9 +1,14 @@
 # VALocker - Valorant Agent Locker
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+
 VALocker is a program written in Python that allows you to automatically lock any Valorant agent quickly and reliably. It helps you secure your favorite agent during the agent selection phase, saving you time and ensuring you don't miss out on playing your preferred character.
 
-## Features
+📋 **Changelog:** For a detailed list of changes, improvements, and bug fixes, refer to the [Changelog](changelog.md) file.
 
+## 📚 Features
+---
 - Provides a user-friendly GUI for easy interaction.
 - Can be run as an executable, no Python installation required.
 - Installs all necessary dependencies automatically.
@@ -22,8 +27,8 @@ VALocker is a program written in Python that allows you to automatically lock an
 - Selects random part of agent and locking button to deter detection.
 - Allows for multiple save files for different accounts and/or configurations.
 
-## Installation
-
+## ⚙️ Installation
+---
 ### Executable
 1. Download the latest zip file from the [releases](https://github.com/E1Bos/VALocker/releases) page.
 2. Extract the zip file to a location of your choice.
@@ -34,8 +39,8 @@ VALocker is a program written in Python that allows you to automatically lock an
 2. Make sure you have Python 3.x installed.
 3. Run `VALocker.pyw` to launch the application, dependancies will be installed automatically.
 
-## Usage
-
+---
+## 🚀 Usage
 1. Run `VALocker.exe` to launch the application. If you are running the Python version, run `VALocker.pyw` instead, dependancies will be installed automatically.
 2. Enable all your unlocked agents in the toggle agent screen.
 3. Select your desired agent from the dropdown menu.
@@ -44,8 +49,10 @@ VALocker is a program written in Python that allows you to automatically lock an
 6. During the agent selection phase in Valorant, VALocker will automatically lock in your chosen agent.
 7. Once the agent is locked, the button under "Current Task" will change to "In Game", once it detects the end of the game, it will automatically switch to "Locking". The mode can be changed at any time by clicking on the button.
 
-## Configuration
+**Note:** VALocker relies on specific display settings for accurate functionality. Please ensure that your VALORANT game is running at a screen resolution of 1920x1080 with letterbox enabled. Deviating from these settings may result in incorrect behavior of the program.
 
+## 🔧 Configuration
+---
 VALocker provides a `user_settings.json` file in the data directory where you can customize certain aspects of the program. The `user_settings.json` file is created when running the program for the first time. The configuration file allows you to:
 
 - Toggle icon feature
@@ -54,14 +61,18 @@ VALocker provides a `user_settings.json` file in the data directory where you ca
 - Enable safe mode on startup
 - Alter safe mode strength on startup
 
-## Images
+## 📏 Display Size Compatibility
+---
+I plan to add support for other display sizes in the future, but for now, VALocker only supports a resolution of 1920x1080. If you would like to see support for other display sizes, please let me know by [creating an issue](https://github.com/E1Bos/VALocker/issues).
 
+## 🖼️ Images
+---
 |![overview_tab](https://github.com/E1Bos/VALocker/assets/66886116/fcfb0dc2-cc13-4815-8cbf-27ad11ebd549)|![agent_toggle_tab](https://github.com/E1Bos/VALocker/assets/66886116/6986f6e7-5b35-424a-84db-d6d289897026)|![random_agent_tab](https://github.com/E1Bos/VALocker/assets/66886116/d833c1d7-ca5d-4c37-b252-11ad65feb81f)|
 |-|-|-|
 |![map_specific_tab](https://github.com/E1Bos/VALocker/assets/66886116/33be39f6-2987-4970-b465-3eb3ab8c0ff3)|![save_tab](https://github.com/E1Bos/VALocker/assets/66886116/4a94dfbb-3346-4c3b-85af-356e64487765)|
 
-## Contributing
-
+## 🤝 Contributing
+---
 Thank you for considering contributing to this project! I greatly appreciate your interest and support.
 
 Please note that while I will be actively maintaining and updating this project, I may not actively review or accept pull requests for changes or additions at this time.
@@ -72,8 +83,8 @@ If you encounter any issues or bugs, please feel free to [create an issue](https
 
 Thank you for your understanding, and I appreciate your interest in this project!
 
-## Acknowledgements
-
+## 🎉 Acknowledgements
+---
 VALocker utilizes the following libraries:
 
 - [customtkinter](https://github.com/TomSchimansky/CustomTkinter) - Customized version of the tkinter library.
@@ -87,14 +98,16 @@ VALocker utilizes the following libraries:
 - [time](https://docs.python.org/3/library/time.html) - Built-in Python library for time-related functions.
 - [tkinter](https://docs.python.org/3/library/tkinter.html) - Python's standard GUI library.
 
-## Contact
-
-For any questions, issues, or feedback, please contact the project maintainer:
+## 📧 Contact
+---
+If you have any questions, feedback, or general inquiries, you may contact me at:
 
 Discord: @e1bos
 
-Feel free to reach out with any inquiries or suggestions you may have.
+Feel free to reach out through the provided contact information for non-issue related matters or general discussions. However, for any project-related issues, I kindly ask that you [add an issue](https://github.com/E1Bos/VALocker/issues) to report and discuss them.
 
-## License
+Thank you for your understanding and cooperation.
 
+## 📜 License
+---
 This project is licensed under the [MIT License](https://opensource.org/licenses/MIT). Please see the [LICENSE](LICENSE) file for more information.

@@ -4,7 +4,7 @@ Changelog
 Date Format: YYYY-MM-DD
 
 ---
-## Version 1.2.3 - 2023-06-23
+## Version 1.2.5 - 2023-06-24
 
 ### Added
 - [Feature] Added automatic releases and automatic compilation to exe. Releases can be found [here](https://github.com/E1Bos/VALocker/releases).
