@@ -68,6 +68,14 @@ I plan to add support for other display sizes in the future, but for now, VALock
 |-|-|-|
 |![map_specific_tab](images/readme_images/map_specific_tab.png)|![save_file_tab](images/readme_images/save_file_tab.png)|
 
+## 🎥 Video Demo
+
+Check out this video demonstration of the program in action:
+
+[![Video Demo](images/readme_images/valocker-example-thumbnail.png)](images/readme_images/valocker-example.mp4)
+
+Click the thumbnail image above or [here](images/readme_images/valocker-example.mp4) to watch the video.
+
 ## 🤝 Contributing
 Thank you for considering contributing to this project! I greatly appreciate your interest and support.
 
