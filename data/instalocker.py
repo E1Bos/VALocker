@@ -427,7 +427,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             current_status_frame,
             text=f"{self.current_save_file}",
             hover=False,
-            fg_color="gray18",
+            fg_color="gray20",
             corner_radius=5,
             width=140,
             font=self.button_font_and_size,
@@ -736,7 +736,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                     for agent, unlock_status in self.unlocked_agents_dict.items()
                     if unlock_status is True
                 ),
-                width=100,
+                width=110,
                 font=self.button_font_and_size,
                 command=lambda agent_name, map_name=map_name: self.toggle_map_specific_agent(
                     agent_name=agent_name, map_name=map_name
