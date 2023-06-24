@@ -571,15 +571,15 @@ class InstalockerGUIMain(customtkinter.CTk):
             font=self.button_font_and_size,
             command=lambda: self.toggle_unlocked_agent_status("none"),
         )
-        self.toggle_none_agent_button.grid(row=0, column=1, pady=10, padx=(5,10))
+        self.toggle_none_agent_button.grid(row=0, column=1, pady=10, padx=(5, 10))
 
         toggle_agent_checkbox_frame = customtkinter.CTkFrame(self.agent_toggle_frame)
-        toggle_agent_checkbox_frame.pack(pady=10, padx=10)
+        toggle_agent_checkbox_frame.pack(pady=10, padx=0)
 
         interior_toggle_agent_checkbox_frame = customtkinter.CTkFrame(
             toggle_agent_checkbox_frame, fg_color="transparent"
         )
-        interior_toggle_agent_checkbox_frame.pack(padx=10, pady=10)
+        interior_toggle_agent_checkbox_frame.pack(padx=15, pady=10)
 
         unlockable_agents = [
             agent for agent in self.all_agents if agent not in self.default_agents
@@ -605,11 +605,12 @@ class InstalockerGUIMain(customtkinter.CTk):
         random_agent_allnone_button_frame = customtkinter.CTkFrame(
             self.random_agent_frame, fg_color="transparent"
         )
-        random_agent_allnone_button_frame.pack(padx=20, pady=20, anchor=tk.NW)
+        random_agent_allnone_button_frame.pack(padx=10, pady=(20,10), anchor=tk.NW)
 
         self.random_agent_exclusiselect_button = customtkinter.CTkButton(
             random_agent_allnone_button_frame,
-            width=60,
+            width=50,
+            height=40,
             text="ExclusiSelect",
             hover=False,
             font=self.button_font_and_size,
@@ -618,8 +619,8 @@ class InstalockerGUIMain(customtkinter.CTk):
         )
         self.random_agent_exclusiselect_button.pack(
             side=tk.LEFT,
-            padx=10,
-            pady=5,
+            padx=(0,11),
+            pady=0,
         )
 
         random_agent_all_none_toggle_frame = customtkinter.CTkFrame(
@@ -817,7 +818,7 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         # endregion
 
-        self.select_frame_by_name("Agent Toggle")
+        self.select_frame_by_name("Overview")
 
     # Creates the list of save file items
     def individual_save_file_items(self, file_name, just_icons=False):
@@ -1164,6 +1165,21 @@ class InstalockerGUIMain(customtkinter.CTk):
                             self.random_agent_checkboxes[
                                 f"self.{toggled_agent_name}_random_checkbox"
                             ].deselect()
+                        
+                        # Finds the role of the toggled agent
+                        for role, agent_list in self.config_file_agents.items():
+                            if toggled_agent_name in agent_list:
+                                agent_role = role.lower()
+                                break
+                        if all(
+                            self.random_agents_dict[agent] is True
+                            for agent in self.config_file_agents[agent_role.upper()]
+                            if self.unlocked_agents_dict[agent] is True
+                        ):
+                            self.agent_role_checkboxes[agent_role].select()
+                        else:
+                            self.agent_role_checkboxes[agent_role].deselect()
+                    
 
                 if toggled_agent_name in ["all", "none"]:
                     if all(
