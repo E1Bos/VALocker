@@ -219,12 +219,13 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         self.navigation_frame = customtkinter.CTkFrame(self, corner_radius=0, width=200)
         self.navigation_frame.grid(row=0, column=0, sticky="nsew")
+        self.navigation_frame.rowconfigure(7, weight=1)
 
         self.navigation_frame_label = customtkinter.CTkLabel(
             self.navigation_frame,
             text="VALocker",
             compound="left",
-            font=("Dubai", 18, "bold"),
+            font=(self.main_font, 18, "bold"),
         )
         self.navigation_frame_label.grid(row=0, column=0, padx=10, pady=10)
 
@@ -311,7 +312,20 @@ class InstalockerGUIMain(customtkinter.CTk):
             hover_color=("gray70", "gray30"),
             command=lambda tab_name="Settings": self.select_frame_by_name(tab_name),
         )
-        # self.set_settings_tab_button.grid(row=6, column=0, sticky="ew")
+        self.set_settings_tab_button.grid(row=6, column=0, sticky="ew")
+
+        quit_button = customtkinter.CTkButton(
+            self.navigation_frame,
+            text="Exit",
+            font=self.button_font_and_size,
+            fg_color=self.button_colors["disabled"],
+            corner_radius=5,
+            hover=False,
+            command=self.exit,
+        )
+        quit_button.grid(row=7, column=0, sticky="sew", padx=10, pady=10)
+
+        
 
         self.overview_frame = customtkinter.CTkFrame(
             self, corner_radius=0, fg_color="transparent"
@@ -529,17 +543,6 @@ class InstalockerGUIMain(customtkinter.CTk):
             font=self.button_font_and_size,
         )
         self.total_games_locked_value.pack(padx=10, pady=(0, 5))
-
-        quit_button = customtkinter.CTkButton(
-            self.overview_frame,
-            text="Exit",
-            font=self.button_font_and_size,
-            fg_color=self.button_colors["disabled"],
-            width=95,
-            hover=False,
-            command=self.exit,
-        )
-        quit_button.place(relx=0.79, rely=0.9)
 
         self.overview_frame.columnconfigure((0, 1, 2), weight=1)
 
