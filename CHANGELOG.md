@@ -3,13 +3,28 @@ Changelog
 
 Date Format: YYYY-MM-DD
 
----
+## Version 1.3.0 - 2023-06-24
+
+### Added
+- [UI] Navigation bar on the left side of the GUI. This will allow for easier navigation between tabs.
+
+### Changed
+- [UI] The Exit button has been moved to the bottom of the navigation bar, so that the GUI can be closed from any tab.
+- [UI] The UI is a lot more consistent. All tabs have the same padding and checkboxes are properly aligned.
+- [UI] Theme changed from "blue" to "dark-blue". This is a lot easier on the eyes, and looks a lot better.
+- [UI] Font changed from "Arial" to "Roboto". 
+
+### Fixed
+- [UI] Fixed bug where the role checkboxes in the random agent tab would not deselect when a new agent was unlocked in the agent toggle tab.
+- [UI] Fixed bug where map dropdown would expand when an agent with a long name was selected. (i.e. Brimstone)
+
+
 ## Version 1.2.5 - 2023-06-24
 
 ### Added
 - [Feature] Added automatic releases and automatic compilation to exe. Releases can be found [here](https://github.com/E1Bos/VALocker/releases).
 
----
+
 ## Version 1.2.2 - 2023-06-22
 
 ### Added
@@ -19,7 +34,7 @@ Date Format: YYYY-MM-DD
 ### Updated
 - [Feature] Updated renaming and creating save files. If input is valid, previous input will be displayed in the input box. Also added error for unsupported characters. i.e. \ / : * ? " < > |
 
----
+
 ## Version 1.2.1 | 2023-06-22
 
 ### Added
@@ -29,33 +44,33 @@ Date Format: YYYY-MM-DD
 - [Bug] Fixed bug where exclusiselect would not update the GUI when selecting an agent.
 - [Bug] Fixed bug where exclusiselect would not deselect randomly selected agent checkbox.
 
----
+
 ## Version 1.1.1 | 2023-06-19
 
 ### Fixed
 - [Bug] Fixed bug where the "All" checkbox would not update if random agents are selected by role.
 - [Bug] Fixed bug where the "None" checkbox would not update if random agents are selected by role.
 
----
+
 ## Version 1.1.0 | 2023-06-19
 
 ### Changes
 - [Update] Updating the GUI uses match-case statements. GUI updates are much faster.
 - [Update] The label for the current save file is now a button and when clicked, it will open the save file tab.
 
----
+
 ## Version 1.0.2 | 2023-06-17
 
 ### Fixed
 - [Bug] Fixed bug where when instalocker is waiting for the end of a game, and the instalocker is stopped, it will stop searching for the end of the game when re enabled.
 
----
+
 ## Version 1.0.1 | 2023-06-15
 
 ### Changes
 - [Update] Text of new save button has been replaced with an icon.
 
----
+
 ## Version 1.0.0 | 2023-06-15
 
 ### Added
@@ -69,10 +84,6 @@ Date Format: YYYY-MM-DD
 
 ### Changed
 - [Update] Current save file label is displayed where the old selection combobox was.
-
-<!-- ### Fixed
-- [Bug] 
-- [Bug]  -->
 
 ### Removed
 - [Feature] Old method of creating new save files and selecting save files.
