@@ -54,7 +54,7 @@ def resource_path(relative):
 # endregion
 
 customtkinter.set_appearance_mode("Dark")
-customtkinter.set_default_color_theme("blue")
+customtkinter.set_default_color_theme("dark-blue")
 
 
 class InstalockerGUIMain(customtkinter.CTk):
@@ -137,7 +137,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         # GUI SETTINGS
         self.window_width = 650
         self.window_height = 400
-        self.main_font = "Calibri"
+        self.main_font = "Roboto"
         self.label_font_and_size = (self.main_font, 16)
         self.button_font_and_size = (self.main_font, 14)
         self.title("VALocker")
@@ -217,15 +217,15 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         # region Navigation Frame
 
-        self.navigation_frame = customtkinter.CTkFrame(self, corner_radius=0, width=200)
+        self.navigation_frame = customtkinter.CTkFrame(self, corner_radius=0)
         self.navigation_frame.grid(row=0, column=0, sticky="nsew")
         self.navigation_frame.rowconfigure(7, weight=1)
 
         self.navigation_frame_label = customtkinter.CTkLabel(
             self.navigation_frame,
             text="VALocker",
-            compound="left",
             font=(self.main_font, 18, "bold"),
+
         )
         self.navigation_frame_label.grid(row=0, column=0, padx=10, pady=10)
 
@@ -312,7 +312,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             hover_color=("gray70", "gray30"),
             command=lambda tab_name="Settings": self.select_frame_by_name(tab_name),
         )
-        self.set_settings_tab_button.grid(row=6, column=0, sticky="ew")
+        # self.set_settings_tab_button.grid(row=6, column=0, sticky="ew")
 
         quit_button = customtkinter.CTkButton(
             self.navigation_frame,
@@ -324,8 +324,6 @@ class InstalockerGUIMain(customtkinter.CTk):
             command=self.exit,
         )
         quit_button.grid(row=7, column=0, sticky="sew", padx=10, pady=10)
-
-        
 
         self.overview_frame = customtkinter.CTkFrame(
             self, corner_radius=0, fg_color="transparent"
@@ -349,6 +347,8 @@ class InstalockerGUIMain(customtkinter.CTk):
         # endregion
 
         # region Overview Tab
+
+        # self.overview_frame.rowconfigure(0, weight=1)
 
         current_status_frame = customtkinter.CTkFrame(self.overview_frame)
         current_status_frame.grid(row=0, column=0, pady=20, padx=10, sticky="nsew")
@@ -394,14 +394,14 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         self.safe_mode_enabled_button = customtkinter.CTkButton(
             safe_mode_frame,
-            width=int(f"{141 if self.safe_mode is False else 70}"),
+            width=int(f"{140 if self.safe_mode is False else 70}"),
             hover=False,
             text=f"{'On' if self.safe_mode is True else 'Off'}",
             fg_color=f"{self.button_colors['enabled'] if self.active is True else self.button_colors['disabled']}",
             font=self.button_font_and_size,
             command=self.toggle_safe_mode,
         )
-        self.safe_mode_enabled_button.pack(side=tk.LEFT, padx=(0, 1), pady=(0, 5))
+        self.safe_mode_enabled_button.pack(side=tk.LEFT, padx=0, pady=(0, 5))
 
         self.safe_mode_strength_button = customtkinter.CTkButton(
             safe_mode_frame,
@@ -427,7 +427,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             current_status_frame,
             text=f"{self.current_save_file}",
             hover=False,
-            fg_color="gray22",
+            fg_color="gray18",
             corner_radius=5,
             width=140,
             font=self.button_font_and_size,
@@ -551,23 +551,27 @@ class InstalockerGUIMain(customtkinter.CTk):
         # region Agent Toggle Tab
 
         mass_select_frame = customtkinter.CTkFrame(self.agent_toggle_frame)
-        mass_select_frame.pack(padx=20, pady=20)
+        mass_select_frame.pack(padx=10, pady=20)
+
+        mass_select_frame.grid_columnconfigure((0, 1), weight=1)
 
         self.toggle_all_agent_button = customtkinter.CTkCheckBox(
             mass_select_frame,
             text="All",
+            width=100,
             font=self.button_font_and_size,
             command=lambda: self.toggle_unlocked_agent_status("all"),
         )
-        self.toggle_all_agent_button.grid(row=0, column=0, padx=10, pady=10)
+        self.toggle_all_agent_button.grid(row=0, column=0, pady=10, padx=(10, 5))
 
         self.toggle_none_agent_button = customtkinter.CTkCheckBox(
             mass_select_frame,
             text="None",
+            width=100,
             font=self.button_font_and_size,
             command=lambda: self.toggle_unlocked_agent_status("none"),
         )
-        self.toggle_none_agent_button.grid(row=0, column=1, padx=10, pady=10)
+        self.toggle_none_agent_button.grid(row=0, column=1, pady=10, padx=(5,10))
 
         toggle_agent_checkbox_frame = customtkinter.CTkFrame(self.agent_toggle_frame)
         toggle_agent_checkbox_frame.pack(pady=10, padx=10)
@@ -619,7 +623,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         )
 
         random_agent_all_none_toggle_frame = customtkinter.CTkFrame(
-            random_agent_allnone_button_frame, height=100, fg_color="gray17"
+            random_agent_allnone_button_frame, height=100
         )
         random_agent_all_none_toggle_frame.pack(padx=0, pady=0)
 
@@ -640,7 +644,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         self.none_random_agent_radio_button.pack(side="right", padx=20, pady=10)
 
         random_agent_role_toggle_frame = customtkinter.CTkFrame(self.random_agent_frame)
-        random_agent_role_toggle_frame.pack(padx=0, pady=5)
+        random_agent_role_toggle_frame.pack(padx=10, pady=10, fill=tk.X)
 
         # Creates the checkboxes for each role
         self.agent_role_checkboxes = dict()
@@ -651,15 +655,17 @@ class InstalockerGUIMain(customtkinter.CTk):
                 random_agent_role_toggle_frame,
                 text=role.capitalize(),
                 font=self.button_font_and_size,
+                width=110,
                 text_color=self.role_colors[role],
                 text_color_disabled=self.role_colors[f"{role}_disabled"],
                 command=lambda role=role: self.toggle_random_agent_status(role),
             )
-            self.agent_role_checkboxes[role].grid(row=0, column=index, padx=10, pady=10)
+            # padx_amount = (5, 10) if index == 0 else 10
+            self.agent_role_checkboxes[role].grid(row=0, column=index, padx=5, pady=10)
 
         # Creates frames for agents of each role
         random_agent_individual_toggle_frame = customtkinter.CTkFrame(
-            self.random_agent_frame, width=150, height=100, fg_color="transparent"
+            self.random_agent_frame, fg_color="transparent"
         )
         random_agent_individual_toggle_frame.pack(padx=0, pady=0)
 
@@ -671,7 +677,6 @@ class InstalockerGUIMain(customtkinter.CTk):
                 random_agent_individual_toggle_frame,
                 width=120,
                 height=100,
-                fg_color="gray17",
             )
             role_frames[role].grid(row=0, column=index % 4, padx=5, pady=5, sticky="n")
 
@@ -702,6 +707,8 @@ class InstalockerGUIMain(customtkinter.CTk):
         # endregion
 
         # region Map Specific Tab
+        self.map_specific_frame.rowconfigure((0,1,2,3,4), weight=1)
+
         map_frames, map_labels, self.map_dropdowns = dict(), dict(), dict()
         for index, map_name in enumerate(self.map_names):
             row, column = index // 2, index % 2
@@ -710,8 +717,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                 self.map_specific_frame, width=230
             )
 
-            pady_amount = (20, 10) if row == 0 else 10
-
+            pady_amount = (20, 5) if row == 0 else (5,20) if row == len(self.map_names)//2 else 5
             map_frames[f"{map_name}_frame"].grid(
                 row=row, column=column, padx=10, pady=pady_amount, sticky="nsew"
             )
@@ -804,9 +810,14 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         # region Settings Tab
 
+        scrolling_settings_frame = customtkinter.CTkScrollableFrame(
+            self.settings_frame
+        )
+        scrolling_settings_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
         # endregion
 
-        self.select_frame_by_name("Overview")
+        self.select_frame_by_name("Agent Toggle")
 
     # Creates the list of save file items
     def individual_save_file_items(self, file_name, just_icons=False):
@@ -814,7 +825,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             self.save_file_frame_items[f"{file_name}_frame"] = customtkinter.CTkFrame(
                 self.save_file_scrollable_frame,
                 height=50,
-                fg_color="grey18"
+                fg_color="grey16"
                 if file_name != self.current_save_file
                 else "dark green",
             )
@@ -1317,7 +1328,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         ]
         for save_file in self.save_files:
             self.save_file_frame_items[f"{save_file}_frame"].configure(
-                fg_color="grey18"
+                fg_color="grey16"
                 if save_file != self.current_save_file
                 else "dark green"
             )
