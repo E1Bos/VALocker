@@ -54,16 +54,23 @@ VALocker provides a `user_settings.json` file in the data directory where you ca
 - Enable safe mode on startup
 - Alter safe mode strength on startup
 
+## Images
+
+|![overview_tab](https://github.com/E1Bos/VALocker/assets/66886116/fcfb0dc2-cc13-4815-8cbf-27ad11ebd549)|![agent_toggle_tab](https://github.com/E1Bos/VALocker/assets/66886116/6986f6e7-5b35-424a-84db-d6d289897026)|![random_agent_tab](https://github.com/E1Bos/VALocker/assets/66886116/d833c1d7-ca5d-4c37-b252-11ad65feb81f)|
+|-|-|-|
+|![map_specific_tab](https://github.com/E1Bos/VALocker/assets/66886116/33be39f6-2987-4970-b465-3eb3ab8c0ff3)|![save_tab](https://github.com/E1Bos/VALocker/assets/66886116/4a94dfbb-3346-4c3b-85af-356e64487765)|
 
 ## Contributing
 
-Contributions to VALocker are welcome! If you would like to contribute to the project, please follow these steps:
+Thank you for considering contributing to this project! I greatly appreciate your interest and support.
 
-1. Fork the repository on GitHub.
-2. Create a new branch for your feature or bug fix.
-3. Make your changes and ensure the code passes all tests.
-4. Commit your changes and push them to your forked repository.
-5. Submit a pull request, describing your changes in detail.
+Please note that while I will be actively maintaining and updating this project, I may not actively review or accept pull requests for changes or additions at this time.
+
+You are still welcome to fork this project and make your own modifications or enhancements. Feel free to experiment, customize, or extend the project based on your needs.
+
+If you encounter any issues or bugs, please feel free to [create an issue](https://github.com/E1Bos/VALocker/issues) on the GitHub repository. I will do my best to address them and provide support.
+
+Thank you for your understanding, and I appreciate your interest in this project!
 
 ## Acknowledgements
 
@@ -80,14 +87,14 @@ VALocker utilizes the following libraries:
 - [time](https://docs.python.org/3/library/time.html) - Built-in Python library for time-related functions.
 - [tkinter](https://docs.python.org/3/library/tkinter.html) - Python's standard GUI library.
 
-## Images
-
-
-
 ## Contact
 
 For any questions, issues, or feedback, please contact the project maintainer:
 
 Discord: @e1bos
 
-Feel free to reach out with any inquiries or suggestions you may have. I appreciate your interest in VALocker!
+Feel free to reach out with any inquiries or suggestions you may have.
+
+## License
+
+This project is licensed under the [MIT License](https://opensource.org/licenses/MIT). Please see the [LICENSE](LICENSE) file for more information.
