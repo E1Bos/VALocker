@@ -8,7 +8,6 @@ VALocker is a program written in Python that allows you to automatically lock an
 📋 **Changelog:** For a detailed list of changes, improvements, and bug fixes, refer to the [Changelog](changelog.md) file.
 
 ## 📚 Features
----
 - Provides a user-friendly GUI for easy interaction.
 - Can be run as an executable, no Python installation required.
 - Installs all necessary dependencies automatically.
@@ -28,7 +27,6 @@ VALocker is a program written in Python that allows you to automatically lock an
 - Allows for multiple save files for different accounts and/or configurations.
 
 ## ⚙️ Installation
----
 ### Executable
 1. Download the latest zip file from the [releases](https://github.com/E1Bos/VALocker/releases) page.
 2. Extract the zip file to a location of your choice.
@@ -39,7 +37,6 @@ VALocker is a program written in Python that allows you to automatically lock an
 2. Make sure you have Python 3.x installed.
 3. Run `VALocker.pyw` to launch the application, dependancies will be installed automatically.
 
----
 ## 🚀 Usage
 1. Run `VALocker.exe` to launch the application. If you are running the Python version, run `VALocker.pyw` instead, dependancies will be installed automatically.
 2. Enable all your unlocked agents in the toggle agent screen.
@@ -52,7 +49,6 @@ VALocker is a program written in Python that allows you to automatically lock an
 **Note:** VALocker relies on specific display settings for accurate functionality. Please ensure that your VALORANT game is running at a screen resolution of 1920x1080 with letterbox enabled. Deviating from these settings may result in incorrect behavior of the program.
 
 ## 🔧 Configuration
----
 VALocker provides a `user_settings.json` file in the data directory where you can customize certain aspects of the program. The `user_settings.json` file is created when running the program for the first time. The configuration file allows you to:
 
 - Toggle icon feature
@@ -62,17 +58,14 @@ VALocker provides a `user_settings.json` file in the data directory where you ca
 - Alter safe mode strength on startup
 
 ## 📏 Display Size Compatibility
----
 I plan to add support for other display sizes in the future, but for now, VALocker only supports a resolution of 1920x1080. If you would like to see support for other display sizes, please let me know by [creating an issue](https://github.com/E1Bos/VALocker/issues).
 
 ## 🖼️ Images
----
 |![overview_tab](https://github.com/E1Bos/VALocker/assets/66886116/fcfb0dc2-cc13-4815-8cbf-27ad11ebd549)|![agent_toggle_tab](https://github.com/E1Bos/VALocker/assets/66886116/6986f6e7-5b35-424a-84db-d6d289897026)|![random_agent_tab](https://github.com/E1Bos/VALocker/assets/66886116/d833c1d7-ca5d-4c37-b252-11ad65feb81f)|
 |-|-|-|
 |![map_specific_tab](https://github.com/E1Bos/VALocker/assets/66886116/33be39f6-2987-4970-b465-3eb3ab8c0ff3)|![save_tab](https://github.com/E1Bos/VALocker/assets/66886116/4a94dfbb-3346-4c3b-85af-356e64487765)|
 
 ## 🤝 Contributing
----
 Thank you for considering contributing to this project! I greatly appreciate your interest and support.
 
 Please note that while I will be actively maintaining and updating this project, I may not actively review or accept pull requests for changes or additions at this time.
@@ -84,7 +77,6 @@ If you encounter any issues or bugs, please feel free to [create an issue](https
 Thank you for your understanding, and I appreciate your interest in this project!
 
 ## 🎉 Acknowledgements
----
 VALocker utilizes the following libraries:
 
 - [customtkinter](https://github.com/TomSchimansky/CustomTkinter) - Customized version of the tkinter library.
@@ -99,7 +91,6 @@ VALocker utilizes the following libraries:
 - [tkinter](https://docs.python.org/3/library/tkinter.html) - Python's standard GUI library.
 
 ## 📧 Contact
----
 If you have any questions, feedback, or general inquiries, you may contact me at:
 
 Discord: @e1bos
@@ -109,5 +100,4 @@ Feel free to reach out through the provided contact information for non-issue re
 Thank you for your understanding and cooperation.
 
 ## 📜 License
----
 This project is licensed under the [MIT License](https://opensource.org/licenses/MIT). Please see the [LICENSE](LICENSE) file for more information.
