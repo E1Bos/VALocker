@@ -70,11 +70,7 @@ I plan to add support for other display sizes in the future, but for now, VALock
 
 ## 🎥 Video Demo
 
-Check out this video demonstration of the program in action:
-
-[![Video Demo](images/readme_images/valocker-example-thumbnail.png)](https://youtu.be/jLzJFGXdZ6s)
-
-Click the thumbnail image above or [here](https://youtu.be/jLzJFGXdZ6s) to watch the video.
+https://github.com/E1Bos/VALocker/assets/66886116/65c1ab7c-0861-4bed-a600-15309923ac6c
 
 ## 🤝 Contributing
 Thank you for considering contributing to this project! I greatly appreciate your interest and support.
