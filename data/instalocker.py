@@ -34,7 +34,7 @@ except ModuleNotFoundError:
     import subprocess
 
     subprocess.run(["pip", "install", "-r", "requirements.txt"])
-    
+
     import customtkinter, pystray, PIL.Image, mss
     import pynput.mouse as pynmouse
 
@@ -135,10 +135,11 @@ class InstalockerGUIMain(customtkinter.CTk):
         self.favorited_save_files = list()
 
         # GUI SETTINGS
-        self.window_width = 550
-        self.window_height = 500
-        self.label_font = ("Arial", 16)  # Arial Size 16
-        self.button_font = ("Arial", 14)  # Arial Size 14
+        self.window_width = 650
+        self.window_height = 400
+        self.main_font = "Calibri"
+        self.label_font_and_size = (self.main_font, 16)
+        self.button_font_and_size = (self.main_font, 14)
         self.title("VALocker")
         self.button_colors = {"enabled": "sea green", "disabled": "#b52d3b"}
         self.role_colors = {
@@ -211,27 +212,135 @@ class InstalockerGUIMain(customtkinter.CTk):
         self.geometry(f"{self.window_width}x{self.window_height}")
         self.resizable(False, False)
 
-        self.tabs = customtkinter.CTkTabview(
-            self,
-            corner_radius=10,
-            width=self.window_width,
-            height=self.window_height - 20,
-        )
-        self.tabs.pack(padx=10, pady=5, fill=tk.BOTH)
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
 
-        overview_tab = self.tabs.add("Overview")
-        agent_toggle_tab = self.tabs.add("Toggle Agents")
-        random_agent_tab = self.tabs.add("Random Agents")
-        map_specific_tab = self.tabs.add("Map Specific")
-        save_file_tab = self.tabs.add("Save File")
+        # region Navigation Frame
+
+        self.navigation_frame = customtkinter.CTkFrame(self, corner_radius=0, width=200)
+        self.navigation_frame.grid(row=0, column=0, sticky="nsew")
+
+        self.navigation_frame_label = customtkinter.CTkLabel(
+            self.navigation_frame,
+            text="VALocker",
+            compound="left",
+            font=("Dubai", 18, "bold"),
+        )
+        self.navigation_frame_label.grid(row=0, column=0, padx=10, pady=10)
+
+        self.set_overview_tab_button = customtkinter.CTkButton(
+            self.navigation_frame,
+            corner_radius=0,
+            height=40,
+            border_spacing=10,
+            text="Overview",
+            font=self.button_font_and_size,
+            fg_color="transparent",
+            text_color=("gray10", "gray90"),
+            hover_color=("gray70", "gray30"),
+            command=lambda tab_name="Overview": self.select_frame_by_name(tab_name),
+        )
+        self.set_overview_tab_button.grid(row=1, column=0, sticky="ew")
+
+        self.set_agent_toggle_tab_button = customtkinter.CTkButton(
+            self.navigation_frame,
+            corner_radius=0,
+            height=40,
+            border_spacing=10,
+            text="Agent Toggles",
+            font=self.button_font_and_size,
+            fg_color="transparent",
+            text_color=("gray10", "gray90"),
+            hover_color=("gray70", "gray30"),
+            command=lambda tab_name="Agent Toggle": self.select_frame_by_name(tab_name),
+        )
+
+        self.set_agent_toggle_tab_button.grid(row=2, column=0, sticky="ew")
+
+        self.set_random_agent_tab_button = customtkinter.CTkButton(
+            self.navigation_frame,
+            corner_radius=0,
+            height=40,
+            border_spacing=10,
+            text="Random Agents",
+            font=self.button_font_and_size,
+            fg_color="transparent",
+            text_color=("gray10", "gray90"),
+            hover_color=("gray70", "gray30"),
+            command=lambda tab_name="Random Agent": self.select_frame_by_name(tab_name),
+        )
+        self.set_random_agent_tab_button.grid(row=3, column=0, sticky="ew")
+
+        self.set_map_specific_tab_button = customtkinter.CTkButton(
+            self.navigation_frame,
+            corner_radius=0,
+            height=40,
+            border_spacing=10,
+            text="Map Specific",
+            font=self.button_font_and_size,
+            fg_color="transparent",
+            text_color=("gray10", "gray90"),
+            hover_color=("gray70", "gray30"),
+            command=lambda tab_name="Map Specific": self.select_frame_by_name(tab_name),
+        )
+        self.set_map_specific_tab_button.grid(row=4, column=0, sticky="ew")
+
+        self.set_save_file_tab_button = customtkinter.CTkButton(
+            self.navigation_frame,
+            corner_radius=0,
+            height=40,
+            border_spacing=10,
+            text="Save Files",
+            font=self.button_font_and_size,
+            fg_color="transparent",
+            text_color=("gray10", "gray90"),
+            hover_color=("gray70", "gray30"),
+            command=lambda tab_name="Save File": self.select_frame_by_name(tab_name),
+        )
+        self.set_save_file_tab_button.grid(row=5, column=0, sticky="ew")
+
+        self.set_settings_tab_button = customtkinter.CTkButton(
+            self.navigation_frame,
+            corner_radius=0,
+            height=40,
+            border_spacing=10,
+            text="Settings",
+            font=self.button_font_and_size,
+            fg_color="transparent",
+            text_color=("gray10", "gray90"),
+            hover_color=("gray70", "gray30"),
+            command=lambda tab_name="Settings": self.select_frame_by_name(tab_name),
+        )
+        # self.set_settings_tab_button.grid(row=6, column=0, sticky="ew")
+
+        self.overview_frame = customtkinter.CTkFrame(
+            self, corner_radius=0, fg_color="transparent"
+        )
+        self.agent_toggle_frame = customtkinter.CTkFrame(
+            self, corner_radius=0, fg_color="transparent"
+        )
+        self.random_agent_frame = customtkinter.CTkFrame(
+            self, corner_radius=0, fg_color="transparent"
+        )
+        self.map_specific_frame = customtkinter.CTkFrame(
+            self, corner_radius=0, fg_color="transparent"
+        )
+        self.save_file_frame = customtkinter.CTkFrame(
+            self, corner_radius=0, fg_color="transparent"
+        )
+        self.settings_frame = customtkinter.CTkFrame(
+            self, corner_radius=0, fg_color="transparent"
+        )
+
+        # endregion
 
         # region Overview Tab
 
-        current_status_frame = customtkinter.CTkFrame(overview_tab)
-        current_status_frame.grid(row=0, column=0)
+        current_status_frame = customtkinter.CTkFrame(self.overview_frame)
+        current_status_frame.grid(row=0, column=0, pady=20, padx=10, sticky="nsew")
 
         current_status_label = customtkinter.CTkLabel(
-            current_status_frame, text="Instalocker:", font=self.label_font
+            current_status_frame, text="Instalocker:", font=self.label_font_and_size
         )
         current_status_label.pack(padx=10, pady=(5, 0))
 
@@ -240,13 +349,13 @@ class InstalockerGUIMain(customtkinter.CTk):
             text=f"{'Running' if self.active is True else 'Stopped'}",
             hover=False,
             fg_color=f"{self.button_colors['enabled'] if self.active is True else self.button_colors['disabled']}",
-            font=self.button_font,
+            font=self.button_font_and_size,
             command=self.toggle_active,
         )
         self.current_status_button.pack(padx=10, pady=(0, 5))
 
         current_task_label = customtkinter.CTkLabel(
-            current_status_frame, text=f"Current Task:", font=self.label_font
+            current_status_frame, text=f"Current Task:", font=self.label_font_and_size
         )
         current_task_label.pack(padx=10, pady=(5, 0))
 
@@ -254,7 +363,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             current_status_frame,
             text=f"{'None' if self.active is False else 'Locking' if self.locking is True else 'In Game'}",
             hover=False,
-            font=self.button_font,
+            font=self.button_font_and_size,
             command=self.toggle_thread_mode,
         )
         self.current_task_button.pack(padx=10, pady=(0, 5))
@@ -265,7 +374,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         safe_mode_frame.pack(padx=10, pady=(5, 0), ipadx=0)
 
         safe_mode_label = customtkinter.CTkLabel(
-            safe_mode_frame, text=f"Safe Mode:", font=self.label_font
+            safe_mode_frame, text=f"Safe Mode:", font=self.label_font_and_size
         )
         safe_mode_label.pack(anchor=tk.N, padx=10)
 
@@ -275,7 +384,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             hover=False,
             text=f"{'On' if self.safe_mode is True else 'Off'}",
             fg_color=f"{self.button_colors['enabled'] if self.active is True else self.button_colors['disabled']}",
-            font=self.button_font,
+            font=self.button_font_and_size,
             command=self.toggle_safe_mode,
         )
         self.safe_mode_enabled_button.pack(side=tk.LEFT, padx=(0, 1), pady=(0, 5))
@@ -285,7 +394,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             width=70,
             hover=False,
             text=f"{list(self.safe_mode_timing.keys())[self.safe_mode_strength]}",
-            font=self.button_font,
+            font=self.button_font_and_size,
             command=self.toggle_safe_mode_strength,
         )
         if self.safe_mode is True:
@@ -296,7 +405,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         current_save_label = customtkinter.CTkLabel(
             current_status_frame,
             text=f"Current Save:",
-            font=self.label_font,
+            font=self.label_font_and_size,
         )
         current_save_label.pack(padx=10, pady=(5, 0))
 
@@ -304,21 +413,19 @@ class InstalockerGUIMain(customtkinter.CTk):
             current_status_frame,
             text=f"{self.current_save_file}",
             hover=False,
-            fg_color="grey16",
+            fg_color="gray22",
             corner_radius=5,
             width=140,
-            font=self.button_font,
-            command=lambda tab_name="Save File": self.change_visible_tab(
-                tab_name=tab_name
-            ),
+            font=self.button_font_and_size,
+            command=lambda tab_name="Save File": self.select_frame_by_name(tab_name),
         )
-        self.current_save_button.pack(padx=10, pady=(0, 5))
+        self.current_save_button.pack(padx=10, pady=(0, 10))
 
-        select_agent_frame = customtkinter.CTkFrame(overview_tab)
-        select_agent_frame.grid(row=0, column=1)
+        select_agent_frame = customtkinter.CTkFrame(self.overview_frame)
+        select_agent_frame.grid(row=0, column=1, pady=20, padx=10, sticky="nsew")
 
         select_agent_label = customtkinter.CTkLabel(
-            select_agent_frame, text="Selected Agent:", font=self.label_font
+            select_agent_frame, text="Selected Agent:", font=self.label_font_and_size
         )
         select_agent_label.pack(padx=10, pady=(5, 0))
 
@@ -336,7 +443,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         self.select_agent_dropdown.pack(padx=10, pady=(0, 5))
 
         self.select_map_enabled_label = customtkinter.CTkLabel(
-            select_agent_frame, text="Map Specific:", font=self.label_font
+            select_agent_frame, text="Map Specific:", font=self.label_font_and_size
         )
         self.select_map_enabled_label.pack(padx=10, pady=(5, 0))
 
@@ -345,28 +452,28 @@ class InstalockerGUIMain(customtkinter.CTk):
             text=f"{'Enabled' if self.map_specific_mode is True else 'Disabled'}",
             hover=False,
             fg_color=f"{self.button_colors['enabled'] if self.map_specific_mode is True else self.button_colors['disabled']}",
-            font=self.button_font,
+            font=self.button_font_and_size,
             command=self.toggle_map_specific,
         )
         self.select_map_specific_button.pack(padx=10, pady=(0, 5))
 
         random_agent_label = customtkinter.CTkLabel(
-            select_agent_frame, text="Random Agent:", font=self.label_font
+            select_agent_frame, text="Random Agent:", font=self.label_font_and_size
         )
         random_agent_label.pack(padx=10, pady=(5, 0))
 
-        self.random_agent_button = customtkinter.CTkButton(
+        self.toggle_random_agent_button = customtkinter.CTkButton(
             select_agent_frame,
             text=f"{'Enabled' if self.random_agent_mode is True else 'Disabled'}",
             hover=False,
             fg_color=f"{self.button_colors['enabled'] if self.random_agent_mode is True else self.button_colors['disabled']}",
-            font=self.button_font,
+            font=self.button_font_and_size,
             command=self.toggle_random_agent_mode,
         )
-        self.random_agent_button.pack(padx=10, pady=(0, 5))
+        self.toggle_random_agent_button.pack(padx=10, pady=(0, 5))
 
         hover_mode_label = customtkinter.CTkLabel(
-            select_agent_frame, text="Hover Mode:", font=self.label_font
+            select_agent_frame, text="Hover Mode:", font=self.label_font_and_size
         )
         hover_mode_label.pack(padx=10, pady=(5, 0))
         self.hover_mode_button = customtkinter.CTkButton(
@@ -374,16 +481,16 @@ class InstalockerGUIMain(customtkinter.CTk):
             text=f"{'Enabled' if self.hover_mode is True else 'Disabled'}",
             hover=False,
             fg_color=f"{self.button_colors['enabled'] if self.hover_mode is True else self.button_colors['disabled']}",
-            font=self.button_font,
+            font=self.button_font_and_size,
             command=self.toggle_hover_mode,
         )
-        self.hover_mode_button.pack(padx=10, pady=(0, 5))
+        self.hover_mode_button.pack(padx=10, pady=(0, 10))
 
-        stats_frame = customtkinter.CTkFrame(overview_tab)
-        stats_frame.grid(row=0, column=2, sticky="n")
+        stats_frame = customtkinter.CTkFrame(self.overview_frame)
+        stats_frame.grid(row=0, column=2, pady=20, padx=10, sticky="nsew")
 
         stats_label = customtkinter.CTkLabel(
-            stats_frame, text="Last Lock:", font=self.label_font
+            stats_frame, text="Last Lock:", font=self.label_font_and_size
         )
         stats_label.pack(padx=10, pady=(5, 0))
 
@@ -395,37 +502,38 @@ class InstalockerGUIMain(customtkinter.CTk):
         self.time_to_lock_label = customtkinter.CTkLabel(
             stats_frame,
             text=f"{time_to_lock_text} ms",
-            font=self.button_font,
+            font=self.button_font_and_size,
         )
         self.time_to_lock_label.pack(padx=10, pady=(0, 5))
 
         average_time_to_lock_label = customtkinter.CTkLabel(
-            stats_frame, text=f"Average:", font=self.label_font
+            stats_frame, text=f"Average:", font=self.label_font_and_size
         )
         average_time_to_lock_label.pack(padx=10, pady=(5, 0))
 
         self.average_time_to_lock_value = customtkinter.CTkLabel(
             stats_frame,
             text=f"{'-' if len(self.time_to_lock_list[self.safe_mode_strength]) == 0 else round(sum(self.time_to_lock_list[self.safe_mode_strength])/len(self.time_to_lock_list[self.safe_mode_strength]),2)} ms",
-            font=self.button_font,
+            font=self.button_font_and_size,
         )
         self.average_time_to_lock_value.pack(padx=10, pady=(0, 5))
 
         total_games_locked_label = customtkinter.CTkLabel(
-            stats_frame, text=f"Deployed:", font=self.label_font
+            stats_frame, text=f"Deployed:", font=self.label_font_and_size
         )
         total_games_locked_label.pack(padx=10, pady=(5, 0))
 
         self.total_games_locked_value = customtkinter.CTkLabel(
             stats_frame,
             text=f"{self.total_games_used} {'times' if self.total_games_used != 1 else 'time'}",
-            font=self.button_font,
+            font=self.button_font_and_size,
         )
         self.total_games_locked_value.pack(padx=10, pady=(0, 5))
 
         quit_button = customtkinter.CTkButton(
-            overview_tab,
+            self.overview_frame,
             text="Exit",
+            font=self.button_font_and_size,
             fg_color=self.button_colors["disabled"],
             width=95,
             hover=False,
@@ -433,31 +541,33 @@ class InstalockerGUIMain(customtkinter.CTk):
         )
         quit_button.place(relx=0.79, rely=0.9)
 
-        overview_tab.columnconfigure((0, 1, 2), weight=1)  # type: ignore
+        self.overview_frame.columnconfigure((0, 1, 2), weight=1)
 
         # endregion
 
         # region Agent Toggle Tab
 
-        mass_select_frame = customtkinter.CTkFrame(agent_toggle_tab)
-        mass_select_frame.pack(padx=20, pady=(20, 10))
+        mass_select_frame = customtkinter.CTkFrame(self.agent_toggle_frame)
+        mass_select_frame.pack(padx=20, pady=20)
 
         self.toggle_all_agent_button = customtkinter.CTkCheckBox(
             mass_select_frame,
             text="All",
+            font=self.button_font_and_size,
             command=lambda: self.toggle_unlocked_agent_status("all"),
         )
-        self.toggle_all_agent_button.grid(row=0, column=0, padx=(20, 0), pady=10)
+        self.toggle_all_agent_button.grid(row=0, column=0, padx=10, pady=10)
 
         self.toggle_none_agent_button = customtkinter.CTkCheckBox(
             mass_select_frame,
             text="None",
+            font=self.button_font_and_size,
             command=lambda: self.toggle_unlocked_agent_status("none"),
         )
-        self.toggle_none_agent_button.grid(row=0, column=1, pady=10)
+        self.toggle_none_agent_button.grid(row=0, column=1, padx=10, pady=10)
 
-        toggle_agent_checkbox_frame = customtkinter.CTkFrame(agent_toggle_tab)
-        toggle_agent_checkbox_frame.pack()
+        toggle_agent_checkbox_frame = customtkinter.CTkFrame(self.agent_toggle_frame)
+        toggle_agent_checkbox_frame.pack(pady=10, padx=10)
 
         interior_toggle_agent_checkbox_frame = customtkinter.CTkFrame(
             toggle_agent_checkbox_frame, fg_color="transparent"
@@ -475,54 +585,45 @@ class InstalockerGUIMain(customtkinter.CTk):
             self.agent_checkboxes[f"self.{agent}_checkbox"] = customtkinter.CTkCheckBox(
                 interior_toggle_agent_checkbox_frame,
                 text=agent,
+                font=self.button_font_and_size,
                 command=lambda agent=agent: self.toggle_unlocked_agent_status(agent),
             )
             self.agent_checkboxes[f"self.{agent}_checkbox"].grid(
-                row=row, column=column, padx=8, pady=8
+                row=row, column=column, pady=10, padx=5
             )
 
         # endregion
 
         # region Random Agent Tab
         random_agent_allnone_button_frame = customtkinter.CTkFrame(
-            random_agent_tab, width=500, height=100, fg_color="transparent"
+            self.random_agent_frame, fg_color="transparent"
         )
-        random_agent_allnone_button_frame.pack(padx=20, pady=5)
+        random_agent_allnone_button_frame.pack(padx=20, pady=20, anchor=tk.NW)
 
         self.random_agent_exclusiselect_button = customtkinter.CTkButton(
             random_agent_allnone_button_frame,
             width=60,
             text="ExclusiSelect",
             hover=False,
+            font=self.button_font_and_size,
             fg_color=f"{self.button_colors['enabled'] if self.random_agent_exclusiselect is True else self.button_colors['disabled']}",
             command=self.toggle_random_agent_exclusiselect,
         )
         self.random_agent_exclusiselect_button.pack(
-            side="left", padx=(20, 0), fill=tk.Y, pady=5
+            side=tk.LEFT,
+            padx=10,
+            pady=5,
         )
-
-        invisible_button = customtkinter.CTkButton(
-            random_agent_allnone_button_frame,
-            width=90,
-            height=40,
-            hover=False,
-            text="",
-            text_color="",
-            bg_color="transparent",
-            fg_color="transparent",
-            state=tk.DISABLED,
-            command=lambda: None,
-        )
-        invisible_button.pack(side="right", padx=(0, 20), fill=tk.Y, pady=5)
 
         random_agent_all_none_toggle_frame = customtkinter.CTkFrame(
-            random_agent_allnone_button_frame, height=100, fg_color="gray20"
+            random_agent_allnone_button_frame, height=100, fg_color="gray17"
         )
-        random_agent_all_none_toggle_frame.pack(padx=20, pady=5)
+        random_agent_all_none_toggle_frame.pack(padx=0, pady=0)
 
         self.all_random_agent_radio_button = customtkinter.CTkCheckBox(
             random_agent_all_none_toggle_frame,
             text="All",
+            font=self.button_font_and_size,
             command=lambda: self.toggle_random_agent_status("all"),
         )
         self.all_random_agent_radio_button.pack(side="left", padx=(20, 0), pady=10)
@@ -530,11 +631,12 @@ class InstalockerGUIMain(customtkinter.CTk):
         self.none_random_agent_radio_button = customtkinter.CTkCheckBox(
             random_agent_all_none_toggle_frame,
             text="None",
+            font=self.button_font_and_size,
             command=lambda: self.toggle_random_agent_status("none"),
         )
-        self.none_random_agent_radio_button.pack(side="right", padx=0, pady=10)
+        self.none_random_agent_radio_button.pack(side="right", padx=20, pady=10)
 
-        random_agent_role_toggle_frame = customtkinter.CTkFrame(random_agent_tab)
+        random_agent_role_toggle_frame = customtkinter.CTkFrame(self.random_agent_frame)
         random_agent_role_toggle_frame.pack(padx=0, pady=5)
 
         # Creates the checkboxes for each role
@@ -545,15 +647,16 @@ class InstalockerGUIMain(customtkinter.CTk):
             self.agent_role_checkboxes[role] = customtkinter.CTkCheckBox(
                 random_agent_role_toggle_frame,
                 text=role.capitalize(),
+                font=self.button_font_and_size,
                 text_color=self.role_colors[role],
                 text_color_disabled=self.role_colors[f"{role}_disabled"],
                 command=lambda role=role: self.toggle_random_agent_status(role),
             )
             self.agent_role_checkboxes[role].grid(row=0, column=index, padx=10, pady=10)
 
-        # Creates frames for each role
+        # Creates frames for agents of each role
         random_agent_individual_toggle_frame = customtkinter.CTkFrame(
-            random_agent_tab, width=150, height=100, fg_color="transparent"
+            self.random_agent_frame, width=150, height=100, fg_color="transparent"
         )
         random_agent_individual_toggle_frame.pack(padx=0, pady=0)
 
@@ -565,7 +668,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                 random_agent_individual_toggle_frame,
                 width=120,
                 height=100,
-                fg_color="gray20",
+                fg_color="gray17",
             )
             role_frames[role].grid(row=0, column=index % 4, padx=5, pady=5, sticky="n")
 
@@ -587,6 +690,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                 frame,
                 text=agent,
                 text_color=self.role_colors[agent_role],
+                font=self.button_font_and_size,
                 command=lambda agent=agent: self.toggle_random_agent_status(agent),
             )
             self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].pack(
@@ -600,15 +704,18 @@ class InstalockerGUIMain(customtkinter.CTk):
             row, column = index // 2, index % 2
 
             map_frames[f"{map_name}_frame"] = customtkinter.CTkFrame(
-                map_specific_tab, width=230
+                self.map_specific_frame, width=230
             )
+
+            pady_amount = (20, 10) if row == 0 else 10
+
             map_frames[f"{map_name}_frame"].grid(
-                row=row, column=column, padx=10, pady=10, sticky="nsew"
+                row=row, column=column, padx=10, pady=pady_amount, sticky="nsew"
             )
             map_labels[f"{map_name}_label"] = customtkinter.CTkLabel(
                 map_frames[f"{map_name}_frame"],
                 text=f"{map_name}:",
-                font=self.label_font,
+                font=self.label_font_and_size,
             )
             map_labels[f"{map_name}_label"].pack(padx=10, pady=5, side=tk.LEFT)
 
@@ -620,6 +727,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                     if unlock_status is True
                 ),
                 width=100,
+                font=self.button_font_and_size,
                 command=lambda agent_name, map_name=map_name: self.toggle_map_specific_agent(
                     agent_name=agent_name, map_name=map_name
                 ),
@@ -627,16 +735,16 @@ class InstalockerGUIMain(customtkinter.CTk):
 
             self.map_dropdowns[map_name].pack(padx=(0, 10), pady=5, side=tk.RIGHT)
 
-        map_specific_tab.columnconfigure((0, 1), weight=1)  # type: ignore
+        self.map_specific_frame.columnconfigure((0, 1), weight=1)  # type: ignore
 
         # endregion
 
         # region Save File Tab
         self.save_file_scrollable_frame = customtkinter.CTkScrollableFrame(
-            save_file_tab
+            self.save_file_frame
         )
         self.save_file_scrollable_frame.pack(
-            fill=tk.BOTH, expand=True, padx=10, pady=(10, 0)
+            fill=tk.BOTH, expand=True, padx=10, pady=(20, 0)
         )
 
         self.save_file_frame_items = dict()
@@ -665,7 +773,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                 dark_image=PIL.Image.open(
                     resource_path("images/gui_icons/new_file.png")
                 ),
-                size=(20, 20),
+                size=(25, 25),
             ),
         )
 
@@ -678,18 +786,24 @@ class InstalockerGUIMain(customtkinter.CTk):
             self.individual_save_file_items(save_file)
 
         new_save_file_button = customtkinter.CTkButton(
-            save_file_tab,
+            self.save_file_frame,
             text="",
             image=self.save_file_icons["new_file"],
             command=self.new_save_file,
             fg_color="transparent",
             hover_color="gray22",
-            width=20,
-            height=20,
+            width=25,
+            height=25,
         )
-        new_save_file_button.pack(padx=10, pady=(3, 0), anchor=tk.NE)
+        new_save_file_button.pack(padx=10, pady=5, anchor=tk.NE)
 
         # endregion
+
+        # region Settings Tab
+
+        # endregion
+
+        self.select_frame_by_name("Overview")
 
     # Creates the list of save file items
     def individual_save_file_items(self, file_name, just_icons=False):
@@ -708,7 +822,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             self.save_file_frame_items[f"{file_name}_button"] = customtkinter.CTkButton(
                 self.save_file_frame_items[f"{file_name}_frame"],
                 text=f"{file_name}",
-                font=self.label_font,
+                font=self.label_font_and_size,
                 fg_color="transparent",
                 hover_color="gray22",
                 hover=True if file_name != self.current_save_file else False,
@@ -765,7 +879,6 @@ class InstalockerGUIMain(customtkinter.CTk):
                 self.update_icon()
             self.update_overview_tab()
             self.update_map_specific_tab()
-
         except AttributeError:
             pass
 
@@ -830,7 +943,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         )
         self.select_agent_dropdown.set(f"{self.selected_agent}")
 
-        self.random_agent_button.configure(
+        self.toggle_random_agent_button.configure(
             text=f"{'Enabled' if self.random_agent_mode is True else 'Disabled'}",
             fg_color=f"{self.button_colors['enabled'] if self.random_agent_mode is True else self.button_colors['disabled']}",
         )
@@ -840,9 +953,9 @@ class InstalockerGUIMain(customtkinter.CTk):
             case False, False:
                 self.select_agent_dropdown.configure(state=tk.NORMAL)
                 if any(value is True for value in self.random_agents_dict.values()):
-                    self.random_agent_button.configure(state=tk.NORMAL)
+                    self.toggle_random_agent_button.configure(state=tk.NORMAL)
                 else:
-                    self.random_agent_button.configure(state=tk.DISABLED)
+                    self.toggle_random_agent_button.configure(state=tk.DISABLED)
                 if any(
                     value is None for value in self.map_specific_agents_dict.values()
                 ):
@@ -850,7 +963,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                 else:
                     self.select_map_specific_button.configure(state=tk.NORMAL)
             case True, False:
-                self.random_agent_button.configure(state=tk.DISABLED)
+                self.toggle_random_agent_button.configure(state=tk.DISABLED)
                 self.select_agent_dropdown.configure(state=tk.DISABLED)
             case False, True:
                 self.select_map_specific_button.configure(state=tk.DISABLED)
@@ -1223,6 +1336,67 @@ class InstalockerGUIMain(customtkinter.CTk):
                 fill=tk.X, padx=(5, 0), pady=3
             )
 
+    # Changes the active frame
+    def select_frame_by_name(self, frame_name):
+        # Updates navigation menu buttons
+        self.set_overview_tab_button.configure(
+            fg_color=("gray75", "gray25") if frame_name == "Overview" else "transparent"
+        )
+        self.set_agent_toggle_tab_button.configure(
+            fg_color=("gray75", "gray25")
+            if frame_name == "Agent Toggle"
+            else "transparent"
+        )
+        self.set_random_agent_tab_button.configure(
+            fg_color=("gray75", "gray25")
+            if frame_name == "Random Agent"
+            else "transparent"
+        )
+        self.set_map_specific_tab_button.configure(
+            fg_color=("gray75", "gray25")
+            if frame_name == "Map Specific"
+            else "transparent"
+        )
+        self.set_save_file_tab_button.configure(
+            fg_color=("gray75", "gray25")
+            if frame_name == "Save File"
+            else "transparent"
+        )
+        self.set_settings_tab_button.configure(
+            fg_color=("gray75", "gray25") if frame_name == "Settings" else "transparent"
+        )
+
+        # Updates current visible frame
+        if frame_name == "Overview":
+            self.overview_frame.grid(row=0, column=1, sticky="nsew")
+        else:
+            self.overview_frame.grid_forget()
+
+        if frame_name == "Agent Toggle":
+            self.agent_toggle_frame.grid(row=0, column=1, sticky="nsew")
+        else:
+            self.agent_toggle_frame.grid_forget()
+
+        if frame_name == "Random Agent":
+            self.random_agent_frame.grid(row=0, column=1, sticky="nsew")
+        else:
+            self.random_agent_frame.grid_forget()
+
+        if frame_name == "Map Specific":
+            self.map_specific_frame.grid(row=0, column=1, sticky="nsew")
+        else:
+            self.map_specific_frame.grid_forget()
+
+        if frame_name == "Save File":
+            self.save_file_frame.grid(row=0, column=1, sticky="nsew")
+        else:
+            self.save_file_frame.grid_forget()
+
+        if frame_name == "Settings":
+            self.settings_frame.grid(row=0, column=1, sticky="nsew")
+        else:
+            self.settings_frame.grid_forget()
+
     # endregion
 
     # endregion
@@ -1343,10 +1517,6 @@ class InstalockerGUIMain(customtkinter.CTk):
         )
 
         self.update_random_agent_tab(exclusiselect_mode=True)
-
-    # Toggles which tab is shown/displayed
-    def change_visible_tab(self, tab_name):
-        self.tabs.set(tab_name)
 
     # endregion
 
@@ -1595,6 +1765,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                 filled_in_text=new_file_name,
                 file_name=old_file_name,
                 colors=self.button_colors,
+                main_font=self.main_font,
                 is_new_file=False,
             ).get_input()
 
@@ -1661,6 +1832,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             window_geometry=self.winfo_geometry(),
             file_name=file_name,
             colors=self.button_colors,
+            main_font=self.main_font,
         ).get_input()
 
         # Does not delete the save file if the user cancels
@@ -1694,6 +1866,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                 filled_in_text=file_name,
                 colors=self.button_colors,
                 is_new_file=True,
+                main_font=self.main_font,
             ).get_input()
 
             is_valid_file_name = self.valid_file_name(file_name)
@@ -1731,6 +1904,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                 title="Invalid File Name",
                 message="File Name Cannot Be Empty",
                 colors=self.button_colors,
+                main_font=self.main_font,
             ).get_input()
             return cancel_event
 
@@ -1740,6 +1914,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                 title="Invalid File Name",
                 message="File Name Already Exists",
                 colors=self.button_colors,
+                main_font=self.main_font,
             ).get_input()
             return cancel_event
 
@@ -1750,6 +1925,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                     title="Invalid File Name",
                     message='File Name Cannot Contain:\n/ \\ : * ? " < > |',
                     colors=self.button_colors,
+                    main_font=self.main_font,
                 ).get_input()
                 return cancel_event
 
@@ -2080,7 +2256,7 @@ class InstalockerGUIMain(customtkinter.CTk):
 
 # Error popup when save renamed incorrectly
 class ErrorPopup(customtkinter.CTkToplevel):
-    def __init__(self, window_geometry, title, message, colors):
+    def __init__(self, window_geometry, title, message, colors, main_font):
         super().__init__()
         self.title(title)
         _, x, y = window_geometry.split("+")
@@ -2090,6 +2266,7 @@ class ErrorPopup(customtkinter.CTkToplevel):
         )
         self.message = message
         self.colors = colors
+        self.main_font = main_font
 
         # GUI Settings
         self.lift()  # lift window on top
@@ -2115,7 +2292,7 @@ class ErrorPopup(customtkinter.CTkToplevel):
         self.rowconfigure(0, weight=1)
 
         self.message = customtkinter.CTkLabel(
-            self, text=self.message, font=("Arial", 14)
+            self, text=self.message, font=(self.main_font, 14)
         )
         self.message.grid(
             row=1, column=0, columnspan=2, padx=0, pady=(20, 0), sticky="ew"
@@ -2126,6 +2303,7 @@ class ErrorPopup(customtkinter.CTkToplevel):
             width=100,
             border_width=0,
             text="Cancel",
+            font=(self.main_font, 14),
             fg_color=self.colors["disabled"],
             command=self.cancel_event,
         )
@@ -2138,6 +2316,7 @@ class ErrorPopup(customtkinter.CTkToplevel):
             width=100,
             border_width=0,
             text="Ok",
+            font=(self.main_font, 14),
             fg_color=self.colors["enabled"],
             command=self.okay_event,
         )
@@ -2171,6 +2350,7 @@ class InputPopup(customtkinter.CTkToplevel):
         title,
         file_name,
         colors,
+        main_font,
         is_new_file=False,
         filled_in_text=None,
     ):
@@ -2185,6 +2365,7 @@ class InputPopup(customtkinter.CTkToplevel):
         self.colors = colors
         self.is_new_file = is_new_file
         self.filled_in_text = filled_in_text
+        self.main_font = main_font
 
         # GUI Settings
         self.lift()  # lift window on top
@@ -2218,11 +2399,13 @@ class InputPopup(customtkinter.CTkToplevel):
             text=message,
             width=300,
             wraplength=300,
-            font=("Arial", 16),
+            font=(self.main_font, 16),
         )
         self.label.grid(row=0, column=0, columnspan=2, padx=20, pady=20, sticky="ew")
 
-        self.entry = customtkinter.CTkEntry(master=self, width=230)
+        self.entry = customtkinter.CTkEntry(
+            master=self, width=230, font=(self.main_font, 14)
+        )
         self.entry.grid(row=1, column=0, columnspan=2, padx=20, pady=0, sticky="ew")
         if self.filled_in_text is None:
             self.entry.insert(0, self.file_name)
@@ -2234,6 +2417,7 @@ class InputPopup(customtkinter.CTkToplevel):
             width=100,
             border_width=0,
             text="Cancel",
+            font=(self.main_font, 14),
             fg_color=self.colors["disabled"],
             command=self.cancel_event,
         )
@@ -2246,6 +2430,7 @@ class InputPopup(customtkinter.CTkToplevel):
             width=100,
             border_width=0,
             text="Ok",
+            font=(self.main_font, 14),
             fg_color=self.colors["enabled"],
             command=self.ok_event,
         )
@@ -2274,7 +2459,7 @@ class InputPopup(customtkinter.CTkToplevel):
 
 # Confirmation popup when deleting saves
 class ConfirmationPopup(customtkinter.CTkToplevel):
-    def __init__(self, window_geometry, file_name, colors):
+    def __init__(self, window_geometry, file_name, colors, main_font):
         super().__init__()
         _, x, y = window_geometry.split("+")
         self.main_window_x, self.main_window_y = int(x), int(y)
@@ -2284,6 +2469,7 @@ class ConfirmationPopup(customtkinter.CTkToplevel):
         self.title("Confirm Deletion")
         self.file_name = file_name
         self.colors = colors
+        self.main_font = main_font
 
         # GUI Settings
         self.lift()  # lift window on top
@@ -2325,8 +2511,8 @@ class ConfirmationPopup(customtkinter.CTkToplevel):
         )
         message = customtkinter.CTkLabel(
             self,
-            text=f"You are about to delete:\n{self.file_name}\nAre you sure?\n\nThis action cannot be undone.",
-            font=("Arial", 16),
+            text=f"Confirm deletion for:\n{self.file_name}\n\nThis action cannot be undone.",
+            font=(self.main_font, 16),
         )
         message.pack(padx=10, pady=10)
 
@@ -2335,6 +2521,7 @@ class ConfirmationPopup(customtkinter.CTkToplevel):
             width=100,
             border_width=0,
             text="Ok",
+            font=(self.main_font, 14),
             fg_color=self.colors["disabled"],
             command=self.confirm_event,
         )
@@ -2345,6 +2532,7 @@ class ConfirmationPopup(customtkinter.CTkToplevel):
             width=100,
             border_width=0,
             text="Cancel",
+            font=(self.main_font, 14),
             fg_color=self.colors["enabled"],
             command=self.cancel_event,
         )
