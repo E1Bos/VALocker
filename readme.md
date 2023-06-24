@@ -64,9 +64,9 @@ VALocker provides a `user_settings.json` file in the data directory where you ca
 I plan to add support for other display sizes in the future, but for now, VALocker only supports a resolution of 1920x1080. If you would like to see support for other display sizes, please let me know by [creating an issue](https://github.com/E1Bos/VALocker/issues).
 
 ## 🖼️ Images
-|![overview_tab](https://github.com/E1Bos/VALocker/assets/66886116/fcfb0dc2-cc13-4815-8cbf-27ad11ebd549)|![agent_toggle_tab](https://github.com/E1Bos/VALocker/assets/66886116/6986f6e7-5b35-424a-84db-d6d289897026)|![random_agent_tab](https://github.com/E1Bos/VALocker/assets/66886116/d833c1d7-ca5d-4c37-b252-11ad65feb81f)|
+|![overview_tab](images/readme_images/overview_tab.png)|![agent_toggle_tab](images/readme_images/agent_toggle_tab.png)|![random_agent_tab](images/readme_images/random_agent_tab.png)|
 |-|-|-|
-|![map_specific_tab](https://github.com/E1Bos/VALocker/assets/66886116/33be39f6-2987-4970-b465-3eb3ab8c0ff3)|![save_tab](https://github.com/E1Bos/VALocker/assets/66886116/4a94dfbb-3346-4c3b-85af-356e64487765)|
+|![map_specific_tab](images/readme_images/map_specific_tab.png)|![save_file_tab](images/readme_images/save_file_tab.png)|
 
 ## 🤝 Contributing
 Thank you for considering contributing to this project! I greatly appreciate your interest and support.
