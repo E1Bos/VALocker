@@ -1,11 +1,13 @@
-# VALocker - Valorant Agent Locker
+# VALocker - VALORANT Agent Locker
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-
-VALocker is a program written in Python that allows you to automatically lock any Valorant agent quickly and reliably. It helps you secure your favorite agent during the agent selection phase, saving you time and ensuring you don't miss out on playing your preferred character.
+VALocker is a program written in Python that allows you to automatically lock any VALORANT agent quickly and reliably. It helps you secure your favorite agent during the agent selection phase, saving you time and ensuring you don't miss out on playing your preferred character.
 
 📋 **Changelog:** For a detailed list of changes, improvements, and bug fixes, refer to the [Changelog](changelog.md) file.
+
+> **Disclaimer:**
+> This program is not affiliated with or endorsed by Riot Games or VALORANT. The software is provided "as is" without any warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, and non-infringement. In no event shall the authors or copyright holders be liable for any claim, damages, or other liability, whether in an action of contract, tort, or otherwise, arising from, out of, or in connection with the software or the use or other dealings in the software.
 
 ## 📚 Features
 - Provides a user-friendly GUI for easy interaction.
@@ -43,7 +45,7 @@ VALocker is a program written in Python that allows you to automatically lock an
 3. Select your desired agent from the dropdown menu.
 4. Choose any additional options or settings based on your preference.
 5. Enable the instalocker by clicking on the button under "Instalocker" to initiate the agent locking process, the button should switch from "Stopped" to "Running", and the button titled "Current Task" should change to "Locking Agent".
-6. During the agent selection phase in Valorant, VALocker will automatically lock in your chosen agent.
+6. During the agent selection phase in VALORANT, VALocker will automatically lock in your chosen agent.
 7. Once the agent is locked, the button under "Current Task" will change to "In Game", once it detects the end of the game, it will automatically switch to "Locking". The mode can be changed at any time by clicking on the button.
 
 **Note:** VALocker relies on specific display settings for accurate functionality. Please ensure that your VALORANT game is running at a screen resolution of 1920x1080 with letterbox enabled. Deviating from these settings may result in incorrect behavior of the program.
@@ -80,15 +82,9 @@ Thank you for your understanding, and I appreciate your interest in this project
 VALocker utilizes the following libraries:
 
 - [customtkinter](https://github.com/TomSchimansky/CustomTkinter) - Customized version of the tkinter library.
-- [json](https://docs.python.org/3/library/json.html) - Built-in Python library for working with JSON data.
-- [os](https://docs.python.org/3/library/os.html) - Built-in Python library for interacting with the operating system.
 - [PIL](https://python-pillow.org/) - Python Imaging Library for image manipulation.
 - [pystray](https://github.com/moses-palmer/pystray) - Library for creating system tray icons.
 - [pynput](https://pypi.org/project/pynput/) - Library for controlling and monitoring input devices.
-- [random](https://docs.python.org/3/library/random.html) - Built-in Python library for random number generation.
-- [threading](https://docs.python.org/3/library/threading.html) - Built-in Python library for multi-threading.
-- [time](https://docs.python.org/3/library/time.html) - Built-in Python library for time-related functions.
-- [tkinter](https://docs.python.org/3/library/tkinter.html) - Python's standard GUI library.
 
 ## 📧 Contact
 If you have any questions, feedback, or general inquiries, you may contact me at:
