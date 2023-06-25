@@ -31,7 +31,7 @@ jobs:
 
       - name: Build file with PyInstaller
         run: |
-          pyinstaller --noconfirm --onefile --windowed --icon "images/icons/instalocker_enabled.ico" --add-data "data;data/" --add-data "images;images/" --collect-all "customtkinter" --distpath dist/ VALocker.pyw
+          pyinstaller --noconfirm --onefile --windowed --icon "images/icons/valocker-enabled.ico" --add-data "data;data/" --add-data "images;images/" --collect-all "customtkinter" --distpath dist/ VALocker.pyw
 
       - name: Create ZIP file
         run: |
