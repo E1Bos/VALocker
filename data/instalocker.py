@@ -219,7 +219,6 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         self.navigation_frame = customtkinter.CTkFrame(self, corner_radius=0)
         self.navigation_frame.grid(row=0, column=0, sticky="nsew")
-        self.navigation_frame.rowconfigure(7, weight=1)
 
         self.navigation_frame_label = customtkinter.CTkLabel(
             self.navigation_frame,
@@ -229,101 +228,28 @@ class InstalockerGUIMain(customtkinter.CTk):
         )
         self.navigation_frame_label.grid(row=0, column=0, padx=10, pady=10)
 
-        self.set_overview_tab_button = customtkinter.CTkButton(
-            self.navigation_frame,
-            corner_radius=0,
-            height=40,
-            border_spacing=10,
-            text="Overview",
-            font=self.button_font_and_size,
-            fg_color="transparent",
-            text_color=("gray10", "gray90"),
-            hover_color=("gray70", "gray30"),
-            command=lambda tab_name="Overview": self.select_frame_by_name(tab_name),
-        )
-        self.set_overview_tab_button.grid(row=1, column=0, sticky="ew")
+        # Creates the navigation buttons
+        self.nav_buttons = dict()
+        button_names = ["Overview", "Agent Toggle", "Random Agent", "Map Specific", "Save File", "Settings"]
+        
+        for row, button_name in enumerate(button_names):
+            row = row + 1
+            self.nav_buttons[button_name] = customtkinter.CTkButton(
+                self.navigation_frame,
+                corner_radius=0,
+                height=40,
+                border_spacing=10,
+                text=button_name,
+                anchor=tk.W,
+                font=self.button_font_and_size,
+                fg_color="transparent",
+                text_color=("gray10", "gray90"),
+                hover_color=("gray70", "gray30"),
+                command=lambda tab_name=button_name: self.select_frame_by_name(tab_name),
+            )
+            self.nav_buttons[button_name].grid(row=row, column=0, sticky="ew")
 
-        self.set_agent_toggle_tab_button = customtkinter.CTkButton(
-            self.navigation_frame,
-            corner_radius=0,
-            height=40,
-            border_spacing=10,
-            text="Agent Toggles",
-            font=self.button_font_and_size,
-            fg_color="transparent",
-            text_color=("gray10", "gray90"),
-            hover_color=("gray70", "gray30"),
-            command=lambda tab_name="Agent Toggle": self.select_frame_by_name(tab_name),
-        )
-
-        self.set_agent_toggle_tab_button.grid(row=2, column=0, sticky="ew")
-
-        self.set_random_agent_tab_button = customtkinter.CTkButton(
-            self.navigation_frame,
-            corner_radius=0,
-            height=40,
-            border_spacing=10,
-            text="Random Agents",
-            font=self.button_font_and_size,
-            fg_color="transparent",
-            text_color=("gray10", "gray90"),
-            hover_color=("gray70", "gray30"),
-            command=lambda tab_name="Random Agent": self.select_frame_by_name(tab_name),
-        )
-        self.set_random_agent_tab_button.grid(row=3, column=0, sticky="ew")
-
-        self.set_map_specific_tab_button = customtkinter.CTkButton(
-            self.navigation_frame,
-            corner_radius=0,
-            height=40,
-            border_spacing=10,
-            text="Map Specific",
-            font=self.button_font_and_size,
-            fg_color="transparent",
-            text_color=("gray10", "gray90"),
-            hover_color=("gray70", "gray30"),
-            command=lambda tab_name="Map Specific": self.select_frame_by_name(tab_name),
-        )
-        self.set_map_specific_tab_button.grid(row=4, column=0, sticky="ew")
-
-        self.set_save_file_tab_button = customtkinter.CTkButton(
-            self.navigation_frame,
-            corner_radius=0,
-            height=40,
-            border_spacing=10,
-            text="Save Files",
-            font=self.button_font_and_size,
-            fg_color="transparent",
-            text_color=("gray10", "gray90"),
-            hover_color=("gray70", "gray30"),
-            command=lambda tab_name="Save File": self.select_frame_by_name(tab_name),
-        )
-        self.set_save_file_tab_button.grid(row=5, column=0, sticky="ew")
-
-        self.set_settings_tab_button = customtkinter.CTkButton(
-            self.navigation_frame,
-            corner_radius=0,
-            height=40,
-            border_spacing=10,
-            text="Settings",
-            font=self.button_font_and_size,
-            fg_color="transparent",
-            text_color=("gray10", "gray90"),
-            hover_color=("gray70", "gray30"),
-            command=lambda tab_name="Settings": self.select_frame_by_name(tab_name),
-        )
-        # self.set_settings_tab_button.grid(row=6, column=0, sticky="ew")
-
-        quit_button = customtkinter.CTkButton(
-            self.navigation_frame,
-            text="Exit",
-            font=self.button_font_and_size,
-            fg_color=self.button_colors["disabled"],
-            corner_radius=5,
-            hover=False,
-            command=self.exit,
-        )
-        quit_button.grid(row=7, column=0, sticky="sew", padx=10, pady=10)
+        self.navigation_frame.rowconfigure(len(self.nav_buttons)+1, weight=1)
 
         self.overview_frame = customtkinter.CTkFrame(
             self, corner_radius=0, fg_color="transparent"
@@ -340,9 +266,23 @@ class InstalockerGUIMain(customtkinter.CTk):
         self.save_file_frame = customtkinter.CTkFrame(
             self, corner_radius=0, fg_color="transparent"
         )
+        self.tools_frame = customtkinter.CTkFrame(
+            self, corner_radius=0, fg_color="transparent"
+        )
         self.settings_frame = customtkinter.CTkFrame(
             self, corner_radius=0, fg_color="transparent"
         )
+
+        quit_button = customtkinter.CTkButton(
+            self.navigation_frame,
+            text="Exit",
+            font=self.button_font_and_size,
+            fg_color=self.button_colors["disabled"],
+            corner_radius=5,
+            hover=False,
+            command=self.exit,
+        )
+        quit_button.grid(row=len(self.nav_buttons) + 2, column=0, sticky="sew", padx=10, pady=10)
 
         # endregion
 
@@ -1368,64 +1308,26 @@ class InstalockerGUIMain(customtkinter.CTk):
 
     # Changes the active frame
     def select_frame_by_name(self, frame_name):
-        # Updates navigation menu buttons
-        self.set_overview_tab_button.configure(
-            fg_color=("gray75", "gray25") if frame_name == "Overview" else "transparent"
-        )
-        self.set_agent_toggle_tab_button.configure(
-            fg_color=("gray75", "gray25")
-            if frame_name == "Agent Toggle"
-            else "transparent"
-        )
-        self.set_random_agent_tab_button.configure(
-            fg_color=("gray75", "gray25")
-            if frame_name == "Random Agent"
-            else "transparent"
-        )
-        self.set_map_specific_tab_button.configure(
-            fg_color=("gray75", "gray25")
-            if frame_name == "Map Specific"
-            else "transparent"
-        )
-        self.set_save_file_tab_button.configure(
-            fg_color=("gray75", "gray25")
-            if frame_name == "Save File"
-            else "transparent"
-        )
-        self.set_settings_tab_button.configure(
-            fg_color=("gray75", "gray25") if frame_name == "Settings" else "transparent"
-        )
+        frame_mapping = {
+            "Overview": self.overview_frame,
+            "Agent Toggle": self.agent_toggle_frame,
+            "Random Agent": self.random_agent_frame,
+            "Map Specific": self.map_specific_frame,
+            "Save File": self.save_file_frame,
+            "Tools": self.tools_frame,
+            "Settings": self.settings_frame
+        }
 
-        # Updates current visible frame
-        if frame_name == "Overview":
-            self.overview_frame.grid(row=0, column=1, sticky="nsew")
-        else:
-            self.overview_frame.grid_forget()
+        for button_name in self.nav_buttons:
+            self.nav_buttons[button_name].configure(
+                fg_color=("gray75", "gray25") if frame_name == button_name else "transparent"
+            )
 
-        if frame_name == "Agent Toggle":
-            self.agent_toggle_frame.grid(row=0, column=1, sticky="nsew")
-        else:
-            self.agent_toggle_frame.grid_forget()
+            if frame_name == button_name:
+                frame_mapping[button_name].grid(row=0, column=1, sticky="nsew")
+            else:
+                frame_mapping[button_name].grid_forget()
 
-        if frame_name == "Random Agent":
-            self.random_agent_frame.grid(row=0, column=1, sticky="nsew")
-        else:
-            self.random_agent_frame.grid_forget()
-
-        if frame_name == "Map Specific":
-            self.map_specific_frame.grid(row=0, column=1, sticky="nsew")
-        else:
-            self.map_specific_frame.grid_forget()
-
-        if frame_name == "Save File":
-            self.save_file_frame.grid(row=0, column=1, sticky="nsew")
-        else:
-            self.save_file_frame.grid_forget()
-
-        if frame_name == "Settings":
-            self.settings_frame.grid(row=0, column=1, sticky="nsew")
-        else:
-            self.settings_frame.grid_forget()
 
     # endregion
 
