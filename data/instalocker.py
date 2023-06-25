@@ -155,9 +155,9 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         # Icons
         self.icons = dict(
-            disabled="images/icons/instalocker_disabled.ico",
-            locking="images/icons/instalocker_enabled.ico",
-            waiting="images/icons/instalocker_enabled.ico",
+            disabled="images/icons/valocker-disabled.ico",
+            locking="images/icons/valocker-locking.ico",
+            waiting="images/icons/valocker-waiting.ico",
         )
         self.current_icon = self.icons["disabled"]
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("VALocker.GUI")
@@ -249,7 +249,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             )
             self.nav_buttons[button_name].grid(row=row, column=0, sticky="ew")
 
-        self.navigation_frame.rowconfigure(len(self.nav_buttons)+1, weight=1)
+        self.navigation_frame.rowconfigure(len(self.nav_buttons), weight=1)
 
         self.overview_frame = customtkinter.CTkFrame(
             self, corner_radius=0, fg_color="transparent"
