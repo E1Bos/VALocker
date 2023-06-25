@@ -224,14 +224,20 @@ class InstalockerGUIMain(customtkinter.CTk):
             self.navigation_frame,
             text="VALocker",
             font=(self.main_font, 18, "bold"),
-
         )
         self.navigation_frame_label.grid(row=0, column=0, padx=10, pady=10)
 
         # Creates the navigation buttons
         self.nav_buttons = dict()
-        button_names = ["Overview", "Agent Toggle", "Random Agent", "Map Specific", "Save File", "Settings"]
-        
+        button_names = [
+            "Overview",
+            "Agent Toggle",
+            "Random Agent",
+            "Map Specific",
+            "Save File",
+            "Settings",
+        ]
+
         for row, button_name in enumerate(button_names):
             row = row + 1
             self.nav_buttons[button_name] = customtkinter.CTkButton(
@@ -245,7 +251,9 @@ class InstalockerGUIMain(customtkinter.CTk):
                 fg_color="transparent",
                 text_color=("gray10", "gray90"),
                 hover_color=("gray70", "gray30"),
-                command=lambda tab_name=button_name: self.select_frame_by_name(tab_name),
+                command=lambda tab_name=button_name: self.select_frame_by_name(
+                    tab_name
+                ),
             )
             self.nav_buttons[button_name].grid(row=row, column=0, sticky="ew")
 
@@ -282,7 +290,9 @@ class InstalockerGUIMain(customtkinter.CTk):
             hover=False,
             command=self.exit,
         )
-        quit_button.grid(row=len(self.nav_buttons) + 2, column=0, sticky="sew", padx=10, pady=10)
+        quit_button.grid(
+            row=len(self.nav_buttons) + 2, column=0, sticky="sew", padx=10, pady=10
+        )
 
         # endregion
 
@@ -545,7 +555,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         random_agent_allnone_button_frame = customtkinter.CTkFrame(
             self.random_agent_frame, fg_color="transparent"
         )
-        random_agent_allnone_button_frame.pack(padx=10, pady=(20,10), anchor=tk.NW)
+        random_agent_allnone_button_frame.pack(padx=10, pady=(20, 10), anchor=tk.NW)
 
         self.random_agent_exclusiselect_button = customtkinter.CTkButton(
             random_agent_allnone_button_frame,
@@ -559,7 +569,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         )
         self.random_agent_exclusiselect_button.pack(
             side=tk.LEFT,
-            padx=(0,11),
+            padx=(0, 11),
             pady=0,
         )
 
@@ -648,7 +658,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         # endregion
 
         # region Map Specific Tab
-        self.map_specific_frame.rowconfigure((0,1,2,3,4), weight=1)
+        self.map_specific_frame.rowconfigure((0, 1, 2, 3, 4), weight=1)
 
         map_frames, map_labels, self.map_dropdowns = dict(), dict(), dict()
         for index, map_name in enumerate(self.map_names):
@@ -658,7 +668,13 @@ class InstalockerGUIMain(customtkinter.CTk):
                 self.map_specific_frame, width=230
             )
 
-            pady_amount = (20, 5) if row == 0 else (5,20) if row == len(self.map_names)//2 else 5
+            pady_amount = (
+                (20, 5)
+                if row == 0
+                else (5, 20)
+                if row == len(self.map_names) // 2
+                else 5
+            )
             map_frames[f"{map_name}_frame"].grid(
                 row=row, column=column, padx=10, pady=pady_amount, sticky="nsew"
             )
@@ -751,9 +767,7 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         # region Settings Tab
 
-        scrolling_settings_frame = customtkinter.CTkScrollableFrame(
-            self.settings_frame
-        )
+        scrolling_settings_frame = customtkinter.CTkScrollableFrame(self.settings_frame)
         scrolling_settings_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
         # endregion
@@ -770,9 +784,11 @@ class InstalockerGUIMain(customtkinter.CTk):
                 if file_name != self.current_save_file
                 else "dark green",
             )
-            self.save_file_frame_items[f"{file_name}_frame"].pack(
-                fill=tk.X, padx=(5, 0), pady=3
-            )
+
+            if file_name != "default" or self.hide_default_save_file is False:
+                self.save_file_frame_items[f"{file_name}_frame"].pack(
+                    fill=tk.X, padx=(5, 0), pady=3
+                )
 
             self.save_file_frame_items[f"{file_name}_button"] = customtkinter.CTkButton(
                 self.save_file_frame_items[f"{file_name}_frame"],
@@ -1105,7 +1121,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                             self.random_agent_checkboxes[
                                 f"self.{toggled_agent_name}_random_checkbox"
                             ].deselect()
-                        
+
                         # Finds the role of the toggled agent
                         for role, agent_list in self.config_file_agents.items():
                             if toggled_agent_name in agent_list:
@@ -1119,7 +1135,6 @@ class InstalockerGUIMain(customtkinter.CTk):
                             self.agent_role_checkboxes[agent_role].select()
                         else:
                             self.agent_role_checkboxes[agent_role].deselect()
-                    
 
                 if toggled_agent_name in ["all", "none"]:
                     if all(
@@ -1302,9 +1317,10 @@ class InstalockerGUIMain(customtkinter.CTk):
                 )
             self.save_file_frame_items[f"{save_file}_frame"].pack_forget()
         for save_file in ordered_save_files:
-            self.save_file_frame_items[f"{save_file}_frame"].pack(
-                fill=tk.X, padx=(5, 0), pady=3
-            )
+            if save_file != "default" or self.hide_default_save_file is False:
+                self.save_file_frame_items[f"{save_file}_frame"].pack(
+                    fill=tk.X, padx=(5, 0), pady=3
+                )
 
     # Changes the active frame
     def select_frame_by_name(self, frame_name):
@@ -1315,19 +1331,20 @@ class InstalockerGUIMain(customtkinter.CTk):
             "Map Specific": self.map_specific_frame,
             "Save File": self.save_file_frame,
             "Tools": self.tools_frame,
-            "Settings": self.settings_frame
+            "Settings": self.settings_frame,
         }
 
         for button_name in self.nav_buttons:
             self.nav_buttons[button_name].configure(
-                fg_color=("gray75", "gray25") if frame_name == button_name else "transparent"
+                fg_color=("gray75", "gray25")
+                if frame_name == button_name
+                else "transparent"
             )
 
             if frame_name == button_name:
                 frame_mapping[button_name].grid(row=0, column=1, sticky="nsew")
             else:
                 frame_mapping[button_name].grid_forget()
-
 
     # endregion
 
@@ -1497,6 +1514,9 @@ class InstalockerGUIMain(customtkinter.CTk):
                     self.persistent_random_agents = user_settings[
                         "PERSISTENT_RANDOM_AGENTS"
                     ]
+                    self.hide_default_save_file = user_settings[
+                        "HIDE_DEFAULT_SAVE_FILE"
+                    ]
                     self.favorited_save_files = user_settings["FAVORITED_SAVE_FILES"]
                     self.total_games_used = user_settings["TIMES_USED"]
                     self.time_to_lock_list = user_settings["TIME_TO_LOCK"]
@@ -1506,40 +1526,28 @@ class InstalockerGUIMain(customtkinter.CTk):
                             list() for _ in range(len(self.safe_mode_timing) + 1)
                         )
 
-                        with open(resource_path("data/user_settings.json"), "w") as us:
-                            user_settings_file_json = {
-                                "ACTIVE_SAVE_FILE": self.current_save_file,
-                                "MINIMIZE_TO_TRAY": self.minimize_to_tray,
-                                "START_MINIMIZED": self.start_minimized,
-                                "INSTALOCK_ON_START": self.active,
-                                "SAFE_MODE_ENABLED_ON_START": self.safe_mode,
-                                "SAFE_MODE_STRENGTH_ON_START": self.safe_mode_strength,
-                                "PERSISTENT_RANDOM_AGENTS": self.persistent_random_agents,
-                                "FAVORITED_SAVE_FILES": self.favorited_save_files,
-                                "TIMES_USED": self.total_games_used,
-                                "TIME_TO_LOCK": self.time_to_lock_list,
-                            }
-                            us.write(json.dumps(user_settings_file_json, indent=4))
-
             # Creates a new user_settings.json file if one does not exist
-            except FileNotFoundError:
+            except Exception:
                 self.minimize_to_tray = False
                 self.start_minimized = False
                 self.persistent_random_agents = False
-                with open(resource_path("data/user_settings.json"), "w") as us:
-                    user_settings_file_json = {
-                        "ACTIVE_SAVE_FILE": self.current_save_file,
-                        "MINIMIZE_TO_TRAY": self.minimize_to_tray,
-                        "START_MINIMIZED": self.start_minimized,
-                        "INSTALOCK_ON_START": self.active,
-                        "SAFE_MODE_ENABLED_ON_START": self.safe_mode,
-                        "SAFE_MODE_STRENGTH_ON_START": self.safe_mode_strength,
-                        "PERSISTENT_RANDOM_AGENTS": self.persistent_random_agents,
-                        "FAVORITED_SAVE_FILES": self.favorited_save_files,
-                        "TIMES_USED": self.total_games_used,
-                        "TIME_TO_LOCK": self.time_to_lock_list,
-                    }
-                    us.write(json.dumps(user_settings_file_json, indent=4))
+                self.hide_default_save_file = True
+
+            with open(resource_path("data/user_settings.json"), "w") as us:
+                user_settings_file_json = {
+                    "ACTIVE_SAVE_FILE": self.current_save_file,
+                    "MINIMIZE_TO_TRAY": self.minimize_to_tray,
+                    "START_MINIMIZED": self.start_minimized,
+                    "INSTALOCK_ON_START": self.active,
+                    "SAFE_MODE_ENABLED_ON_START": self.safe_mode,
+                    "SAFE_MODE_STRENGTH_ON_START": self.safe_mode_strength,
+                    "PERSISTENT_RANDOM_AGENTS": self.persistent_random_agents,
+                    "HIDE_DEFAULT_SAVE_FILE": self.hide_default_save_file,
+                    "FAVORITED_SAVE_FILES": self.favorited_save_files,
+                    "TIMES_USED": self.total_games_used,
+                    "TIME_TO_LOCK": self.time_to_lock_list,
+                }
+                us.write(json.dumps(user_settings_file_json, indent=4))
 
         # Loads the save file data
         with open(
@@ -1806,24 +1814,34 @@ class InstalockerGUIMain(customtkinter.CTk):
             if is_valid_file_name is None:
                 return
 
-        # Creates the new save file
-        with open(resource_path(f"./data/save_files/{file_name}.json"), "w") as sf:
-            empty_map_specific_agents_dict = self.map_specific_agents_dict.copy()
-            for map_name in empty_map_specific_agents_dict:
-                empty_map_specific_agents_dict[map_name] = None
+        # Opens the default save file and turns all values to default
+        with open(resource_path(f"./data/save_files/default.json"), "r") as sf:
+            default_save_file_json = json.load(sf)
+            for agent in default_save_file_json["UNLOCKED_AGENTS"]:
+                default_save_file_json["UNLOCKED_AGENTS"][agent] = False
+            for agent in default_save_file_json["RANDOM_AGENTS"]:
+                default_save_file_json["RANDOM_AGENTS"][agent] = False
+            for map in default_save_file_json["MAP_SPECIFIC_AGENTS"]:
+                default_save_file_json["MAP_SPECIFIC_AGENTS"][map] = None
 
             save_file_json = {
-                "SELECTED_AGENT": self.selected_agent,
-                "UNLOCKED_AGENTS": self.unlocked_agents_dict,
-                "RANDOM_AGENTS": self.random_agents_dict,
-                "MAP_SPECIFIC_AGENTS": empty_map_specific_agents_dict,
+                "SELECTED_AGENT": default_save_file_json["SELECTED_AGENT"],
+                "UNLOCKED_AGENTS": default_save_file_json["UNLOCKED_AGENTS"],
+                "RANDOM_AGENTS": default_save_file_json["RANDOM_AGENTS"],
+                "MAP_SPECIFIC_AGENTS": default_save_file_json["MAP_SPECIFIC_AGENTS"],
             }
+
+        # Creates the new save file
+        with open(resource_path(f"./data/save_files/{file_name}.json"), "w") as sf:
             sf.write(json.dumps(save_file_json, indent=4))
 
         # Finds the save file and adds it to the list
         self.individual_save_file_items(file_name)
         self.find_save_files()
         self.update_save_file_tab()
+
+        # Changes the current save file to the new one
+        self.change_current_save_file(file_name)
 
     # Checks the name of the save file to make sure it is valid
     def valid_file_name(self, new_file_name):
@@ -2475,6 +2493,7 @@ class ConfirmationPopup(customtkinter.CTkToplevel):
 
 
 # endregion
+
 
 if __name__ == "__main__":
     main_gui = InstalockerGUIMain()

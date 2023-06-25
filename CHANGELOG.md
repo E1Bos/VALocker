@@ -7,6 +7,7 @@ Date Format: YYYY-MM-DD
 
 ### Added
 - [Feature] New custom icons, the old icons were a rip off of the Valorant icons. The new icons are custom made to show "VL", which is short for VALocker. When disabled, the icons will be greyed out. When enabled, the icon will be colored. While VALocker is set to "Locking", the icon features a lock. While VALocker is set to "In Game", the icon features an hourglass. The icons are displayed in the taskbar, and in the system tray. The icons are also displayed in the GUI, in the top left corner of the window.
+- [Feature] New config option "HIDE_DEFAULT_SAVE_FILE" allows the user to hide the default save file from the save file tab. This is useful if you have a lot of save files or don't like how the default file is displayed right after the favorited files. This is set to true by default, and can be changed in the user settings file.
 
 ### Removed
 - Old icons, which were somewhat confusing when Valorant was running.
