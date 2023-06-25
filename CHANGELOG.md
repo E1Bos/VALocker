@@ -3,6 +3,14 @@ Changelog
 
 Date Format: YYYY-MM-DD
 
+## Version 1.3.2 - 2023-06-25
+
+### Added
+- [Feature] New custom icons, the old icons were a rip off of the Valorant icons. The new icons are custom made to show "VL", which is short for VALocker. When disabled, the icons will be greyed out. When enabled, the icon will be colored. While VALocker is set to "Locking", the icon features a lock. While VALocker is set to "In Game", the icon features an hourglass. The icons are displayed in the taskbar, and in the system tray. The icons are also displayed in the GUI, in the top left corner of the window.
+
+### Removed
+- Old icons, which were somewhat confusing when Valorant was running.
+
 ## Version 1.3.0 - 2023-06-24
 
 ### Added
