@@ -68,11 +68,14 @@ VALocker is a program written in Python that allows you to automatically lock an
 ## 🔧 Configuration
 VALocker provides a `user_settings.json` file in the data directory where you can customize certain aspects of the program. The `user_settings.json` file is created when running the program for the first time. The configuration file allows you to:
 
-- Toggle icon feature
-- Minimize on startup
-- Instalocking on startup
-- Enable safe mode on startup
-- Alter safe mode strength on startup
+- Toggle the option to minimize VALocker to the system tray.
+- Enable or disable the automatic minimization of VALocker on startup.
+- Choose whether to enable instalocking automatically on startup.
+- Toggle the safe mode feature on startup.
+- Adjust the default strength of safe mode on startup.
+- Toggle the persistence of random agents while using ExclusiSelect.
+- Customize the timings between each action when safe mode is disabled.
+- Show or hide the default save file according to your preference.
 
 ## 📏 Display Size Compatibility
 I plan to add support for other display sizes in the future, but for now, VALocker only supports a resolution of 1920x1080. If you would like to see support for other display sizes, please let me know by [creating an issue](https://github.com/E1Bos/VALocker/issues).
