@@ -14,7 +14,7 @@ VALocker is a program written in Python that allows you to automatically lock an
 - Can be run as an executable, no Python installation required.
 - Installs all necessary dependencies automatically.
 - Allows the window to be minimized into an icon.
-- Load-to-lock time of less than 100ms on average.
+- Load-to-lock time of 70ms on average.
 - Auto-detects game end screen for set-and-forget relocking.
 - Supports map-specific agent locking.
 - Random agent mode allows random agent selection from a pool, adding variety and reducing repetition.
