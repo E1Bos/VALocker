@@ -235,7 +235,8 @@ class InstalockerGUIMain(customtkinter.CTk):
             "Random Agent",
             "Map Specific",
             "Save File",
-            "Settings",
+            # "Tools",
+            # "Settings",
         ]
 
         for row, button_name in enumerate(button_names):
