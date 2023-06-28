@@ -1,6 +1,20 @@
-# VALocker - VALORANT Agent Locker
+<h1 align="center">
+  VALocker | VALORANT Agent Locker
+</h1>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+<br>
+<div align="center">
+  <a href="https://github.com/E1Bos/VALocker/blob/master/LICENSE">
+    <img src="https://img.shields.io/github/license/E1Bos/VALocker?color=brightgreen" alt="License">
+  </a>
+  <a href="https://github.com/E1Bos/VALocker/releases">
+    <img src="https://img.shields.io/github/v/release/E1Bos/VALocker?color=blue" alt="Version">
+  </a>
+  <a href="https://github.com/E1Bos/VALocker/releases">
+    <img src="https://img.shields.io/github/downloads/E1Bos/VALocker/total?color=yellow" alt="Downloads">
+  </a>
+</div>
+<br>
 
 VALocker is a program written in Python that allows you to automatically lock any VALORANT agent quickly and reliably. It helps you secure your favorite agent during the agent selection phase, saving you time and ensuring you don't miss out on playing your preferred character.
 
