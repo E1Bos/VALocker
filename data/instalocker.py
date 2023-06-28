@@ -658,7 +658,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         # endregion
 
         # region Map Specific Tab
-        self.map_specific_frame.rowconfigure((0, 1, 2, 3, 4), weight=1)
+        self.map_specific_frame.rowconfigure([i for i in range(len(self.map_names)//2 + 1)], weight=1)
 
         map_frames, map_labels, self.map_dropdowns = dict(), dict(), dict()
         for index, map_name in enumerate(self.map_names):
@@ -943,6 +943,8 @@ class InstalockerGUIMain(customtkinter.CTk):
                 self.map_specific_mode = False
                 self.random_agent_mode = False
                 self.update_overview_tab()
+
+        self.update_icon()
 
     # Updates agent toggle tab
     def update_agent_toggle_tab(self, agent_name=None):
@@ -1514,6 +1516,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                     self.persistent_random_agents = user_settings[
                         "PERSISTENT_RANDOM_AGENTS"
                     ]
+                    self.fast_mode_timings = user_settings["FAST_MODE_TIMINGS"]
                     self.hide_default_save_file = user_settings[
                         "HIDE_DEFAULT_SAVE_FILE"
                     ]
@@ -1532,6 +1535,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                 self.start_minimized = False
                 self.persistent_random_agents = False
                 self.hide_default_save_file = True
+                self.fast_mode_timings = [0.2, 0.2, 0.2]
 
             with open(resource_path("data/user_settings.json"), "w") as us:
                 user_settings_file_json = {
@@ -1542,6 +1546,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                     "SAFE_MODE_ENABLED_ON_START": self.safe_mode,
                     "SAFE_MODE_STRENGTH_ON_START": self.safe_mode_strength,
                     "PERSISTENT_RANDOM_AGENTS": self.persistent_random_agents,
+                    "FAST_MODE_TIMINGS": self.fast_mode_timings,
                     "HIDE_DEFAULT_SAVE_FILE": self.hide_default_save_file,
                     "FAVORITED_SAVE_FILES": self.favorited_save_files,
                     "TIMES_USED": self.total_games_used,
@@ -2055,7 +2060,6 @@ class InstalockerGUIMain(customtkinter.CTk):
                 total_confirmations += 1
 
                 if total_confirmations >= self.locking_confirmations:
-                    self.start_lock = time.time()
                     self.lock_agent()
             else:
                 total_confirmations = 0
@@ -2065,6 +2069,7 @@ class InstalockerGUIMain(customtkinter.CTk):
 
     # Locks the agent
     def lock_agent(self):
+        start_time = time.time()
         if self.random_agent_mode is True:
             randomly_selected_agent = random.choice(
                 list(
@@ -2076,11 +2081,11 @@ class InstalockerGUIMain(customtkinter.CTk):
             self.find_agent_coords(randomly_selected_agent)
         if self.safe_mode is False:
             self.mouse.position = (self.agent_coords[0], self.agent_coords[1])
-            time.sleep(0.02)
+            time.sleep(self.fast_mode_timings[0])
             self.mouse.click(pynmouse.Button.left, 1)
-            time.sleep(0.06)
+            time.sleep(self.fast_mode_timings[1])
             self.mouse.position = (self.lock_button[0], self.lock_button[1])
-            time.sleep(0.01)
+            time.sleep(self.fast_mode_timings[2])
 
             if self.hover_mode is False:
                 self.mouse.click(pynmouse.Button.left, 1)
@@ -2103,7 +2108,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             if self.hover_mode is False:
                 self.mouse.click(pynmouse.Button.left, 1)
 
-        time_to_lock = round((time.time() - self.start_lock) * 1000, 2)
+        time_to_lock = round((time.time() - start_time) * 1000, 2)
         if self.safe_mode is True:
             self.time_to_lock_list[self.safe_mode_strength].append(time_to_lock)
         else:
@@ -2129,7 +2134,6 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         self.update_overview_tab()
         self.update_user_settings()
-        self.find_game_end()
 
     # Finds the end of the game
     def find_game_end(self):
@@ -2158,6 +2162,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                 except AttributeError:
                     pass
                 break
+        return
 
     # Returns the coords for the agent selected
     def find_agent_coords(self, agent_name):
