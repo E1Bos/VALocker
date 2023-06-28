@@ -73,6 +73,9 @@ VALocker provides a `user_settings.json` file in the data directory where you ca
 - Choose whether to enable instalocking automatically on startup.
 - Toggle the safe mode feature on startup.
 - Adjust the default strength of safe mode on startup.
+  - 0: Low (300 - 500ms)
+  - 1: Medium (500 - 800ms)
+  - 2: High (800 - 1000ms)
 - Toggle the persistence of random agents while using ExclusiSelect.
 - Customize the timings between each action when safe mode is disabled.
 - Show or hide the default save file according to your preference.
