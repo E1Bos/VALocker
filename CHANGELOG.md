@@ -3,6 +3,16 @@ Changelog
 
 Date Format: YYYY-MM-DD
 
+## Version 1.4.0 - 2023-06-28
+
+### Added
+- [Feature] Support for new agent "Deadlock".
+- [Feature] New option in user_settings, "FAST_MODE_TIMINGS", the set delay between each action when safe mode is disabled. Default is set to 0.2, 0.2, 0.2. This can be changed if your computer is slower and is struggling to keep up with the default timings. Setting the numbers too low or to zero may cause issues while locking, such as button presses not being registered by Valorant.
+
+### Fixed
+- [Bug] Fixed bug where icons would not update after locking or detecting the end of a game.
+- [Bug] Fixed various minor bugs.
+
 ## Version 1.3.2 - 2023-06-25
 
 ### Added
