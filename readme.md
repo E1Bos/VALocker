@@ -31,8 +31,8 @@ VALocker is a program written in Python that allows you to automatically lock an
 
 ## ⚙️ Installation
 ### Executable
-1. Download the latest zip file from the [releases](https://github.com/E1Bos/VALocker/releases) page.
-2. Extract the zip file to a location of your choice.
+1. Download `VALocker.zip` from the [releases](https://github.com/E1Bos/VALocker/releases) page.
+2. Extract the file to a location of your choice.
 3. Run `VALocker.exe` to launch the application.
 
 ### Python
