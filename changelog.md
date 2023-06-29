@@ -3,6 +3,13 @@ Changelog
 
 Date Format: YYYY-MM-DD
 
+## Version 1.4.1 - 2023-06-29
+
+### Added
+- [Feature] Tools tab added, with features that are not related to locking agents but more improving the Valorant experience.
+- [Feature] Tools run independently of the locking thread, so you can use tools without locking agents. To enable them, go to the tools tab and ensure the button at the top of the screen says "Tools Enabled".
+- [Feature] New tool, auto drop spike, automatically detects when you are the spike carrier and drops the spike. This is useful if you don't want to be the spike carrier, but don't want to drop the spike manually, or if players keep dropping you the spike. If you pick up the spike on site, or if you are planting, the spike will not be dropped. I plan to update it in the future so that it automatically disables when you are the last player alive.
+
 ## Version 1.4.0 - 2023-06-28
 
 ### Added
