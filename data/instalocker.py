@@ -187,7 +187,8 @@ class InstalockerGUIMain(customtkinter.CTk):
         # Creates Mouse Controller
         self.mouse = pynmouse.Controller()
         self.keyboard = pynkeyboard.Controller()
-        self.mss_instance = None
+        self.locking_screenshotter = None
+        self.tools_screenshotter = None
 
         # Creates GUI
         self.create_gui()
@@ -2079,8 +2080,8 @@ class InstalockerGUIMain(customtkinter.CTk):
     # Starts the locking thread, calls the locking function based on the mode
     def locking_main(self):
         time.sleep(1)
-        if self.mss_instance is None:
-            self.mss_instance = mss.mss()
+        if self.locking_screenshotter is None:
+            self.locking_screenshotter = mss.mss()
         while self.active_thread is True:
             time.sleep(0.3)
             if self.active is True and self.active_thread is True:
@@ -2110,7 +2111,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         ):
             time.sleep(0.1)
 
-            current_map = self.return_screenshot_bytes(self.mss_instance, self.map_selection_coords)
+            current_map = self.return_screenshot_bytes(self.locking_screenshotter, self.map_selection_coords)
             game_map = self.map_lookup.get(current_map)
 
         if game_map is not None:
@@ -2129,7 +2130,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             and self.active is True
             and self.map_specific_mode is map_specific_toggle
         ):
-            agent_screen_section = self.return_screenshot_bytes(self.mss_instance, self.locking_coords)
+            agent_screen_section = self.return_screenshot_bytes(self.locking_screenshotter, self.locking_coords)
 
             if agent_screen_section == self.agent_select_image:
                 total_confirmations += 1
@@ -2216,8 +2217,8 @@ class InstalockerGUIMain(customtkinter.CTk):
             self.active is True and self.active_thread is True and self.locking is False
         ):
             time.sleep(1)
-            menu_screen_1 = self.return_screenshot_bytes(self.mss_instance, self.menu_screen_coords['end_of_game'])
-            menu_screen_2 = self.return_screenshot_bytes(self.mss_instance, self.menu_screen_coords['main_menu'])
+            menu_screen_1 = self.return_screenshot_bytes(self.locking_screenshotter, self.menu_screen_coords['end_of_game'])
+            menu_screen_2 = self.return_screenshot_bytes(self.locking_screenshotter, self.menu_screen_coords['main_menu'])
 
             if (
                 menu_screen_1 in self.in_menu_images
@@ -2276,7 +2277,8 @@ class InstalockerGUIMain(customtkinter.CTk):
     # region Tools Thread
 
     def tools_main(self):
-        self.tools_screenshotter = mss.mss()
+        if self.tools_screenshotter is None:
+            self.tools_screenshotter = mss.mss()
         spike_drop_confirmations = 0
         while self.enable_tools is True:
             time.sleep(0.1)
@@ -2300,9 +2302,6 @@ class InstalockerGUIMain(customtkinter.CTk):
 
                     else:
                         spike_drop_confirmations = 0
-
-
-
 
     # endregion
 
