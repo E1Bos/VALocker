@@ -803,7 +803,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         left_most_frame.pack(padx=10, pady=10, side=tk.LEFT, fill=tk.Y)
 
         auto_drop_spike_label = customtkinter.CTkLabel(
-            left_most_frame, text="Anti Spike:", font=self.label_font_and_size
+            left_most_frame, text="Auto Drop Spike:", font=self.label_font_and_size
         )
         auto_drop_spike_label.pack(padx=10, pady=(5, 0))
 
