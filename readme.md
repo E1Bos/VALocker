@@ -39,6 +39,10 @@ VALocker is a program written in Python that allows you to automatically lock an
 - Selects random part of agent and locking button to deter detection.
 - Allows for multiple save files for different accounts and/or configurations.
 - Utilizes screenshot analysis to obtain game data, ensuring a safer approach and reducing the risk of bans compared to other aggressive methods such as direct memory reading.
+- Features non-instalocking related tools to improve quality of life. Tools currently implemented:
+  - Auto drop spike
+
+> Tools are still a work in progress. Feel free to suggest any tools you would like to see implemented.
 
 ## ⚙️ Installation
 ### Executable
