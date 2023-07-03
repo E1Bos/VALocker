@@ -3,6 +3,11 @@ Changelog
 
 Date Format: YYYY-MM-DD
 
+## Version 1.4.2 - 2023-07-03
+
+### Fixed
+- [Bug] Occasionally, while flashed, the instalocker would return to "Locking", this has been fixed by requiring multiple consecutive frames to match before returning to "Locking".
+
 ## Version 1.4.1 - 2023-06-29
 
 ### Added
