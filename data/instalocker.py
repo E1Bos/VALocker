@@ -72,13 +72,16 @@ class InstalockerGUIMain(customtkinter.CTk):
         self.locking = True
         self.locking_coords = (945, 866, 955, 867)
         self.map_selection_coords = (878, 437, 1047, 646)
+        self.agent_coords_offset = (15, 15)
         self.menu_screen_coords = {'end_of_game': (814, 243, 892, 244),
                                    'main_menu': (1330, 330, 1455, 353)}
         self.locking_image_path = "images/agent_screen/agent_screen_bar.png"
-        self.locking_confirmations = 2
         self.locking_button = None
-        self.agent_coords_offset = (15, 15)
-        # self.locking_coords = (958, 866, 962, 870) # agent screen dot
+
+        self.locking_confirmations_required = 2        
+        self.menu_screen_confirmaions_required = 3
+
+        # self.locking_coords = (958, 866, 870) # agent screen dot
         # self.locking_coords = (959, 867, 961, 869) # agent screen dot solid
 
         # Locking Images
@@ -146,6 +149,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                              'is_planting': PIL.Image.open(resource_path("images/tools/auto_drop_spike/is_planting.png")).tobytes(),}
         self.tools_locations = {'spike': (1852, 684, 1856, 687), 'can_plant': (905, 139, 936, 141), 'is_planting': (832, 174, 833, 193),}
         self.auto_drop_spike = False
+        self.spike_drop_confirmations_required = 2
 
         # GUI SETTINGS
         self.window_width = 650
@@ -184,7 +188,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         # Loads data from save files
         self.load_data_from_files(first_run=True)
 
-        # Creates Mouse Controller
+        # Defines Controllers
         self.mouse = pynmouse.Controller()
         self.keyboard = pynkeyboard.Controller()
         self.locking_screenshotter = None
@@ -2075,7 +2079,7 @@ class InstalockerGUIMain(customtkinter.CTk):
 
     # endregion
 
-    # region Locking
+    # region Locking Thread
 
     # Starts the locking thread, calls the locking function based on the mode
     def locking_main(self):
@@ -2122,7 +2126,7 @@ class InstalockerGUIMain(customtkinter.CTk):
 
     # Detects when in the agent select screen
     def locate_agent_screen(self, map_specific_toggle=False):
-        total_confirmations = 0
+        confirmations = 0
         self.start_lock = float()
         while (
             self.active_thread is True
@@ -2133,12 +2137,12 @@ class InstalockerGUIMain(customtkinter.CTk):
             agent_screen_section = self.return_screenshot_bytes(self.locking_screenshotter, self.locking_coords)
 
             if agent_screen_section == self.agent_select_image:
-                total_confirmations += 1
+                confirmations += 1
 
-                if total_confirmations >= self.locking_confirmations:
+                if confirmations >= self.locking_confirmations_required:
                     self.lock_agent()
             else:
-                total_confirmations = 0
+                confirmations = 0
 
         else:
             self.find_game_end()
@@ -2213,6 +2217,7 @@ class InstalockerGUIMain(customtkinter.CTk):
 
     # Finds the end of the game
     def find_game_end(self):
+        confirmations = 0
         while (
             self.active is True and self.active_thread is True and self.locking is False
         ):
@@ -2224,13 +2229,18 @@ class InstalockerGUIMain(customtkinter.CTk):
                 menu_screen_1 in self.in_menu_images
                 or menu_screen_2 in self.in_menu_images
             ):
-                self.locking = True
-                self.update_overview_tab()
-                try:
-                    self.icon.update_menu()
-                except AttributeError:
-                    pass
-                break
+                confirmations += 1
+
+                if confirmations >= self.menu_screen_confirmaions_required:
+                    self.locking = True
+                    self.update_overview_tab()
+                    try:
+                        self.icon.update_menu()
+                    except AttributeError:
+                        pass
+                    break
+            else:
+                confirmations = 0
         return
 
     # Returns the coords for the agent selected
@@ -2292,7 +2302,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                     if spike_screenshot == self.tools_images["spike"] and can_plant != self.tools_images["can_plant"] and is_planting != self.tools_images["is_planting"]:
                         spike_drop_confirmations += 1
                             
-                        if spike_drop_confirmations >= 2:
+                        if spike_drop_confirmations >= self.spike_drop_confirmations_required:
                             self.keyboard.press("4")
                             self.keyboard.release("4")
                             time.sleep(0.1)
