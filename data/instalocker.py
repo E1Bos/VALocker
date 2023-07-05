@@ -150,6 +150,10 @@ class InstalockerGUIMain(customtkinter.CTk):
         self.tools_locations = {'spike': (1852, 684, 1856, 687), 'can_plant': (905, 139, 936, 141), 'is_planting': (832, 174, 833, 193),}
         self.auto_drop_spike = False
         self.spike_drop_confirmations_required = 2
+        self.auto_gg = False
+        self.auto_gg_confirmations_required = 2
+        self.anti_afk = False
+
 
         # GUI SETTINGS
         self.window_width = 650
@@ -791,36 +795,56 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         # region Tools Tab
 
-        top_most_frame = customtkinter.CTkFrame(self.tools_frame, height=40)
-        top_most_frame.pack(padx=10, pady=(20,0), fill=tk.X)
-
         self.toggle_tools_button = customtkinter.CTkButton(
-            top_most_frame,
+            self.tools_frame,
             text=f"Tools {'Enabled' if self.enable_tools is True else 'Disabled'}",
             hover=False,
+            height=40,
             fg_color=f"{self.button_colors['enabled'] if self.enable_tools is True else self.button_colors['disabled']}",
-            font=self.button_font_and_size,
+            font=(self.main_font, 16),
             command=self.toggle_tools,
         )
-        self.toggle_tools_button.pack(padx=10, pady=10)
+        self.toggle_tools_button.pack(padx=10, pady=20, fill=tk.X)
 
-        left_most_frame = customtkinter.CTkFrame(self.tools_frame)
-        left_most_frame.pack(padx=10, pady=10, side=tk.LEFT, fill=tk.Y)
+        scrollable_frame = customtkinter.CTkScrollableFrame(self.tools_frame)
+        scrollable_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=(0, 20))
 
-        auto_drop_spike_label = customtkinter.CTkLabel(
-            left_most_frame, text="Auto Drop Spike:", font=self.label_font_and_size
-        )
-        auto_drop_spike_label.pack(padx=10, pady=(5, 0))
+        scrollable_frame.columnconfigure((0, 1), weight=1)
+        scrollable_frame.rowconfigure((0, 1), weight=1)
 
         self.auto_drop_spike_button = customtkinter.CTkButton(
-            left_most_frame,
-            text=f"{'Enabled' if self.auto_drop_spike is True else 'Disabled'}",
+            scrollable_frame,
+            text=f"Auto Drop Spike",
+            height=40,
             hover=False,
             fg_color=f"{self.button_colors['enabled'] if self.auto_drop_spike is True else self.button_colors['disabled']}",
             font=self.button_font_and_size,
             command=self.toggle_auto_drop_spike,
         )
-        self.auto_drop_spike_button.pack(padx=10, pady=(0, 5))
+        self.auto_drop_spike_button.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+
+        self.auto_gg_button = customtkinter.CTkButton(
+            scrollable_frame,
+            text=f"Auto GG",
+            height=40,
+            hover=False,
+            fg_color=f"{self.button_colors['enabled'] if self.auto_gg is True else self.button_colors['disabled']}",
+            font=self.button_font_and_size,
+            command=self.toggle_auto_gg,
+        )
+        # self.auto_gg_button.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
+
+        self.anti_afk_button = customtkinter.CTkButton(
+            scrollable_frame,
+            text=f"Anti AFK",
+            height=40,
+            hover=False,
+            fg_color=f"{self.button_colors['enabled'] if self.anti_afk is True else self.button_colors['disabled']}",
+            font=self.button_font_and_size,
+            command=self.toggle_anti_afk,
+        )
+        # self.anti_afk_button.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
+
 
         # endregion
 
@@ -1396,8 +1420,15 @@ class InstalockerGUIMain(customtkinter.CTk):
         )
 
         self.auto_drop_spike_button.configure(
-            text=f"{'Enabled' if self.auto_drop_spike is True else 'Disabled'}",
             fg_color=f"{self.button_colors['enabled'] if self.auto_drop_spike is True else self.button_colors['disabled']}",
+        )
+
+        self.auto_gg_button.configure(
+            fg_color=f"{self.button_colors['enabled'] if self.auto_gg is True else self.button_colors['disabled']}",
+        )
+
+        self.anti_afk_button.configure(
+            fg_color=f"{self.button_colors['enabled'] if self.anti_afk is True else self.button_colors['disabled']}",
         )
 
     # Changes the active frame
@@ -1557,6 +1588,16 @@ class InstalockerGUIMain(customtkinter.CTk):
     # Toggles auto drop spike
     def toggle_auto_drop_spike(self):
         self.auto_drop_spike = not self.auto_drop_spike
+        self.update_tools_tab()
+
+    # Toggles auto gg
+    def toggle_auto_gg(self):
+        self.auto_gg = not self.auto_gg
+        self.update_tools_tab()
+
+    # Toggles anti afk
+    def toggle_anti_afk(self):
+        self.anti_afk = not self.anti_afk
         self.update_tools_tab()
 
     # endregion
@@ -2068,7 +2109,8 @@ class InstalockerGUIMain(customtkinter.CTk):
             agent_name, exclusiselect_mode=exclusiselect_toggle
         )
         self.update_overview_tab()
-        self.save_current_data()
+        if exclusiselect_toggle is False:
+            self.save_current_data()
 
     # Toggles which agent is selected for a specific map
     def toggle_map_specific_agent(self, agent_name, map_name):
@@ -2220,8 +2262,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         confirmations = 0
         while (
             self.active is True and self.active_thread is True and self.locking is False
-        ):
-            time.sleep(1)
+        ): 
             menu_screen_1 = self.return_screenshot_bytes(self.locking_screenshotter, self.menu_screen_coords['end_of_game'])
             menu_screen_2 = self.return_screenshot_bytes(self.locking_screenshotter, self.menu_screen_coords['main_menu'])
 
@@ -2239,8 +2280,10 @@ class InstalockerGUIMain(customtkinter.CTk):
                     except AttributeError:
                         pass
                     break
+                time.sleep(0.1)
             else:
                 confirmations = 0
+                time.sleep(1)
         return
 
     # Returns the coords for the agent selected
@@ -2312,6 +2355,12 @@ class InstalockerGUIMain(customtkinter.CTk):
 
                     else:
                         spike_drop_confirmations = 0
+
+                if self.auto_gg is True:
+                    pass
+
+                if self.anti_afk is True:
+                    pass
 
     # endregion
 
