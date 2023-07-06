@@ -30,8 +30,9 @@ try:
     import customtkinter, pystray, PIL.Image, mss
     import pynput.mouse as pynmouse
     import pynput.keyboard as pynkeyboard
+    import numpy as np
 
-except ModuleNotFoundError:
+except Exception:
     # Installs missing modules if exception is raised
     import subprocess
 
@@ -40,6 +41,7 @@ except ModuleNotFoundError:
     import customtkinter, pystray, PIL.Image, mss
     import pynput.mouse as pynmouse
     import pynput.keyboard as pynkeyboard
+    import numpy as np
 
 
 # Imports modules that are installed with Python
@@ -70,31 +72,30 @@ class InstalockerGUIMain(customtkinter.CTk):
         self.active = False
         self.active_thread = True
         self.locking = True
-        self.locking_coords = (945, 866, 955, 867)
+        self.locking_coords = (947, 866, 952, 867)
         self.map_selection_coords = (878, 437, 1047, 646)
         self.agent_coords_offset = (15, 15)
-        self.menu_screen_coords = {'end_of_game': (814, 243, 892, 244),
-                                   'main_menu': (1330, 330, 1455, 353)}
-        self.locking_image_path = "images/agent_screen/agent_screen_bar.png"
+        self.menu_screen_coords = {
+            "main_menu": (815, 243, 820, 244),
+            "end_of_game": (1330, 330, 1455, 353),
+        }
+        self.pixel_patterns = {
+            "locking": [178, 238, 234, 255],
+            "main_menu": [240, 244, 245, 255],
+            "has_spike": [255, 255, 255, 255],
+            "can_plant": [255, 255, 255, 255],
+            "is_planting": [178, 238, 235, 255],
+        }
         self.locking_button = None
 
-        self.locking_confirmations_required = 2        
+        self.locking_confirmations_required = 2
         self.menu_screen_confirmaions_required = 3
 
         # self.locking_coords = (958, 866, 870) # agent screen dot
         # self.locking_coords = (959, 867, 961, 869) # agent screen dot solid
 
-        # Locking Images
-        self.agent_select_image = PIL.Image.open(
-            resource_path(self.locking_image_path)
-        ).tobytes()
+        # In Menu Images
         self.in_menu_images = [
-            PIL.Image.open(
-                resource_path("images/in_menu/in_menu_normal_bar.png")
-            ).tobytes(),
-            PIL.Image.open(
-                resource_path("images/in_menu/in_menu_comp_bar.png")
-            ).tobytes(),
             PIL.Image.open(
                 resource_path("images/in_menu/in_menu_progress_text_1.png")
             ).tobytes(),
@@ -144,16 +145,17 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         # Tools
         self.enable_tools = False
-        self.tools_images = {'spike': PIL.Image.open(resource_path("images/tools/auto_drop_spike/has_spike.png")).tobytes(),
-                             'can_plant': PIL.Image.open(resource_path("images/tools/auto_drop_spike/can_plant.png")).tobytes(),
-                             'is_planting': PIL.Image.open(resource_path("images/tools/auto_drop_spike/is_planting.png")).tobytes(),}
-        self.tools_locations = {'spike': (1852, 684, 1856, 687), 'can_plant': (905, 139, 936, 141), 'is_planting': (832, 174, 833, 193),}
+        self.tools_thread = None
+        self.tools_locations = {
+            "spike": (1852, 684, 1856, 687),
+            "can_plant": (910, 140, 920, 141),
+            "is_planting": (832, 174, 833, 193),
+        }
         self.auto_drop_spike = False
         self.spike_drop_confirmations_required = 2
         self.auto_gg = False
         self.auto_gg_confirmations_required = 2
         self.anti_afk = False
-
 
         # GUI SETTINGS
         self.window_width = 650
@@ -215,7 +217,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         else:
             self.protocol("WM_DELETE_WINDOW", self.exit)
 
-        # Creates Thread
+        # Creates Threads
         self.agent_thread = threading.Thread(target=self.locking_main).start()
 
         if self.enable_tools is True:
@@ -686,7 +688,9 @@ class InstalockerGUIMain(customtkinter.CTk):
         # endregion
 
         # region Map Specific Tab
-        self.map_specific_frame.rowconfigure([i for i in range(len(self.map_names)//2 + 1)], weight=1)
+        self.map_specific_frame.rowconfigure(
+            [i for i in range(len(self.map_names) // 2 + 1)], weight=1
+        )
 
         map_frames, map_labels, self.map_dropdowns = dict(), dict(), dict()
         for index, map_name in enumerate(self.map_names):
@@ -821,7 +825,9 @@ class InstalockerGUIMain(customtkinter.CTk):
             font=self.button_font_and_size,
             command=self.toggle_auto_drop_spike,
         )
-        self.auto_drop_spike_button.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+        self.auto_drop_spike_button.grid(
+            row=0, column=0, padx=10, pady=10, sticky="nsew"
+        )
 
         self.auto_gg_button = customtkinter.CTkButton(
             scrollable_frame,
@@ -844,7 +850,6 @@ class InstalockerGUIMain(customtkinter.CTk):
             command=self.toggle_anti_afk,
         )
         # self.anti_afk_button.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
-
 
         # endregion
 
@@ -1579,10 +1584,8 @@ class InstalockerGUIMain(customtkinter.CTk):
     # Toggles different tools
     def toggle_tools(self):
         self.enable_tools = not self.enable_tools
-
-        if self.enable_tools is True:
+        if self.tools_thread is None:
             self.tools_thread = threading.Thread(target=self.tools_main).start()
-
         self.update_tools_tab()
 
     # Toggles auto drop spike
@@ -2157,7 +2160,9 @@ class InstalockerGUIMain(customtkinter.CTk):
         ):
             time.sleep(0.1)
 
-            current_map = self.return_screenshot_bytes(self.locking_screenshotter, self.map_selection_coords)
+            current_map = self.return_screenshot_bytes(
+                self.locking_screenshotter, self.map_selection_coords
+            )
             game_map = self.map_lookup.get(current_map)
 
         if game_map is not None:
@@ -2176,9 +2181,12 @@ class InstalockerGUIMain(customtkinter.CTk):
             and self.active is True
             and self.map_specific_mode is map_specific_toggle
         ):
-            agent_screen_section = self.return_screenshot_bytes(self.locking_screenshotter, self.locking_coords)
-
-            if agent_screen_section == self.agent_select_image:
+            if self.is_matching(
+                self.return_screenshot_pixels(
+                    self.locking_screenshotter, self.locking_coords
+                ),
+                self.pixel_patterns["locking"],
+            ):
                 confirmations += 1
 
                 if confirmations >= self.locking_confirmations_required:
@@ -2262,14 +2270,18 @@ class InstalockerGUIMain(customtkinter.CTk):
         confirmations = 0
         while (
             self.active is True and self.active_thread is True and self.locking is False
-        ): 
-            menu_screen_1 = self.return_screenshot_bytes(self.locking_screenshotter, self.menu_screen_coords['end_of_game'])
-            menu_screen_2 = self.return_screenshot_bytes(self.locking_screenshotter, self.menu_screen_coords['main_menu'])
+        ):
+            end_of_game = self.return_screenshot_bytes(
+                self.locking_screenshotter, self.menu_screen_coords["end_of_game"]
+            )
+            main_menu = self.is_matching(
+                self.return_screenshot_pixels(
+                    self.locking_screenshotter, self.menu_screen_coords["main_menu"]
+                ),
+                self.pixel_patterns["main_menu"],
+            )
 
-            if (
-                menu_screen_1 in self.in_menu_images
-                or menu_screen_2 in self.in_menu_images
-            ):
+            if end_of_game in self.in_menu_images or main_menu is True:
                 confirmations += 1
 
                 if confirmations >= self.menu_screen_confirmaions_required:
@@ -2333,19 +2345,44 @@ class InstalockerGUIMain(customtkinter.CTk):
         if self.tools_screenshotter is None:
             self.tools_screenshotter = mss.mss()
         spike_drop_confirmations = 0
-        while self.enable_tools is True:
-            time.sleep(0.1)
-            if self.locking is False or self.active is False:
+        while self.active_thread is True:
+            if self.enable_tools is True and (
+                self.locking is False or self.active is False
+            ):
+                time.sleep(0.1)
                 if self.auto_drop_spike is True:
+                    # spike_screenshot = self.return_screenshot_bytes(self.tools_screenshotter, self.tools_locations["spike"])
+                    has_spike = self.is_matching(
+                        self.return_screenshot_pixels(
+                            self.tools_screenshotter, self.tools_locations["spike"]
+                        ),
+                        self.pixel_patterns["has_spike"],
+                    )
+                    can_plant = self.is_matching(
+                        self.return_screenshot_pixels(
+                            self.tools_screenshotter, self.tools_locations["can_plant"]
+                        ),
+                        self.pixel_patterns["can_plant"],
+                    )
+                    is_planting = self.is_matching(
+                        self.return_screenshot_pixels(
+                            self.tools_screenshotter,
+                            self.tools_locations["is_planting"],
+                        ),
+                        self.pixel_patterns["is_planting"],
+                    )
 
-                    spike_screenshot = self.return_screenshot_bytes(self.tools_screenshotter, self.tools_locations["spike"])
-                    can_plant = self.return_screenshot_bytes(self.tools_screenshotter, self.tools_locations["can_plant"])
-                    is_planting = self.return_screenshot_bytes(self.tools_screenshotter, self.tools_locations["is_planting"])
-
-                    if spike_screenshot == self.tools_images["spike"] and can_plant != self.tools_images["can_plant"] and is_planting != self.tools_images["is_planting"]:
+                    if (
+                        has_spike is True
+                        and can_plant is False
+                        and is_planting is False
+                    ):
                         spike_drop_confirmations += 1
-                            
-                        if spike_drop_confirmations >= self.spike_drop_confirmations_required:
+
+                        if (
+                            spike_drop_confirmations
+                            >= self.spike_drop_confirmations_required
+                        ):
                             self.keyboard.press("4")
                             self.keyboard.release("4")
                             time.sleep(0.1)
@@ -2356,11 +2393,13 @@ class InstalockerGUIMain(customtkinter.CTk):
                     else:
                         spike_drop_confirmations = 0
 
-                if self.auto_gg is True:
-                    pass
+                # if self.auto_gg is True:
+                #     pass
 
-                if self.anti_afk is True:
-                    pass
+                # if self.anti_afk is True:
+                #     pass
+            else:
+                time.sleep(1)
 
     # endregion
 
@@ -2376,7 +2415,15 @@ class InstalockerGUIMain(customtkinter.CTk):
         ).tobytes()
         return screenshot
 
+    def return_screenshot_pixels(self, screenshotter, bbox):
+        agent_screen_section = screenshotter.grab(bbox)
+        return np.array(agent_screen_section, dtype=np.uint8)
+
+    def is_matching(self, pixels, expected_pixels):
+        return bool(np.all(pixels == expected_pixels, axis=2).all())
+
     # endregion
+
 
 # region Popups
 
