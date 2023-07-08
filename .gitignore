@@ -7,6 +7,7 @@ venv
 # Building to exe and compiled files
 build-to-exe
 output
+data/valorant_files
 
 # Folders
 __pycache__
@@ -21,3 +22,4 @@ user_settings.json
 # Ignore necessary files
 !default.json
 !config.json
+!default_keybinds.json
