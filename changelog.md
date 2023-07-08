@@ -3,6 +3,14 @@ Changelog
 
 Date Format: YYYY-MM-DD
 
+## Version 1.5.0 - 2023-07-08
+
+### Added
+- [Feature] VALocker automatically clones the VALORANT log file, keybinds file, and user game settings file to find which account is currently being used, then grabs any custom keybinds from that account. If keybinds such as Mouse Buttons are used, this feature may fail and "GRAB_KEYBINDS" should be set to false in the user settings file. This feature is enabled by default.
+- [Feature] Added new tool, "Anti AFK". This feature will press your movement keys every 5 seconds to prevent you from being kicked for being AFK. This feature is can be enabled in the tools tab. The anti-afk method can be changed to move the user around forward and backwards, to move the user in a circle, or press random movement keys. Currently the anti-afk mode is hard-coded to circle, but when the settings tab is fully implemented, this will be configurable.
+- [Feature] VALocker now grabs your current game resolution. At the moment, it brings up a error message if the resolution is not 1920x1080, but in the future this feature will be expanded to detect the game resolution and adjust the pixel data accordingly.
+- [Feature] If the instalocker is running, tools will only run if the instalocker is in the "In Game" state. This is to prevent tools from running while attempting to lock.
+
 ## Version 1.4.3 - 2023-07-05
 
 ### Changes
