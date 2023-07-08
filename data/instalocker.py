@@ -45,7 +45,7 @@ except Exception:
 
 
 # Imports modules that are installed with Python
-import json, os, random, threading, time, ctypes
+import json, os, random, threading, time, ctypes, shutil, re
 import tkinter as tk
 
 # endregion
@@ -175,6 +175,10 @@ class InstalockerGUIMain(customtkinter.CTk):
         # Default Save File
         self.current_save_file = "default"
 
+        # Valorant File Reader
+        self.current_account_id = None
+        self.grab_keybinds = True
+
         # Finds all save files
         self.find_save_files()
 
@@ -206,9 +210,11 @@ class InstalockerGUIMain(customtkinter.CTk):
             self.protocol("WM_DELETE_WINDOW", self.exit)
 
         # Creates Threads
+        if self.grab_keybinds is True:
+            valorant_files_thread = threading.Thread(target=self.valorant_log_reader).start()
         self.agent_thread = threading.Thread(target=self.locking_main).start()
         self.tools_thread = threading.Thread(target=self.tools_main).start()
-
+        
     def exit(self):
         self.active_thread = False
         try:
@@ -1588,7 +1594,7 @@ class InstalockerGUIMain(customtkinter.CTk):
 
     def anti_afk_on_press(self, key):
         if hasattr(key, "char") and self.detect_user_input and self.enable_tools:
-            if key.char in ["w", "a", "s", "d"]:
+            if key.char in [self.keybinds['MoveForward'], self.keybinds['MoveRight'], self.keybinds['MoveBackward'], self.keybinds['MoveLeft']]:
                 self.anti_afk = False
                 self.update_tools_tab()
 
@@ -1618,6 +1624,10 @@ class InstalockerGUIMain(customtkinter.CTk):
                 except (PIL.UnidentifiedImageError, FileNotFoundError):
                     self.map_lookup[None] = map_name
 
+            # Grabs default keybinds
+            with open(resource_path("data/default_keybinds.json"), "r") as keybinds:
+                self.keybinds = json.load(keybinds)
+
             # Loads the user_settings.json file, clears time_to_lock if new timings are added
             try:
                 with open(
@@ -1639,6 +1649,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                     self.persistent_random_agents = user_settings[
                         "PERSISTENT_RANDOM_AGENTS"
                     ]
+                    self.grab_keybinds = user_settings["GRAB_KEYBINDS"]
                     self.fast_mode_timings = user_settings["FAST_MODE_TIMINGS"]
                     self.hide_default_save_file = user_settings[
                         "HIDE_DEFAULT_SAVE_FILE"
@@ -1658,6 +1669,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                 self.start_minimized = False
                 self.persistent_random_agents = False
                 self.hide_default_save_file = True
+                self.grab_keybinds = True
                 self.fast_mode_timings = [0.2, 0.2, 0.2]
 
             with open(resource_path("data/user_settings.json"), "w") as us:
@@ -1669,6 +1681,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                     "SAFE_MODE_ENABLED_ON_START": self.safe_mode,
                     "SAFE_MODE_STRENGTH_ON_START": self.safe_mode_strength,
                     "PERSISTENT_RANDOM_AGENTS": self.persistent_random_agents,
+                    "GRAB_KEYBINDS": self.grab_keybinds,
                     "FAST_MODE_TIMINGS": self.fast_mode_timings,
                     "HIDE_DEFAULT_SAVE_FILE": self.hide_default_save_file,
                     "FAVORITED_SAVE_FILES": self.favorited_save_files,
@@ -2350,7 +2363,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                 time.sleep(0.1)
 
                 # region Auto Drop Spike
-                if self.auto_drop_spike is True or self.anti_afk is True:
+                if self.auto_drop_spike is True: # or self.anti_afk is True
                     has_spike = self.is_matching(
                         self.return_screenshot_pixels(
                             self.tools_screenshotter, self.tools_locations["spike"]
@@ -2382,15 +2395,15 @@ class InstalockerGUIMain(customtkinter.CTk):
                             spike_drop_confirmations
                             >= self.spike_drop_confirmations_required
                         ):
-                            self.keyboard.tap("4")
+                            self.keyboard.tap(self.keybinds["Activate_Level"])
                             time.sleep(0.1)
-                            self.keyboard.tap("g")
+                            self.keyboard.tap(self.keybinds["DropEquippable"])
                             spike_drop_confirmations = 0
 
                     else:
                         spike_drop_confirmations = 0
                 # endregion
-                
+
                 # region Anti AFK
                 if self.anti_afk is True:
                     if self.tools_listener.running is False:
@@ -2400,7 +2413,7 @@ class InstalockerGUIMain(customtkinter.CTk):
 
                     if current_time - last_press_time >= 5:
                         self.detect_user_input = False
-                        self.anti_afk_method()
+                        self.anti_afk_method(anti_afk_type='circle')
                         self.detect_user_input = True
                         last_press_time = current_time
 
@@ -2418,24 +2431,23 @@ class InstalockerGUIMain(customtkinter.CTk):
     def anti_afk_method(self, anti_afk_type='default', hold_time=0.2):
         match anti_afk_type:
             case 'default':
-                for key in ['w', 's']:
+                for key in [self.keybinds['MoveForward'], self.keybinds['MoveBackward']]:
                     self.keyboard.press(key)
                     time.sleep(hold_time if hold_time > 0 else random.uniform(0.1, 0.3))
                     self.keyboard.release(key)
                     time.sleep(hold_time if hold_time > 0 else random.uniform(0.1, 0.3))
             case 'circle':
-                for key in ['w', 'd', 's', 'a']:
+                for key in [self.keybinds['MoveForward'], self.keybinds['MoveRight'], self.keybinds['MoveBackward'], self.keybinds['MoveLeft']]:
                     self.keyboard.press(key)
                     time.sleep(hold_time if hold_time > 0 else random.uniform(0.1, 0.3))
                     self.keyboard.release(key)
                     time.sleep(hold_time if hold_time > 0 else random.uniform(0.1, 0.3))
             case 'random':
-                key = random.choice(['w', 'a', 's', 'd'])
+                key = random.choice([self.keybinds['MoveForward'], self.keybinds['MoveRight'], self.keybinds['MoveBackward'], self.keybinds['MoveLeft']])
                 self.keyboard.press(key)
                 time.sleep(hold_time if hold_time > 0 else random.uniform(0.1, 0.3))
                 self.keyboard.release(key)
                 
-
 
     # endregion
 
@@ -2457,6 +2469,135 @@ class InstalockerGUIMain(customtkinter.CTk):
 
     def is_matching(self, pixels, expected_pixels):
         return bool(np.all(pixels == expected_pixels, axis=2).all())
+
+    # endregion
+
+    # region Valorant Log Reader
+
+    def valorant_log_reader(self):
+        self.get_valorant_log()
+        self.get_user_id()
+        self.get_current_account_config_file()
+        self.get_game_resolution()
+        self.get_custom_keybinds()
+
+    # Clone the valorant log file to the data folder
+    def get_valorant_log(self):
+        original_log = os.getenv("LOCALAPPDATA") + "/VALORANT/Saved/Logs/ShooterGame.log"
+        destination_path = resource_path("data/valorant_files/")
+
+        if not os.path.exists(destination_path):
+            os.makedirs(destination_path)
+        
+        shutil.copy(original_log, destination_path)
+
+    # Gets the user id from the log file
+    def get_user_id(self):
+        log_file_path = resource_path("data/valorant_files/ShooterGame.log")
+        pattern = r".*Logged in user changed: (.*)"
+
+        with open(log_file_path, "r", encoding='utf-8') as file:
+            log_content = file.read()
+            match = re.search(pattern, log_content)
+
+        if match:
+            self.current_account_id = match.group(1)
+        else:
+            time.sleep(5)
+            self.get_user_id()
+
+    # Clones the keybinds and game settings files for the current account
+    def get_current_account_config_file(self):
+        if self.current_account_id is None:
+            return None
+
+        for file in os.listdir(os.getenv("LOCALAPPDATA") + "/VALORANT/Saved/Config/"):
+            if file.startswith(self.current_account_id):
+                self.current_account_config_file = file
+                break
+
+        game_settings = f"{os.getenv('LOCALAPPDATA')}/VALORANT/Saved/Config/{self.current_account_config_file}/Windows/GameUserSettings.ini"
+        keybinds = f"{os.getenv('LOCALAPPDATA')}/VALORANT/Saved/Config/{self.current_account_config_file}/WindowsClient/BackupKeybinds.json"
+
+        shutil.copy(game_settings, resource_path("data/valorant_files/"))
+        shutil.copy(keybinds, resource_path("data/valorant_files/"))
+
+    # Finds the game resolution from the gameusersettings.ini file
+    def get_game_resolution(self):
+        with open(resource_path("data/valorant_files/GameUserSettings.ini"), "r") as file:
+            game_settings = file.read()
+            resolution_size_x = re.search(r"ResolutionSizeX=(.*)", game_settings).group(1)
+            resolution_size_y = re.search(r"ResolutionSizeY=(.*)", game_settings).group(1)
+            fullscreen_mode = re.search(r"FullscreenMode=(.*)", game_settings).group(1)
+
+            self.screen_resolution = (int(resolution_size_x), int(resolution_size_y))
+            
+            if self.screen_resolution != (1920, 1080):
+                print(self.screen_resolution)
+                ErrorPopup(
+                    window_geometry=self.winfo_geometry(),
+                    title="Warning",
+                    message="Your game resolution is not 1920x1080.\nPlease change it to 1920x1080\nin fullscreen or windowed fullscreen",
+                    colors=self.button_colors,
+                    main_font=self.main_font,
+                ).get_input()
+            elif fullscreen_mode == "2":
+                ErrorPopup(
+                    window_geometry=self.winfo_geometry(),
+                    title="Warning",
+                    message="Your game is in windowed mode.\nPlease change it to 1920x1080\nin fullscreen or windowed fullscreen",
+                    colors=self.button_colors,
+                    main_font=self.main_font,
+                ).get_input()
+
+
+    # Grabs the changed keybinds from the backup keybinds file
+    def get_custom_keybinds(self):
+        custom_keybinds = dict()
+        with open(resource_path("data/valorant_files/BackupKeybinds.json"), "r") as file:
+            json_file = json.load(file)
+            
+            for keybind in json_file['actionMappings']:
+                if keybind['bindIndex'] == 0:
+                    custom_keybinds[keybind['name']] = self.convert_keybind(keybind['key'])
+
+            for keybind in json_file['axisMappings']:
+                if keybind['bindIndex'] == 0:
+                    match keybind['name'], keybind['scale']:
+                        case "MoveForward", 1:
+                            key_name = "MoveForward"
+                        case "MoveForward", -1:
+                            key_name = "MoveBackward"
+                        case "MoveRight", 1:
+                            key_name = "MoveRight"
+                        case "MoveRight", -1:
+                            key_name = "MoveLeft"
+                    custom_keybinds[key_name] = self.convert_keybind(keybind['key'])
+                        
+            
+            for keybind_name in custom_keybinds.keys():
+                if keybind_name in self.keybinds.keys():
+                    self.keybinds[keybind_name] = custom_keybinds[keybind_name]
+
+    # Converts valorant keybinds to custom mappings
+    def convert_keybind(self, key):
+        custom_mappings = {
+            "One": "1",
+            "Two": "2",
+            "Three": "3",
+            "Four": "4",
+            "Five": "5",
+            "Six": "6",
+            "Seven": "7",
+            "Eight": "8",
+            "Nine": "9",
+            "Zero": "0",
+        }
+
+        if key in custom_mappings.keys():
+            return custom_mappings[key]
+        else:
+            return key.lower()
 
     # endregion
 
