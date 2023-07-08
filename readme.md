@@ -91,7 +91,7 @@ I plan to add support for other display sizes in the future, but for now, VALock
 ## 🖼️ Images
 |![overview_tab](images/readme_images/overview_tab.png)|![agent_toggle_tab](images/readme_images/agent_toggle_tab.png)|![random_agent_tab](images/readme_images/random_agent_tab.png)|
 |-|-|-|
-|![map_specific_tab](images/readme_images/map_specific_tab.png)|![save_file_tab](images/readme_images/save_file_tab.png)|
+|![map_specific_tab](images/readme_images/map_specific_tab.png)|![save_file_tab](images/readme_images/save_file_tab.png)|![tools_tab](images/readme_images/tools_tab.png)|
 
 ## 🎥 Video Demo
 
