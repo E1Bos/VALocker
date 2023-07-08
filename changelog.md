@@ -3,6 +3,12 @@ Changelog
 
 Date Format: YYYY-MM-DD
 
+## Version 1.4.3 - 2023-07-05
+
+### Changes
+- [Feature] Updated almost all game methods (locking, waiting, tools, etc.) to compare pixel data instead of image data. This should improve performance, reduces file size, and makes implementing new tools easier. Maps are still compared using image data, as I'm not sure how to compare pixel data for maps yet.
+- [Feature] Updated the layout of the tools tab to appear similar to the save file tab.
+
 ## Version 1.4.2 - 2023-07-03
 
 ### Fixed

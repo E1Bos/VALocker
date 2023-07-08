@@ -50,7 +50,6 @@ import tkinter as tk
 
 # endregion
 
-
 # region PyInstaller Requirement
 def resource_path(relative):
     return os.path.join(os.environ.get("_MEIPASS2", os.path.abspath(".")), relative)
@@ -60,7 +59,6 @@ def resource_path(relative):
 
 customtkinter.set_appearance_mode("Dark")
 customtkinter.set_default_color_theme("dark-blue")
-
 
 class InstalockerGUIMain(customtkinter.CTk):
     # region Init and Exit Function
@@ -77,11 +75,12 @@ class InstalockerGUIMain(customtkinter.CTk):
         self.agent_coords_offset = (15, 15)
         self.menu_screen_coords = {
             "main_menu": (815, 243, 820, 244),
-            "end_of_game": (1330, 330, 1455, 353),
+            "progress_text": (1325, 334, 1327, 346),
         }
         self.pixel_patterns = {
             "locking": [178, 238, 234, 255],
             "main_menu": [240, 244, 245, 255],
+            "progress_text": [255, 255, 255, 255],
             "has_spike": [255, 255, 255, 255],
             "can_plant": [255, 255, 255, 255],
             "is_planting": [178, 238, 235, 255],
@@ -90,19 +89,6 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         self.locking_confirmations_required = 2
         self.menu_screen_confirmaions_required = 3
-
-        # self.locking_coords = (958, 866, 870) # agent screen dot
-        # self.locking_coords = (959, 867, 961, 869) # agent screen dot solid
-
-        # In Menu Images
-        self.in_menu_images = [
-            PIL.Image.open(
-                resource_path("images/in_menu/in_menu_progress_text_1.png")
-            ).tobytes(),
-            PIL.Image.open(
-                resource_path("images/in_menu/in_menu_progress_text_2.png")
-            ).tobytes(),
-        ]
 
         # Map Specific
         self.map_specific_mode = False
@@ -2271,17 +2257,23 @@ class InstalockerGUIMain(customtkinter.CTk):
         while (
             self.active is True and self.active_thread is True and self.locking is False
         ):
-            end_of_game = self.return_screenshot_bytes(
-                self.locking_screenshotter, self.menu_screen_coords["end_of_game"]
-            )
-            main_menu = self.is_matching(
+
+
+            player_banner = self.is_matching(
                 self.return_screenshot_pixels(
                     self.locking_screenshotter, self.menu_screen_coords["main_menu"]
                 ),
                 self.pixel_patterns["main_menu"],
             )
 
-            if end_of_game in self.in_menu_images or main_menu is True:
+            progress_text = self.is_matching(
+                self.return_screenshot_pixels(
+                    self.locking_screenshotter, self.menu_screen_coords["progress_text"]
+                ),
+                self.pixel_patterns["progress_text"],
+            )
+
+            if progress_text is True or player_banner is True:
                 confirmations += 1
 
                 if confirmations >= self.menu_screen_confirmaions_required:
@@ -2351,7 +2343,6 @@ class InstalockerGUIMain(customtkinter.CTk):
             ):
                 time.sleep(0.1)
                 if self.auto_drop_spike is True:
-                    # spike_screenshot = self.return_screenshot_bytes(self.tools_screenshotter, self.tools_locations["spike"])
                     has_spike = self.is_matching(
                         self.return_screenshot_pixels(
                             self.tools_screenshotter, self.tools_locations["spike"]
@@ -2426,7 +2417,6 @@ class InstalockerGUIMain(customtkinter.CTk):
 
 
 # region Popups
-
 
 # Error popup when save renamed incorrectly
 class ErrorPopup(customtkinter.CTkToplevel):
