@@ -64,7 +64,7 @@ VALocker is a program written in Python that allows you to automatically lock an
 6. During the agent selection phase in VALORANT, VALocker will automatically lock in your chosen agent.
 7. Once the agent is locked, the button under "Current Task" will change to "In Game", once it detects the end of the game, it will automatically switch to "Locking". The mode can be changed at any time by clicking on the button.
 
-**Note:** VALocker relies on specific display settings for accurate functionality. Please ensure that your VALORANT game is running at a screen resolution of 1920x1080 with letterbox enabled. Deviating from these settings may result in incorrect behavior of the program.
+**Note:** VALocker relies on specific display settings for accurate functionality. Please ensure that your VALORANT game is running at a screen resolution of 1920x1080 in letterbox mode. VALocker relies heavily on the Valorant UI to determine what is going on in game, and adding an FPS cap is recommended. At higher framerates, Valorant sometimes does not render the UI, which can cause issues with the program. VALocker has been tested at 60 FPS and 144 FPS, and works reliably at this framerate. It may work at higher framerates if thats what your monitor supports. Deviating from these settings may result in incorrect behavior of the program.
 
 ## 🔧 Configuration
 VALocker provides a `user_settings.json` file in the data directory where you can customize certain aspects of the program. The `user_settings.json` file is created when running the program for the first time. The configuration file allows you to:
