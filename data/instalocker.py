@@ -2533,11 +2533,10 @@ class InstalockerGUIMain(customtkinter.CTk):
             self.screen_resolution = (int(resolution_size_x), int(resolution_size_y))
             
             if self.screen_resolution != (1920, 1080):
-                print(self.screen_resolution)
                 ErrorPopup(
                     window_geometry=self.winfo_geometry(),
                     title="Warning",
-                    message="Your game resolution is not 1920x1080.\nPlease change it to 1920x1080\nin fullscreen or windowed fullscreen",
+                    message=f"Your game resolution is {self.screen_resolution}.\nPlease change it to 1920x1080\nin fullscreen or windowed fullscreen",
                     colors=self.button_colors,
                     main_font=self.main_font,
                 ).get_input()
