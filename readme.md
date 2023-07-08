@@ -39,8 +39,11 @@ VALocker is a program written in Python that allows you to automatically lock an
 - Selects random part of agent and locking button to deter detection.
 - Allows for multiple save files for different accounts and/or configurations.
 - Utilizes screenshot analysis to obtain game data, ensuring a safer approach and reducing the risk of bans compared to other aggressive methods such as direct memory reading.
-- Features non-instalocking related tools to improve quality of life. Tools currently implemented:
+- Features non-instalocking related tools to improve quality of life. Tools only work when the instalocker is disabled or "In Game". The currently implemented tools are:
   - Auto drop spike
+  - Anti-AFK
+    - Anti-AFK can be used in conjuction with the instalocker to take an break from your computer while queuing and return without being kicked for inactivity.
+    - Anti-AFK automatically disables if your movement keys are pressed. If "GRAB_KEYBINDS" is set to false in the user settings file, if WASD are pressed.
 
 > Tools are still a work in progress. Feel free to suggest any tools you would like to see implemented.
 
@@ -78,6 +81,7 @@ VALocker provides a `user_settings.json` file in the data directory where you ca
   - 1: Medium (500 - 800ms)
   - 2: High (800 - 1000ms)
 - Toggle the persistence of random agents while using ExclusiSelect.
+- Toggle the automatic keybind-grabber.
 - Customize the timings between each action when safe mode is disabled.
 - Show or hide the default save file according to your preference.
 
