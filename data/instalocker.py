@@ -57,8 +57,11 @@ def resource_path(relative):
 
 # endregion
 
+# region Customtkinter Global Settings
 customtkinter.set_appearance_mode("Dark")
 customtkinter.set_default_color_theme("dark-blue")
+# endregion
+
 
 class InstalockerGUIMain(customtkinter.CTk):
     # region Init and Exit Function
@@ -210,8 +213,8 @@ class InstalockerGUIMain(customtkinter.CTk):
             self.protocol("WM_DELETE_WINDOW", self.exit)
 
         # Creates Threads
-        if self.grab_keybinds is True:
-            valorant_files_thread = threading.Thread(target=self.valorant_log_reader).start()
+        
+        valorant_files_thread = threading.Thread(target=self.valorant_log_reader).start()
         self.agent_thread = threading.Thread(target=self.locking_main).start()
         self.tools_thread = threading.Thread(target=self.tools_main).start()
         
@@ -2474,12 +2477,15 @@ class InstalockerGUIMain(customtkinter.CTk):
 
     # region Valorant Log Reader
 
+    # Starts the valorant log reader thread
     def valorant_log_reader(self):
         self.get_valorant_log()
         self.get_user_id()
-        self.get_current_account_config_file()
+        self.get_current_account_config_files()
         self.get_game_resolution()
-        self.get_custom_keybinds()
+        if self.grab_keybinds is True:
+            self.get_custom_keybinds()
+        
 
     # Clone the valorant log file to the data folder
     def get_valorant_log(self):
@@ -2507,7 +2513,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             self.get_user_id()
 
     # Clones the keybinds and game settings files for the current account
-    def get_current_account_config_file(self):
+    def get_current_account_config_files(self):
         if self.current_account_id is None:
             return None
 
