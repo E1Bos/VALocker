@@ -142,6 +142,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         self.auto_gg = False
         self.auto_gg_confirmations_required = 2
         self.anti_afk = False
+        self.detect_user_input = True
 
         # GUI SETTINGS
         self.window_width = 650
@@ -185,6 +186,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         self.keyboard = pynkeyboard.Controller()
         self.locking_screenshotter = None
         self.tools_screenshotter = None
+        self.tools_listener = None
 
         # Creates GUI
         self.create_gui()
@@ -205,13 +207,10 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         # Creates Threads
         self.agent_thread = threading.Thread(target=self.locking_main).start()
-
-        if self.enable_tools is True:
-            self.tools_thread = threading.Thread(target=self.tools_main).start()
+        self.tools_thread = threading.Thread(target=self.tools_main).start()
 
     def exit(self):
         self.active_thread = False
-        self.enable_tools = False
         try:
             self.icon.stop()
         except AttributeError:
@@ -815,17 +814,6 @@ class InstalockerGUIMain(customtkinter.CTk):
             row=0, column=0, padx=10, pady=10, sticky="nsew"
         )
 
-        self.auto_gg_button = customtkinter.CTkButton(
-            scrollable_frame,
-            text=f"Auto GG",
-            height=40,
-            hover=False,
-            fg_color=f"{self.button_colors['enabled'] if self.auto_gg is True else self.button_colors['disabled']}",
-            font=self.button_font_and_size,
-            command=self.toggle_auto_gg,
-        )
-        # self.auto_gg_button.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
-
         self.anti_afk_button = customtkinter.CTkButton(
             scrollable_frame,
             text=f"Anti AFK",
@@ -835,7 +823,18 @@ class InstalockerGUIMain(customtkinter.CTk):
             font=self.button_font_and_size,
             command=self.toggle_anti_afk,
         )
-        # self.anti_afk_button.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
+        self.anti_afk_button.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
+
+        self.auto_gg_button = customtkinter.CTkButton(
+            scrollable_frame,
+            text=f"Auto GG",
+            height=40,
+            hover=False,
+            fg_color=f"{self.button_colors['enabled'] if self.auto_gg is True else self.button_colors['disabled']}",
+            font=self.button_font_and_size,
+            command=self.toggle_auto_gg,
+        )
+        # self.auto_gg_button.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
 
         # endregion
 
@@ -1414,12 +1413,12 @@ class InstalockerGUIMain(customtkinter.CTk):
             fg_color=f"{self.button_colors['enabled'] if self.auto_drop_spike is True else self.button_colors['disabled']}",
         )
 
-        self.auto_gg_button.configure(
-            fg_color=f"{self.button_colors['enabled'] if self.auto_gg is True else self.button_colors['disabled']}",
-        )
-
         self.anti_afk_button.configure(
             fg_color=f"{self.button_colors['enabled'] if self.anti_afk is True else self.button_colors['disabled']}",
+        )
+
+        self.auto_gg_button.configure(
+            fg_color=f"{self.button_colors['enabled'] if self.auto_gg is True else self.button_colors['disabled']}",
         )
 
     # Changes the active frame
@@ -1570,8 +1569,6 @@ class InstalockerGUIMain(customtkinter.CTk):
     # Toggles different tools
     def toggle_tools(self):
         self.enable_tools = not self.enable_tools
-        if self.tools_thread is None:
-            self.tools_thread = threading.Thread(target=self.tools_main).start()
         self.update_tools_tab()
 
     # Toggles auto drop spike
@@ -1588,6 +1585,12 @@ class InstalockerGUIMain(customtkinter.CTk):
     def toggle_anti_afk(self):
         self.anti_afk = not self.anti_afk
         self.update_tools_tab()
+
+    def anti_afk_on_press(self, key):
+        if hasattr(key, "char") and self.detect_user_input and self.enable_tools:
+            if key.char in ["w", "a", "s", "d"]:
+                self.anti_afk = False
+                self.update_tools_tab()
 
     # endregion
 
@@ -2336,13 +2339,18 @@ class InstalockerGUIMain(customtkinter.CTk):
     def tools_main(self):
         if self.tools_screenshotter is None:
             self.tools_screenshotter = mss.mss()
+        if self.tools_listener is None:
+            self.tools_listener = pynkeyboard.Listener(on_press=self.anti_afk_on_press)
         spike_drop_confirmations = 0
+        last_press_time = time.time()
         while self.active_thread is True:
             if self.enable_tools is True and (
                 self.locking is False or self.active is False
             ):
                 time.sleep(0.1)
-                if self.auto_drop_spike is True:
+
+                # region Auto Drop Spike
+                if self.auto_drop_spike is True or self.anti_afk is True:
                     has_spike = self.is_matching(
                         self.return_screenshot_pixels(
                             self.tools_screenshotter, self.tools_locations["spike"]
@@ -2374,23 +2382,60 @@ class InstalockerGUIMain(customtkinter.CTk):
                             spike_drop_confirmations
                             >= self.spike_drop_confirmations_required
                         ):
-                            self.keyboard.press("4")
-                            self.keyboard.release("4")
+                            self.keyboard.tap("4")
                             time.sleep(0.1)
-                            self.keyboard.press("g")
-                            self.keyboard.release("g")
+                            self.keyboard.tap("g")
                             spike_drop_confirmations = 0
 
                     else:
                         spike_drop_confirmations = 0
+                # endregion
+                
+                # region Anti AFK
+                if self.anti_afk is True:
+                    if self.tools_listener.running is False:
+                        self.tools_listener.start()
+                        self.tools_listener.wait()
+                    current_time = time.time()
 
-                # if self.auto_gg is True:
-                #     pass
+                    if current_time - last_press_time >= 5:
+                        self.detect_user_input = False
+                        self.anti_afk_method()
+                        self.detect_user_input = True
+                        last_press_time = current_time
 
-                # if self.anti_afk is True:
-                #     pass
+                elif self.tools_listener.running is True:
+                    self.tools_listener.stop()
+                    self.tools_listener = pynkeyboard.Listener(on_press=self.anti_afk_on_press)
+                # endregion
+
             else:
+                if self.tools_listener.running is True:
+                    self.tools_listener.stop()
+                    self.tools_listener = pynkeyboard.Listener(on_press=self.anti_afk_on_press)
                 time.sleep(1)
+
+    def anti_afk_method(self, anti_afk_type='default', hold_time=0.2):
+        match anti_afk_type:
+            case 'default':
+                for key in ['w', 's']:
+                    self.keyboard.press(key)
+                    time.sleep(hold_time if hold_time > 0 else random.uniform(0.1, 0.3))
+                    self.keyboard.release(key)
+                    time.sleep(hold_time if hold_time > 0 else random.uniform(0.1, 0.3))
+            case 'circle':
+                for key in ['w', 'd', 's', 'a']:
+                    self.keyboard.press(key)
+                    time.sleep(hold_time if hold_time > 0 else random.uniform(0.1, 0.3))
+                    self.keyboard.release(key)
+                    time.sleep(hold_time if hold_time > 0 else random.uniform(0.1, 0.3))
+            case 'random':
+                key = random.choice(['w', 'a', 's', 'd'])
+                self.keyboard.press(key)
+                time.sleep(hold_time if hold_time > 0 else random.uniform(0.1, 0.3))
+                self.keyboard.release(key)
+                
+
 
     # endregion
 
