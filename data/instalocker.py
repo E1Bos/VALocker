@@ -90,9 +90,6 @@ class InstalockerGUIMain(customtkinter.CTk):
         }
         self.locking_button = None
 
-        self.locking_confirmations_required = 2
-        self.menu_screen_confirmaions_required = 3
-
         # Map Specific
         self.map_specific_mode = False
         self.map_lookup = dict()
@@ -1652,6 +1649,8 @@ class InstalockerGUIMain(customtkinter.CTk):
                     self.persistent_random_agents = user_settings[
                         "PERSISTENT_RANDOM_AGENTS"
                     ]
+                    self.locking_confirmations_required = user_settings["LOCKING_CONFIRMATIONS"]
+                    self.menu_screen_confirmaions_required = user_settings["MENU_CONFIRMATIONS"]
                     self.grab_keybinds = user_settings["GRAB_KEYBINDS"]
                     self.fast_mode_timings = user_settings["FAST_MODE_TIMINGS"]
                     self.hide_default_save_file = user_settings[
@@ -1672,6 +1671,8 @@ class InstalockerGUIMain(customtkinter.CTk):
                 self.start_minimized = False
                 self.persistent_random_agents = False
                 self.hide_default_save_file = True
+                self.locking_confirmations_required = 2
+                self.menu_screen_confirmaions_required = 2
                 self.grab_keybinds = True
                 self.fast_mode_timings = [0.02, 0.02, 0.02]
 
@@ -1684,6 +1685,8 @@ class InstalockerGUIMain(customtkinter.CTk):
                     "SAFE_MODE_ENABLED_ON_START": self.safe_mode,
                     "SAFE_MODE_STRENGTH_ON_START": self.safe_mode_strength,
                     "PERSISTENT_RANDOM_AGENTS": self.persistent_random_agents,
+                    "LOCKING_CONFIRMATIONS":self.locking_confirmations_required,
+                    "MENU_CONFIRMATIONS":self.menu_screen_confirmaions_required,
                     "GRAB_KEYBINDS": self.grab_keybinds,
                     "FAST_MODE_TIMINGS": self.fast_mode_timings,
                     "HIDE_DEFAULT_SAVE_FILE": self.hide_default_save_file,
