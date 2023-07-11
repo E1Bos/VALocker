@@ -3,7 +3,7 @@ Changelog
 
 Date Format: YYYY-MM-DD
 
-## Version 1.5.1b - 2023-07-11
+## Version 1.5.2 - 2023-07-11
 
 ### Added
 - [Feature] "LOCKING_CONFIRMATIONS" and "MENU_CONFIRMATIONS" to user settings. This lets you change how many consecutive frames VALocker needs to detect you being in the agent selection screen or menu screen.
