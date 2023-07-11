@@ -1673,7 +1673,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                 self.persistent_random_agents = False
                 self.hide_default_save_file = True
                 self.grab_keybinds = True
-                self.fast_mode_timings = [0.2, 0.2, 0.2]
+                self.fast_mode_timings = [0.02, 0.02, 0.02]
 
             with open(resource_path("data/user_settings.json"), "w") as us:
                 user_settings_file_json = {
