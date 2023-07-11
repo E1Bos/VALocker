@@ -1671,8 +1671,8 @@ class InstalockerGUIMain(customtkinter.CTk):
                 self.start_minimized = False
                 self.persistent_random_agents = False
                 self.hide_default_save_file = True
-                self.locking_confirmations_required = 2
-                self.menu_screen_confirmaions_required = 2
+                self.locking_confirmations_required = 3
+                self.menu_screen_confirmaions_required = 3
                 self.grab_keybinds = True
                 self.fast_mode_timings = [0.02, 0.02, 0.02]
 
