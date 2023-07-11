@@ -81,6 +81,8 @@ VALocker provides a `user_settings.json` file in the data directory where you ca
   - 1: Medium (500 - 800ms)
   - 2: High (800 - 1000ms)
 - Toggle the persistence of random agents while using ExclusiSelect.
+- Change the amount of locking confirmations required, this is how many consecutive screenshots are required before the program is sure you're in the agent selection screen.
+- Change the amount of menu screen confirmations, this is how many consecutive screenshots are required before the program is sure you're in the main menu screen.
 - Toggle the automatic keybind-grabber.
 - Customize the timings between each action when safe mode is disabled.
 - Show or hide the default save file according to your preference.
