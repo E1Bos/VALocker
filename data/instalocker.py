@@ -850,7 +850,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         # region Settings Tab
 
         scrolling_settings_frame = customtkinter.CTkScrollableFrame(self.settings_frame)
-        scrolling_settings_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        scrolling_settings_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=20)
 
         # endregion
 
@@ -2074,6 +2074,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             "toggle_unlocked_agent_status", toggled_agent_name=agent_name
         )
         self.update_gui(from_agent_tab=True)
+        self.find_agent_coords(self.selected_agent)
         self.save_current_data()
 
     # Toggles the agent in the random agent tab

@@ -3,6 +3,12 @@ Changelog
 
 Date Format: YYYY-MM-DD
 
+## Version 1.5.1 - 2023-07-11
+
+### Fixed
+- [Bug] Instalocker would select wrong agent when a new agent was unlocked. The coords were not recalculated.
+- [Bug] Fixed padding on tools tab.
+
 ## Version 1.5.0 - 2023-07-08
 
 ### Added
