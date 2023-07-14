@@ -50,6 +50,7 @@ import tkinter as tk
 
 # endregion
 
+
 # region PyInstaller Requirement
 def resource_path(relative):
     return os.path.join(os.environ.get("_MEIPASS2", os.path.abspath(".")), relative)
@@ -69,8 +70,8 @@ class InstalockerGUIMain(customtkinter.CTk):
     def __init__(self):
         super().__init__()
 
-        # Locking Values
-        self.active = False
+        # Locking Variables
+        self.enabled = False
         self.active_thread = True
         self.locking = True
         self.locking_coords = (947, 866, 952, 867)
@@ -90,46 +91,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         }
         self.locking_button = None
 
-        # Map Specific
-        self.map_specific_mode = False
-        self.map_lookup = dict()
-
-        # Safe Mode
-        self.safe_mode = True
-        self.safe_mode_strength = 0
-        self.safe_mode_timing = {
-            "Low": (0.2, 0.4),
-            "Medium": (0.4, 0.7),
-            "High": (0.7, 1.0),
-        }
-
-        # Random Agent Mode
-        self.random_agent_mode = False
-
-        # Hover Mode
-        self.hover_mode = False
-
-        # Agent Data
-        self.default_agents = list()
-        self.selected_agent = str()
-        self.all_agents = list()
-        self.random_agent_exclusiselect = False
-
-        # Statistics
-        self.total_games_used = 0
-        self.time_to_lock_list = list(
-            list() for _ in range(len(self.safe_mode_timing) + 1)
-        )
-
-        # Box Coords
-        self.box_coords = dict()
-        self.lock_button = list()
-
-        # Save Files
-        self.save_files = None
-        self.favorited_save_files = list()
-
-        # Tools
+        # Tool Variables
         self.enable_tools = False
         self.tools_thread = None
         self.tools_locations = {
@@ -139,12 +101,11 @@ class InstalockerGUIMain(customtkinter.CTk):
         }
         self.auto_drop_spike = False
         self.spike_drop_confirmations_required = 2
-        self.auto_gg = False
-        self.auto_gg_confirmations_required = 2
         self.anti_afk = False
-        self.detect_user_input = True
+        self.register_keyboard_input = True
+        self.anti_aim = False
 
-        # GUI SETTINGS
+        # GUI Settings
         self.window_width = 650
         self.window_height = 400
         self.main_font = "Roboto"
@@ -163,6 +124,40 @@ class InstalockerGUIMain(customtkinter.CTk):
             "sentinels_disabled": "#317234",
         }
 
+        # Modes
+        self.map_specific_mode = False
+        self.random_agent_mode = False
+        self.hover_mode = False
+        self.random_agent_exclusiselect = False
+
+        # Safe Mode
+        self.safe_mode = True
+        self.safe_mode_strength = 0
+        self.safe_mode_timing = {
+            "Low": (0.2, 0.4),
+            "Medium": (0.4, 0.7),
+            "High": (0.7, 1.0),
+        }
+
+        # Default/Empty Variables
+        self.current_save_file = "default"
+        self.box_coords = dict()
+        self.lock_button = list()
+        self.favorited_save_files = list()
+        self.default_agents = list()
+        self.selected_agent = str()
+        self.all_agents = list()
+        self.map_lookup = dict()
+        self.save_files = list()
+        self.current_account_id = None
+        self.grab_keybinds = False
+
+        # Stats
+        self.total_games_used = 0
+        self.time_to_lock_list = list(
+            list() for _ in range(len(self.safe_mode_timing) + 1)
+        )
+
         # Icons
         self.icons = dict(
             disabled="images/icons/valocker-disabled.ico",
@@ -172,25 +167,18 @@ class InstalockerGUIMain(customtkinter.CTk):
         self.current_icon = self.icons["disabled"]
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("VALocker.GUI")
 
-        # Default Save File
-        self.current_save_file = "default"
-
-        # Valorant File Reader
-        self.current_account_id = None
-        self.grab_keybinds = True
+        # Defines Controllers
+        self.mouse = pynmouse.Controller()
+        self.keyboard = pynkeyboard.Controller()
+        self.locking_screenshotter = None
+        self.tools_screenshotter = None
+        self.tools_keyboard_listener = None
 
         # Finds all save files
         self.find_save_files()
 
         # Loads data from save files
         self.load_data_from_files(first_run=True)
-
-        # Defines Controllers
-        self.mouse = pynmouse.Controller()
-        self.keyboard = pynkeyboard.Controller()
-        self.locking_screenshotter = None
-        self.tools_screenshotter = None
-        self.tools_listener = None
 
         # Creates GUI
         self.create_gui()
@@ -201,7 +189,6 @@ class InstalockerGUIMain(customtkinter.CTk):
         # Checks if program should close to tray
         if self.minimize_to_tray is True:
             self.protocol("WM_DELETE_WINDOW", self.withdraw_window)
-
             self.create_tray_icon()
 
             if self.start_minimized is True:
@@ -210,13 +197,21 @@ class InstalockerGUIMain(customtkinter.CTk):
             self.protocol("WM_DELETE_WINDOW", self.exit)
 
         # Creates Threads
-        
-        valorant_files_thread = threading.Thread(target=self.valorant_log_reader).start()
-        self.agent_thread = threading.Thread(target=self.locking_main).start()
-        self.tools_thread = threading.Thread(target=self.tools_main).start()
-        
+        valorant_files_thread = threading.Thread(target=self.valorant_log_reader)
+        self.agent_thread = threading.Thread(target=self.locking_main)
+        self.tools_thread = threading.Thread(target=self.tools_main)
+
+        self.agent_thread.start()
+        self.tools_thread.start()
+        valorant_files_thread.start()
+
     def exit(self):
         self.active_thread = False
+        self.enable_tools = False
+
+        if self.tools_keyboard_listener.running is True:
+            self.tools_keyboard_listener.stop()
+
         try:
             self.icon.stop()
         except AttributeError:
@@ -256,7 +251,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             "Map Specific",
             "Save File",
             "Tools",
-            # "Settings",
+            "Settings",
         ]
 
         for row, button_name in enumerate(button_names):
@@ -331,9 +326,9 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         self.current_status_button = customtkinter.CTkButton(
             current_status_frame,
-            text=f"{'Running' if self.active is True else 'Stopped'}",
+            text=f"{'Running' if self.enabled is True else 'Stopped'}",
             hover=False,
-            fg_color=f"{self.button_colors['enabled'] if self.active is True else self.button_colors['disabled']}",
+            fg_color=f"{self.button_colors['enabled'] if self.enabled is True else self.button_colors['disabled']}",
             font=self.button_font_and_size,
             command=self.toggle_active,
         )
@@ -346,7 +341,7 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         self.current_task_button = customtkinter.CTkButton(
             current_status_frame,
-            text=f"{'None' if self.active is False else 'Locking' if self.locking is True else 'In Game'}",
+            text=f"{'None' if self.enabled is False else 'Locking' if self.locking is True else 'In Game'}",
             hover=False,
             font=self.button_font_and_size,
             command=self.toggle_thread_mode,
@@ -368,7 +363,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             width=int(f"{140 if self.safe_mode is False else 70}"),
             hover=False,
             text=f"{'On' if self.safe_mode is True else 'Off'}",
-            fg_color=f"{self.button_colors['enabled'] if self.active is True else self.button_colors['disabled']}",
+            fg_color=f"{self.button_colors['enabled'] if self.enabled is True else self.button_colors['disabled']}",
             font=self.button_font_and_size,
             command=self.toggle_safe_mode,
         )
@@ -831,16 +826,16 @@ class InstalockerGUIMain(customtkinter.CTk):
         )
         self.anti_afk_button.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
 
-        self.auto_gg_button = customtkinter.CTkButton(
+        self.anti_aim_button = customtkinter.CTkButton(
             scrollable_frame,
-            text=f"Auto GG",
+            text=f"Anti Aim",
             height=40,
             hover=False,
-            fg_color=f"{self.button_colors['enabled'] if self.auto_gg is True else self.button_colors['disabled']}",
+            fg_color=f"{self.button_colors['enabled'] if self.anti_afk is True else self.button_colors['disabled']}",
             font=self.button_font_and_size,
-            command=self.toggle_auto_gg,
+            command=self.toggle_anti_aim,
         )
-        # self.auto_gg_button.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
+        # self.anti_aim_button.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
 
         # endregion
 
@@ -848,6 +843,141 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         scrolling_settings_frame = customtkinter.CTkScrollableFrame(self.settings_frame)
         scrolling_settings_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=20)
+
+        # General Settings
+
+        general_settings_frame = customtkinter.CTkFrame(scrolling_settings_frame, fg_color="gray16")
+        general_settings_frame.pack(padx=10, pady=10, ipady=5, fill=tk.X)
+        general_settings_frame.columnconfigure((0, 1), weight=1)
+
+        general_settings_label = customtkinter.CTkLabel(
+            general_settings_frame,
+            text="General Settings:",
+            font=self.label_font_and_size,
+        )
+        general_settings_label.grid(
+            column=0, row=0, padx=10, pady=5, sticky="nsew", columnspan=2
+        )
+
+        self.minimize_to_tray_button = customtkinter.CTkButton(
+            general_settings_frame,
+            text="Minimize to Tray",
+            height=40,
+            width=200,
+            hover=False,
+            fg_color=f"{self.button_colors['enabled'] if self.minimize_to_tray is True else self.button_colors['disabled']}",
+            font=self.button_font_and_size,
+            command=lambda: self.toggle_setting("minimize_to_tray"),
+        )
+        self.minimize_to_tray_button.grid(
+            column=0, row=1, padx=10, pady=5, sticky="nsew"
+        )
+
+        self.persistent_random_agents_button = customtkinter.CTkButton(
+            general_settings_frame,
+            text="Persistent Random Agents",
+            height=40,
+            width=200,
+            hover=False,
+            fg_color=f"{self.button_colors['enabled'] if self.persistent_random_agents is True else self.button_colors['disabled']}",
+            font=self.button_font_and_size,
+            command=lambda: self.toggle_setting("persistent_random_agents"),
+        )
+        self.persistent_random_agents_button.grid(
+            column=1, row=1, padx=10, pady=5, sticky="nsew"
+        )
+
+        self.hide_default_save_file_button = customtkinter.CTkButton(
+            general_settings_frame,
+            text="Hide Default Save File",
+            height=40,
+            width=200,
+            hover=False,
+            fg_color=f"{self.button_colors['enabled'] if self.hide_default_save_file is True else self.button_colors['disabled']}",
+            font=self.button_font_and_size,
+            command=lambda: self.toggle_setting("hide_default_save_file"),
+        )
+        self.hide_default_save_file_button.grid(
+            column=0, row=2, padx=10, pady=5, sticky="nsew"
+        )
+
+        # On Startup Settings
+        on_startup_frame = customtkinter.CTkFrame(scrolling_settings_frame, fg_color="gray16")
+        on_startup_frame.pack(padx=10, pady=10, ipady=5, fill=tk.X)
+        on_startup_frame.columnconfigure((0, 1), weight=1)
+
+        on_startup_label = customtkinter.CTkLabel(
+            on_startup_frame, text="On Startup:", font=self.label_font_and_size
+        )
+        on_startup_label.grid(
+            column=0, row=0, padx=10, pady=5, sticky="nsew", columnspan=2
+        )
+
+        self.start_minimized_button = customtkinter.CTkButton(
+            on_startup_frame,
+            text="Start Minimized",
+            height=40,
+            width=200,
+            hover=False,
+            fg_color=f"{self.button_colors['enabled'] if self.start_minimized is True else self.button_colors['disabled']}",
+            font=self.button_font_and_size,
+            command=lambda: self.toggle_setting("start_minimized"),
+        )
+        self.start_minimized_button.grid(
+            column=0, row=1, padx=10, pady=5, sticky="nsew"
+        )
+
+        self.enable_on_startup_button = customtkinter.CTkButton(
+            on_startup_frame,
+            text="Enable Instalocker",
+            height=40,
+            width=200,
+            hover=False,
+            fg_color=f"{self.button_colors['enabled'] if self.enable_on_startup is True else self.button_colors['disabled']}",
+            font=self.button_font_and_size,
+            command=lambda: self.toggle_setting("enable_on_startup"),
+        )
+        self.enable_on_startup_button.grid(
+            column=1, row=1, padx=10, pady=5, sticky="nsew"
+        )
+
+        self.safe_mode_on_startup_button = customtkinter.CTkButton(
+            on_startup_frame,
+            text="Enable Safe Mode",
+            height=40,
+            width=200,
+            hover=False,
+            fg_color=f"{self.button_colors['enabled'] if self.safe_mode_on_startup is True else self.button_colors['disabled']}",
+            font=self.button_font_and_size,
+            command=lambda: self.toggle_setting("safe_mode_on_startup"),
+        )
+        self.safe_mode_on_startup_button.grid(
+            column=0, row=2, padx=10, pady=5, sticky="nsew"
+        )
+
+        self.safe_mode_strength_on_startup_button = customtkinter.CTkButton(
+            on_startup_frame,
+            text=f"Safe Mode Strength: {list(self.safe_mode_timing.keys())[self.safe_mode_strength_on_startup]}",
+            height=40,
+            hover=False,
+            font=self.button_font_and_size,
+            command=lambda: self.toggle_setting("safe_mode_strength_on_startup"),
+        )
+        self.safe_mode_strength_on_startup_button.grid(
+            column=1, row=2, padx=10, pady=5, sticky="nsew"
+        )
+
+        self.grab_keybinds_button = customtkinter.CTkButton(
+            on_startup_frame,
+            text="Grab Keybinds",
+            height=40,
+            width=200,
+            hover=False,
+            fg_color=f"{self.button_colors['enabled'] if self.grab_keybinds is True else self.button_colors['disabled']}",
+            font=self.button_font_and_size,
+            command=lambda: self.toggle_setting("grab_keybinds"),
+        )
+        self.grab_keybinds_button.grid(column=0, row=3, padx=10, pady=5, sticky="nsew")
 
         # endregion
 
@@ -952,13 +1082,13 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         # Buttons Left Column
         self.current_status_button.configure(
-            text=f"{'Running' if self.active is True else 'Stopped'}",
-            fg_color=f"{self.button_colors['enabled'] if self.active is True else self.button_colors['disabled']}",
+            text=f"{'Running' if self.enabled is True else 'Stopped'}",
+            fg_color=f"{self.button_colors['enabled'] if self.enabled is True else self.button_colors['disabled']}",
         )
 
         self.current_task_button.configure(
-            text=f"{'None' if self.active is False else 'Locking' if self.locking is True else 'In Game'}",
-            state=tk.DISABLED if self.active is False else tk.NORMAL,
+            text=f"{'None' if self.enabled is False else 'Locking' if self.locking is True else 'In Game'}",
+            state=tk.DISABLED if self.enabled is False else tk.NORMAL,
         )
 
         self.safe_mode_enabled_button.configure(
@@ -1423,8 +1553,8 @@ class InstalockerGUIMain(customtkinter.CTk):
             fg_color=f"{self.button_colors['enabled'] if self.anti_afk is True else self.button_colors['disabled']}",
         )
 
-        self.auto_gg_button.configure(
-            fg_color=f"{self.button_colors['enabled'] if self.auto_gg is True else self.button_colors['disabled']}",
+        self.anti_aim_button.configure(
+            fg_color=f"{self.button_colors['enabled'] if self.anti_aim is True else self.button_colors['disabled']}",
         )
 
     # Changes the active frame
@@ -1464,12 +1594,12 @@ class InstalockerGUIMain(customtkinter.CTk):
                 lambda x: f"Show GUI", lambda x: self.show_window(), default=True
             ),
             pystray.MenuItem(
-                lambda x: f'Status: {"Enabled" if self.active else "Disabled"}',
+                lambda x: f'Status: {"Enabled" if self.enabled else "Disabled"}',
                 lambda x: self.toggle_active(),
-                checked=lambda x: self.active,
+                checked=lambda x: self.enabled,
             ),
             pystray.MenuItem(
-                lambda x: f"Status: {'None' if self.active is False else 'Locking' if self.locking is True else 'In Game (Waiting)'}",
+                lambda x: f"Status: {'None' if self.enabled is False else 'Locking' if self.locking is True else 'In Game (Waiting)'}",
                 lambda x: self.toggle_thread_mode(),
             ),
             pystray.MenuItem("Exit", lambda x: self.exit()),
@@ -1477,7 +1607,7 @@ class InstalockerGUIMain(customtkinter.CTk):
 
     # Updates GUI and tray icons
     def update_icon(self):
-        if self.active is False:
+        if self.enabled is False:
             self.current_icon = self.icons["disabled"]
         elif self.locking is True:
             self.current_icon = self.icons["locking"]
@@ -1514,9 +1644,110 @@ class InstalockerGUIMain(customtkinter.CTk):
 
     # region Toggles
 
+    def toggle_setting(self, setting_name, setting_value=None):
+        with open(resource_path("data/user_settings.json"), "r") as user_settings_file:
+            user_settings = json.load(user_settings_file)
+            match setting_name:
+                case "minimize_to_tray":
+                    user_settings["MINIMIZE_TO_TRAY"] = (
+                        not user_settings["MINIMIZE_TO_TRAY"]
+                        if setting_value is None
+                        else setting_value
+                    )
+                    self.minimize_to_tray_button.configure(
+                        fg_color=f"{self.button_colors['enabled'] if user_settings['MINIMIZE_TO_TRAY'] is True else self.button_colors['disabled']}",
+                    )
+                    self.minimize_to_tray = user_settings["MINIMIZE_TO_TRAY"]
+
+                    if self.minimize_to_tray is True:
+                        self.protocol("WM_DELETE_WINDOW", self.withdraw_window)
+                        self.create_tray_icon()
+
+                    else:
+                        self.protocol("WM_DELETE_WINDOW", self.exit)
+                        try:
+                            self.icon.stop()
+                        except AttributeError:
+                            pass
+
+                case "start_minimized":
+                    user_settings["START_MINIMIZED"] = (
+                        not user_settings["START_MINIMIZED"]
+                        if setting_value is None
+                        else setting_value
+                    )
+                    self.start_minimized_button.configure(
+                        fg_color=f"{self.button_colors['enabled'] if user_settings['START_MINIMIZED'] is True else self.button_colors['disabled']}",
+                    )
+                case "enable_on_startup":
+                    user_settings["ENABLE_ON_STARTUP"] = (
+                        not user_settings["ENABLE_ON_STARTUP"]
+                        if setting_value is None
+                        else setting_value
+                    )
+                    self.enable_on_startup_button.configure(
+                        fg_color=f"{self.button_colors['enabled'] if user_settings['ENABLE_ON_STARTUP'] is True else self.button_colors['disabled']}",
+                    )
+                case "safe_mode_on_startup":
+                    user_settings["SAFE_MODE_ON_STARTUP"] = (
+                        not user_settings["SAFE_MODE_ON_STARTUP"]
+                        if setting_value is None
+                        else setting_value
+                    )
+                    self.safe_mode_on_startup_button.configure(
+                        fg_color=f"{self.button_colors['enabled'] if user_settings['SAFE_MODE_ON_STARTUP'] is True else self.button_colors['disabled']}",
+                    )
+                case "safe_mode_strength_on_startup":
+                    self.safe_mode_strength_on_startup = user_settings["SAFE_MODE_STRENGTH_ON_STARTUP"]
+                    if self.safe_mode_strength_on_startup >= len(self.safe_mode_timing) - 1:
+                        self.safe_mode_strength_on_startup = 0
+                    else:
+                        self.safe_mode_strength_on_startup += 1
+                    user_settings["SAFE_MODE_STRENGTH_ON_STARTUP"] = self.safe_mode_strength_on_startup
+                    self.safe_mode_strength_on_startup_button.configure(
+                        text=f"Safe Mode Strength: {list(self.safe_mode_timing.keys())[self.safe_mode_strength_on_startup]}",
+                    )
+                case "persistent_random_agents":
+                    user_settings["PERSISTENT_RANDOM_AGENTS"] = (
+                        not user_settings["PERSISTENT_RANDOM_AGENTS"]
+                        if setting_value is None
+                        else setting_value
+                    )
+                    self.persistent_random_agents = user_settings[
+                        "PERSISTENT_RANDOM_AGENTS"
+                    ]
+                    self.persistent_random_agents_button.configure(
+                        fg_color=f"{self.button_colors['enabled'] if user_settings['PERSISTENT_RANDOM_AGENTS'] is True else self.button_colors['disabled']}",
+                    )
+                case "grab_keybinds":
+                    user_settings["GRAB_KEYBINDS"] = (
+                        not user_settings["GRAB_KEYBINDS"]
+                        if setting_value is None
+                        else setting_value
+                    )
+                    self.grab_keybinds_button.configure(
+                        fg_color=f"{self.button_colors['enabled'] if user_settings['GRAB_KEYBINDS'] is True else self.button_colors['disabled']}",
+                    )
+                case "hide_default_save_file":
+                    user_settings["HIDE_DEFAULT_SAVE_FILE"] = (
+                        not user_settings["HIDE_DEFAULT_SAVE_FILE"]
+                        if setting_value is None
+                        else setting_value
+                    )
+                    self.hide_default_save_file = user_settings[
+                        "HIDE_DEFAULT_SAVE_FILE"
+                    ]
+                    self.hide_default_save_file_button.configure(
+                        fg_color=f"{self.button_colors['enabled'] if user_settings['HIDE_DEFAULT_SAVE_FILE'] is True else self.button_colors['disabled']}",
+                    )
+                    self.update_save_file_tab()
+
+        with open(resource_path("data/user_settings.json"), "w") as user_settings_file:
+            json.dump(user_settings, user_settings_file, indent=4)
+
     # Toggles the active state of the program between running and stopped
     def toggle_active(self):
-        self.active = not self.active
+        self.enabled = not self.enabled
         self.update_overview_tab()
         self.update_icon()
 
@@ -1582,21 +1813,15 @@ class InstalockerGUIMain(customtkinter.CTk):
         self.auto_drop_spike = not self.auto_drop_spike
         self.update_tools_tab()
 
-    # Toggles auto gg
-    def toggle_auto_gg(self):
-        self.auto_gg = not self.auto_gg
-        self.update_tools_tab()
-
     # Toggles anti afk
     def toggle_anti_afk(self):
         self.anti_afk = not self.anti_afk
         self.update_tools_tab()
 
-    def anti_afk_on_press(self, key):
-        if hasattr(key, "char") and self.detect_user_input and self.enable_tools:
-            if key.char in [self.keybinds['MoveForward'], self.keybinds['MoveRight'], self.keybinds['MoveBackward'], self.keybinds['MoveLeft']]:
-                self.anti_afk = False
-                self.update_tools_tab()
+    # Toggles anti aim (not implemented yet)
+    def toggle_anti_aim(self):
+        self.anti_aim = not self.anti_aim
+        self.update_tools_tab()
 
     # endregion
 
@@ -1641,16 +1866,25 @@ class InstalockerGUIMain(customtkinter.CTk):
                     )
                     self.minimize_to_tray = user_settings["MINIMIZE_TO_TRAY"]
                     self.start_minimized = user_settings["START_MINIMIZED"]
-                    self.active = user_settings["INSTALOCK_ON_START"]
-                    self.safe_mode = user_settings["SAFE_MODE_ENABLED_ON_START"]
+                    self.enabled = user_settings["ENABLE_ON_STARTUP"]
+                    self.enable_on_startup = user_settings["ENABLE_ON_STARTUP"]
+                    self.safe_mode = user_settings["SAFE_MODE_ON_STARTUP"]
+                    self.safe_mode_on_startup = user_settings["SAFE_MODE_ON_STARTUP"]
                     self.safe_mode_strength = user_settings[
-                        "SAFE_MODE_STRENGTH_ON_START"
+                        "SAFE_MODE_STRENGTH_ON_STARTUP"
+                    ]
+                    self.safe_mode_strength_on_startup = user_settings[
+                        "SAFE_MODE_STRENGTH_ON_STARTUP"
                     ]
                     self.persistent_random_agents = user_settings[
                         "PERSISTENT_RANDOM_AGENTS"
                     ]
-                    self.locking_confirmations_required = user_settings["LOCKING_CONFIRMATIONS"]
-                    self.menu_screen_confirmaions_required = user_settings["MENU_CONFIRMATIONS"]
+                    self.locking_confirmations_required = user_settings[
+                        "LOCKING_CONFIRMATIONS"
+                    ]
+                    self.menu_screen_confirmaions_required = user_settings[
+                        "MENU_CONFIRMATIONS"
+                    ]
                     self.grab_keybinds = user_settings["GRAB_KEYBINDS"]
                     self.fast_mode_timings = user_settings["FAST_MODE_TIMINGS"]
                     self.hide_default_save_file = user_settings[
@@ -1673,7 +1907,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                 self.hide_default_save_file = True
                 self.locking_confirmations_required = 3
                 self.menu_screen_confirmaions_required = 3
-                self.grab_keybinds = True
+                self.grab_keybinds = False
                 self.fast_mode_timings = [0.02, 0.02, 0.02]
 
             with open(resource_path("data/user_settings.json"), "w") as us:
@@ -1681,12 +1915,12 @@ class InstalockerGUIMain(customtkinter.CTk):
                     "ACTIVE_SAVE_FILE": self.current_save_file,
                     "MINIMIZE_TO_TRAY": self.minimize_to_tray,
                     "START_MINIMIZED": self.start_minimized,
-                    "INSTALOCK_ON_START": self.active,
-                    "SAFE_MODE_ENABLED_ON_START": self.safe_mode,
-                    "SAFE_MODE_STRENGTH_ON_START": self.safe_mode_strength,
+                    "ENABLE_ON_STARTUP": self.enabled,
+                    "SAFE_MODE_ON_STARTUP": self.safe_mode,
+                    "SAFE_MODE_STRENGTH_ON_STARTUP": self.safe_mode_strength,
                     "PERSISTENT_RANDOM_AGENTS": self.persistent_random_agents,
-                    "LOCKING_CONFIRMATIONS":self.locking_confirmations_required,
-                    "MENU_CONFIRMATIONS":self.menu_screen_confirmaions_required,
+                    "LOCKING_CONFIRMATIONS": self.locking_confirmations_required,
+                    "MENU_CONFIRMATIONS": self.menu_screen_confirmaions_required,
                     "GRAB_KEYBINDS": self.grab_keybinds,
                     "FAST_MODE_TIMINGS": self.fast_mode_timings,
                     "HIDE_DEFAULT_SAVE_FILE": self.hide_default_save_file,
@@ -2142,7 +2376,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             self.locking_screenshotter = mss.mss()
         while self.active_thread is True:
             time.sleep(0.3)
-            if self.active is True and self.active_thread is True:
+            if self.enabled is True and self.active_thread is True:
                 self.lock_button = (
                     self.box_info["LOCK_COORDS"][0]
                     + random.randint(0, self.box_info["LOCK_SIZE"][0]),
@@ -2164,7 +2398,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             game_map == None
             and self.active_thread is True
             and self.locking is True
-            and self.active is True
+            and self.enabled is True
             and self.map_specific_mode is True
         ):
             time.sleep(0.1)
@@ -2187,7 +2421,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         while (
             self.active_thread is True
             and self.locking is True
-            and self.active is True
+            and self.enabled is True
             and self.map_specific_mode is map_specific_toggle
         ):
             if self.is_matching(
@@ -2278,10 +2512,8 @@ class InstalockerGUIMain(customtkinter.CTk):
     def find_game_end(self):
         confirmations = 0
         while (
-            self.active is True and self.active_thread is True and self.locking is False
+            self.enabled is True and self.active_thread is True and self.locking is False
         ):
-
-
             player_banner = self.is_matching(
                 self.return_screenshot_pixels(
                     self.locking_screenshotter, self.menu_screen_coords["main_menu"]
@@ -2350,7 +2582,7 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         # Disable instalocking if the agent trying to be selected is not unlocked
         except ValueError:
-            self.active = False
+            self.enabled = False
 
     # endregion
 
@@ -2359,18 +2591,19 @@ class InstalockerGUIMain(customtkinter.CTk):
     def tools_main(self):
         if self.tools_screenshotter is None:
             self.tools_screenshotter = mss.mss()
-        if self.tools_listener is None:
-            self.tools_listener = pynkeyboard.Listener(on_press=self.anti_afk_on_press)
+        if self.tools_keyboard_listener is None:
+            self.tools_keyboard_listener = pynkeyboard.Listener(
+                on_press=self.tools_keyboard_on_press
+            )
         spike_drop_confirmations = 0
-        last_press_time = time.time()
         while self.active_thread is True:
             if self.enable_tools is True and (
-                self.locking is False or self.active is False
+                self.locking is False or self.enabled is False
             ):
                 time.sleep(0.1)
 
                 # region Auto Drop Spike
-                if self.auto_drop_spike is True: # or self.anti_afk is True
+                if self.auto_drop_spike is True:  # or self.anti_afk is True
                     has_spike = self.is_matching(
                         self.return_screenshot_pixels(
                             self.tools_screenshotter, self.tools_locations["spike"]
@@ -2413,48 +2646,93 @@ class InstalockerGUIMain(customtkinter.CTk):
 
                 # region Anti AFK
                 if self.anti_afk is True:
-                    if self.tools_listener.running is False:
-                        self.tools_listener.start()
-                        self.tools_listener.wait()
+                    if self.tools_keyboard_listener.running is False:
+                        self.tools_keyboard_listener.start()
+                        self.tools_keyboard_listener.wait()
+                        last_press_time = time.time()
+
                     current_time = time.time()
 
-                    if current_time - last_press_time >= 5:
-                        self.detect_user_input = False
-                        self.anti_afk_method(anti_afk_type='circle')
-                        self.detect_user_input = True
+                    if current_time - last_press_time >= 7.5:
+                        self.register_keyboard_input = False
+                        self.anti_afk_method()
+                        self.register_keyboard_input = True
                         last_press_time = current_time
 
-                elif self.tools_listener.running is True:
-                    self.tools_listener.stop()
-                    self.tools_listener = pynkeyboard.Listener(on_press=self.anti_afk_on_press)
+                elif self.tools_keyboard_listener.running is True:
+                    self.tools_keyboard_listener.stop()
+                    self.tools_keyboard_listener = pynkeyboard.Listener(
+                        on_press=self.tools_keyboard_on_press
+                    )
                 # endregion
 
             else:
-                if self.tools_listener.running is True:
-                    self.tools_listener.stop()
-                    self.tools_listener = pynkeyboard.Listener(on_press=self.anti_afk_on_press)
+                if self.tools_keyboard_listener.running is True:
+                    self.tools_keyboard_listener.stop()
+                    self.tools_keyboard_listener = pynkeyboard.Listener(
+                        on_press=self.tools_keyboard_on_press
+                    )
                 time.sleep(1)
 
-    def anti_afk_method(self, anti_afk_type='default', hold_time=0.2):
+    def anti_afk_method(self, anti_afk_type="default", hold_time=0.2):
         match anti_afk_type:
-            case 'default':
-                for key in [self.keybinds['MoveForward'], self.keybinds['MoveBackward']]:
+            case "default":
+                for key in [
+                    self.keybinds["MoveForward"],
+                    self.keybinds["MoveBackward"],
+                ]:
                     self.keyboard.press(key)
                     time.sleep(hold_time if hold_time > 0 else random.uniform(0.1, 0.3))
                     self.keyboard.release(key)
                     time.sleep(hold_time if hold_time > 0 else random.uniform(0.1, 0.3))
-            case 'circle':
-                for key in [self.keybinds['MoveForward'], self.keybinds['MoveRight'], self.keybinds['MoveBackward'], self.keybinds['MoveLeft']]:
+            case "circle":
+                for key in [
+                    self.keybinds["MoveForward"],
+                    self.keybinds["MoveRight"],
+                    self.keybinds["MoveBackward"],
+                    self.keybinds["MoveLeft"],
+                ]:
                     self.keyboard.press(key)
                     time.sleep(hold_time if hold_time > 0 else random.uniform(0.1, 0.3))
                     self.keyboard.release(key)
                     time.sleep(hold_time if hold_time > 0 else random.uniform(0.1, 0.3))
-            case 'random':
-                key = random.choice([self.keybinds['MoveForward'], self.keybinds['MoveRight'], self.keybinds['MoveBackward'], self.keybinds['MoveLeft']])
+            case "random":
+                key = random.choice(
+                    [
+                        self.keybinds["MoveForward"],
+                        self.keybinds["MoveRight"],
+                        self.keybinds["MoveBackward"],
+                        self.keybinds["MoveLeft"],
+                    ]
+                )
                 self.keyboard.press(key)
                 time.sleep(hold_time if hold_time > 0 else random.uniform(0.1, 0.3))
                 self.keyboard.release(key)
-                
+
+    def tools_keyboard_on_press(self, key):
+        if (
+            hasattr(key, "char")
+            and self.register_keyboard_input
+            and self.enable_tools
+            and self.anti_afk
+        ):
+            if key.char in [
+                self.keybinds["MoveForward"],
+                self.keybinds["MoveRight"],
+                self.keybinds["MoveBackward"],
+                self.keybinds["MoveLeft"],
+            ]:
+                self.anti_afk = False
+                self.update_tools_tab()
+
+    # def tools_mouse_on_press(self, x, y, button, pressed):
+    #     if self.enable_tools and self.anti_aim and self.register_mouse_input:
+    #         if pressed and button == pynmouse.Button.left:
+    #             self.register_mouse_input = False
+    #             self.shoot_mouse()
+    #     self.is_shooting = True
+    # elif not pressed and button == pynmouse.Button.left:
+    #     self.is_shooting = False
 
     # endregion
 
@@ -2483,22 +2761,36 @@ class InstalockerGUIMain(customtkinter.CTk):
 
     # Starts the valorant log reader thread
     def valorant_log_reader(self):
-        self.get_valorant_log()
-        self.get_user_id()
-        self.get_current_account_config_files()
-        self.get_game_resolution()
-        if self.grab_keybinds is True:
-            self.get_custom_keybinds()
-        
+        try:
+            self.get_valorant_log()
+            self.get_user_id()
+            self.get_current_account_config_files()
+            self.get_game_resolution()
+            if self.grab_keybinds is True:
+                self.get_custom_keybinds()
+
+        except Exception:
+            self.toggle_settings("grab_keybinds", False)
+            self.grab_keybinds = False
+
+            ErrorPopup(
+                window_geometry=self.winfo_geometry(),
+                title="Error",
+                message="Error reading Valorant log file.\nGrab keybinds has been disabled.",
+                colors=self.button_colors,
+                main_font=self.main_font,
+            ).get_input()
 
     # Clone the valorant log file to the data folder
     def get_valorant_log(self):
-        original_log = os.getenv("LOCALAPPDATA") + "/VALORANT/Saved/Logs/ShooterGame.log"
+        original_log = (
+            os.getenv("LOCALAPPDATA") + "/VALORANT/Saved/Logs/ShooterGame.log"
+        )
         destination_path = resource_path("data/valorant_files/")
 
         if not os.path.exists(destination_path):
             os.makedirs(destination_path)
-        
+
         shutil.copy(original_log, destination_path)
 
     # Gets the user id from the log file
@@ -2506,7 +2798,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         log_file_path = resource_path("data/valorant_files/ShooterGame.log")
         pattern = r".*Logged in user changed: (.*)"
 
-        with open(log_file_path, "r", encoding='utf-8') as file:
+        with open(log_file_path, "r", encoding="utf-8") as file:
             log_content = file.read()
             match = re.search(pattern, log_content)
 
@@ -2534,14 +2826,20 @@ class InstalockerGUIMain(customtkinter.CTk):
 
     # Finds the game resolution from the gameusersettings.ini file
     def get_game_resolution(self):
-        with open(resource_path("data/valorant_files/GameUserSettings.ini"), "r") as file:
+        with open(
+            resource_path("data/valorant_files/GameUserSettings.ini"), "r"
+        ) as file:
             game_settings = file.read()
-            resolution_size_x = re.search(r"ResolutionSizeX=(.*)", game_settings).group(1)
-            resolution_size_y = re.search(r"ResolutionSizeY=(.*)", game_settings).group(1)
+            resolution_size_x = re.search(r"ResolutionSizeX=(.*)", game_settings).group(
+                1
+            )
+            resolution_size_y = re.search(r"ResolutionSizeY=(.*)", game_settings).group(
+                1
+            )
             fullscreen_mode = re.search(r"FullscreenMode=(.*)", game_settings).group(1)
 
             self.screen_resolution = (int(resolution_size_x), int(resolution_size_y))
-            
+
             if self.screen_resolution != (1920, 1080):
                 ErrorPopup(
                     window_geometry=self.winfo_geometry(),
@@ -2559,20 +2857,23 @@ class InstalockerGUIMain(customtkinter.CTk):
                     main_font=self.main_font,
                 ).get_input()
 
-
     # Grabs the changed keybinds from the backup keybinds file
     def get_custom_keybinds(self):
         custom_keybinds = dict()
-        with open(resource_path("data/valorant_files/BackupKeybinds.json"), "r") as file:
+        with open(
+            resource_path("data/valorant_files/BackupKeybinds.json"), "r"
+        ) as file:
             json_file = json.load(file)
-            
-            for keybind in json_file['actionMappings']:
-                if keybind['bindIndex'] == 0:
-                    custom_keybinds[keybind['name']] = self.convert_keybind(keybind['key'])
 
-            for keybind in json_file['axisMappings']:
-                if keybind['bindIndex'] == 0:
-                    match keybind['name'], keybind['scale']:
+            for keybind in json_file["actionMappings"]:
+                if keybind["bindIndex"] == 0:
+                    custom_keybinds[keybind["name"]] = self.convert_keybind(
+                        keybind["key"]
+                    )
+
+            for keybind in json_file["axisMappings"]:
+                if keybind["bindIndex"] == 0:
+                    match keybind["name"], keybind["scale"]:
                         case "MoveForward", 1:
                             key_name = "MoveForward"
                         case "MoveForward", -1:
@@ -2581,9 +2882,8 @@ class InstalockerGUIMain(customtkinter.CTk):
                             key_name = "MoveRight"
                         case "MoveRight", -1:
                             key_name = "MoveLeft"
-                    custom_keybinds[key_name] = self.convert_keybind(keybind['key'])
-                        
-            
+                    custom_keybinds[key_name] = self.convert_keybind(keybind["key"])
+
             for keybind_name in custom_keybinds.keys():
                 if keybind_name in self.keybinds.keys():
                     self.keybinds[keybind_name] = custom_keybinds[keybind_name]
@@ -2612,6 +2912,7 @@ class InstalockerGUIMain(customtkinter.CTk):
 
 
 # region Popups
+
 
 # Error popup when save renamed incorrectly
 class ErrorPopup(customtkinter.CTkToplevel):
