@@ -1907,17 +1907,20 @@ class InstalockerGUIMain(customtkinter.CTk):
                 self.hide_default_save_file = True
                 self.locking_confirmations_required = 3
                 self.menu_screen_confirmaions_required = 3
-                self.grab_keybinds = False
+                self.grab_keybinds = True
                 self.fast_mode_timings = [0.02, 0.02, 0.02]
+                self.enable_on_startup = False
+                self.safe_mode_on_startup = True
+                self.safe_mode_strength_on_startup = 0
 
             with open(resource_path("data/user_settings.json"), "w") as us:
                 user_settings_file_json = {
                     "ACTIVE_SAVE_FILE": self.current_save_file,
                     "MINIMIZE_TO_TRAY": self.minimize_to_tray,
                     "START_MINIMIZED": self.start_minimized,
-                    "ENABLE_ON_STARTUP": self.enabled,
-                    "SAFE_MODE_ON_STARTUP": self.safe_mode,
-                    "SAFE_MODE_STRENGTH_ON_STARTUP": self.safe_mode_strength,
+                    "ENABLE_ON_STARTUP": self.enable_on_startup,
+                    "SAFE_MODE_ON_STARTUP": self.safe_mode_on_startup,
+                    "SAFE_MODE_STRENGTH_ON_STARTUP": self.safe_mode_strength_on_startup,
                     "PERSISTENT_RANDOM_AGENTS": self.persistent_random_agents,
                     "LOCKING_CONFIRMATIONS": self.locking_confirmations_required,
                     "MENU_CONFIRMATIONS": self.menu_screen_confirmaions_required,
