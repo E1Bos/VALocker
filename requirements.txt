@@ -6,3 +6,4 @@ pynput==1.7.6
 pystray==0.19.4
 six==1.16.0
 numpy==1.25.0
+requests==2.31.0
