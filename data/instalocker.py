@@ -1838,6 +1838,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                 self.box_info = config["BOX_INFO"]
                 self.config_file_agents = config["ALL_AGENTS"]
                 self.map_names = config["MAPS"]
+                self.keybinds = config["DEFAULT_KEYBINDS"]
 
             # Loads the map images
             for map_name in self.map_names:
@@ -1848,10 +1849,6 @@ class InstalockerGUIMain(customtkinter.CTk):
                     self.map_lookup[map_binary] = map_name
                 except (PIL.UnidentifiedImageError, FileNotFoundError):
                     self.map_lookup[None] = map_name
-
-            # Grabs default keybinds
-            with open(resource_path("data/default_keybinds.json"), "r") as keybinds:
-                self.keybinds = json.load(keybinds)
 
             # Loads the user_settings.json file, clears time_to_lock if new timings are added
             try:
