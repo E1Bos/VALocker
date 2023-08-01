@@ -23,7 +23,7 @@ SOFTWARE.
 """
 
 if __name__ == "__main__":
-    from data.instalocker import *
+    from data.instalocker import InstalockerGUIMain
 
     gui_main = InstalockerGUIMain()
     gui_main.mainloop()
