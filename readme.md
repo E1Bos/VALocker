@@ -44,19 +44,25 @@ VALocker is a program written in Python that allows you to automatically lock an
   - Anti-AFK
     - Anti-AFK can be used in conjuction with the instalocker to take an break from your computer while queuing and return without being kicked for inactivity.
     - Anti-AFK automatically disables if your movement keys are pressed. If "GRAB_KEYBINDS" is set to false in the user settings file, if WASD are pressed.
-
+- Automatically checks for updates.
 > Tools are still a work in progress. Feel free to suggest any tools you would like to see implemented.
 
 ## ⚙️ Installation
-### Executable
+### 💻 Executable
 1. Download `VALocker.zip` from the [releases](https://github.com/E1Bos/VALocker/releases) page.
 2. Extract the file to a location of your choice.
 3. Run `VALocker.exe` to launch the application.
 
-### Python
+### 🐍 Python
 1. Clone the repository to your local machine.
 2. Make sure you have Python 3.x installed.
 3. Run `VALocker.pyw` to launch the application, dependancies will be installed automatically.
+
+### 🔄 Updating
+1. Download the latest version from the [releases](https://github.com/E1Bos/VALocker/releases) page.
+2. Close VALocker if it is currently running.
+3. If using `VALocker.zip`, extract the `VALocker` folder to a location of your choice.
+4. Replace all files in your VALocker directory with the new files. All your settings and save files should be preserved.
 
 ## 🚀 Usage
 1. Run `VALocker.exe` to launch the application. If you are running the Python version, run `VALocker.pyw` instead, dependancies will be installed automatically.
