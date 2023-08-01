@@ -27,7 +27,7 @@ SOFTWARE.
 # Imports all modules, if it fails it will install them
 try:
     # Modules that are not installed by default
-    import customtkinter, pystray, PIL.Image, mss
+    import customtkinter, pystray, PIL.Image, mss, requests
     import pynput.mouse as pynmouse
     import pynput.keyboard as pynkeyboard
     import numpy as np
@@ -38,14 +38,14 @@ except Exception:
 
     subprocess.run(["pip", "install", "-r", "requirements.txt"])
 
-    import customtkinter, pystray, PIL.Image, mss
+    import customtkinter, pystray, PIL.Image, mss, requests
     import pynput.mouse as pynmouse
     import pynput.keyboard as pynkeyboard
     import numpy as np
 
 
 # Imports modules that are installed with Python
-import json, os, random, threading, time, ctypes, shutil, re
+import json, os, random, threading, time, ctypes, shutil, re, webbrowser
 import tkinter as tk
 
 # endregion
@@ -54,9 +54,8 @@ import tkinter as tk
 # region PyInstaller Requirement
 def resource_path(relative):
     return os.path.join(os.environ.get("_MEIPASS2", os.path.abspath(".")), relative)
-
-
 # endregion
+
 
 # region Customtkinter Global Settings
 customtkinter.set_appearance_mode("Dark")
@@ -70,6 +69,9 @@ class InstalockerGUIMain(customtkinter.CTk):
     def __init__(self):
         super().__init__()
 
+        # Version
+        CURRENT_VERSION = ("v1.5.4")
+        
         # Locking Variables
         self.enabled = False
         self.active_thread = True
@@ -167,6 +169,23 @@ class InstalockerGUIMain(customtkinter.CTk):
         self.current_icon = self.icons["disabled"]
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("VALocker.GUI")
 
+        # Finds the latest version
+        latest_version = self.get_latest_version()
+        needs_update = self.compare_versions(CURRENT_VERSION, latest_version)
+        if needs_update:
+            update_now = UpdatePopup(
+            window_geometry=self.winfo_geometry(),
+            current_version=CURRENT_VERSION,
+            latest_version=latest_version,
+            colors=self.button_colors,
+            main_font=self.main_font).get_input()
+
+            # Opens the latest release page and closes the program if the user wants to update
+            if update_now:
+                webbrowser.open("https://www.github.com/E1Bos/VALocker/releases/latest/")
+                self.exit()
+                quit()
+
         # Defines Controllers
         self.mouse = pynmouse.Controller()
         self.keyboard = pynkeyboard.Controller()
@@ -209,13 +228,17 @@ class InstalockerGUIMain(customtkinter.CTk):
         self.active_thread = False
         self.enable_tools = False
 
-        if self.tools_keyboard_listener.running is True:
-            self.tools_keyboard_listener.stop()
+        try:
+            if self.tools_keyboard_listener.running is True:
+                self.tools_keyboard_listener.stop()
+        except AttributeError:
+            pass
 
         try:
             self.icon.stop()
         except AttributeError:
             pass
+
         self.destroy()
 
     # endregion
@@ -1926,7 +1949,6 @@ class InstalockerGUIMain(customtkinter.CTk):
                     self.favorited_save_files = stats_json["FAVORITED_SAVE_FILES"]
                     self.total_games_used = stats_json["TIMES_USED"]
                     self.time_to_lock_list = stats_json["TIME_TO_LOCK"]
-                    print(stats_json)
                     
 
                 if len(self.time_to_lock_list) != len(self.safe_mode_timing) + 1:
@@ -2164,7 +2186,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         if file_name == self.current_save_file or file_name == "default":
             return
 
-        is_confirmed = ConfirmationPopup(
+        is_confirmed = ConfirmDeletePopup(
             window_geometry=self.winfo_geometry(),
             file_name=file_name,
             colors=self.button_colors,
@@ -2379,6 +2401,33 @@ class InstalockerGUIMain(customtkinter.CTk):
         self.update_map_specific_tab()
         self.update_overview_tab()
         self.save_current_data()
+
+    # endregion
+
+    # region Check Updates
+
+    def get_latest_version(self, timeout=5):
+        URL = 'https://api.github.com/repos/E1Bos/VALocker/releases/latest'
+        r = requests.get(URL, timeout=timeout)
+        if r.status_code == 200:
+            return r.json()['tag_name']
+        else:
+            return None
+
+    def compare_versions(self, current_version, latest_version):
+        current_version = current_version[1:].split('.')  # Remove 'v' and split into parts
+        latest_version = latest_version[1:].split('.')
+
+        for v1, v2 in zip(current_version, latest_version):
+            if int(v1) < int(v2):
+                return True  # The latest version is higher and requires an update
+            elif int(v1) > int(v2):
+                return False  # The current version is higher or equal, no update needed
+
+        if len(current_version) < len(latest_version):
+            return True  # The latest version has more parts, indicating a higher version
+        elif len(current_version) == len(latest_version):
+            return False  # Both versions are equal
 
     # endregion
 
@@ -3133,7 +3182,7 @@ class InputPopup(customtkinter.CTkToplevel):
 
 
 # Confirmation popup when deleting saves
-class ConfirmationPopup(customtkinter.CTkToplevel):
+class ConfirmDeletePopup(customtkinter.CTkToplevel):
     def __init__(self, window_geometry, file_name, colors, main_font):
         super().__init__()
         _, x, y = window_geometry.split("+")
@@ -3214,6 +3263,91 @@ class ConfirmationPopup(customtkinter.CTkToplevel):
         self.cancel_button.pack(padx=20, pady=10, side=tk.RIGHT)
 
         self.bind("<Return>", self.cancel_event)
+        self.bind("<Escape>", self.cancel_event)
+
+# Popup when update is available
+class UpdatePopup(customtkinter.CTkToplevel):
+    def __init__(self, window_geometry, current_version, latest_version, colors, main_font):
+        super().__init__()
+        _, x, y = window_geometry.split("+")
+        self.main_window_x, self.main_window_y = int(x), int(y)
+        self.small_window_width, self.small_window_height = map(
+            int, self.geometry().split("+")[0].split("x")
+        )
+        self.title("Update Available")
+        self.current_version = current_version
+        self.latest_version = latest_version
+        self.colors = colors
+        self.main_font = main_font
+
+        # GUI Settings
+        self.lift()  # lift window on top
+        self.attributes("-topmost", True)  # keep window on top
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.resizable(False, False)
+        self.grab_set()  # make other windows not clickable
+
+        self.user_input = False
+
+        self.create_confirmation_popup()
+
+    def confirm_event(self, event=None):
+        self.user_input = True
+        self.grab_release()
+        self.destroy()
+
+    def cancel_event(self, event=None):
+        self.user_input = False
+        self.grab_release()
+        self.destroy()
+
+    def on_closing(self):
+        self.grab_release()
+        self.destroy()
+
+    def get_input(self):
+        self.wait_window()
+        return self.user_input
+
+    def create_confirmation_popup(self):
+        self.geometry("400x150")
+        self.geometry(
+            "+%d+%d"
+            % (
+                self.main_window_x + self.small_window_width / 2,
+                self.main_window_y + self.small_window_height / 2,
+            )
+        )
+        message = customtkinter.CTkLabel(
+            self,
+            text=f"{self.latest_version} is available.\nYou currently have {self.current_version} installed.\n\nWould you like to be taken to the download page?",
+            font=(self.main_font, 16),
+        )
+        message.pack(padx=10, pady=10)
+
+        self.yes_button = customtkinter.CTkButton(
+            master=self,
+            width=150,
+            border_width=0,
+            text="Yes",
+            font=(self.main_font, 14),
+            fg_color=self.colors["enabled"],
+            command=self.confirm_event,
+        )
+        self.yes_button.pack(padx=20, pady=10, side=tk.RIGHT)
+
+        self.no_button = customtkinter.CTkButton(
+            master=self,
+            width=150,
+            border_width=0,
+            text="No",
+            font=(self.main_font, 14),
+            fg_color=self.colors["disabled"],
+            command=self.cancel_event,
+        )
+        self.no_button.pack(padx=20, pady=10, side=tk.LEFT)
+
+        self.bind("<Return>", self.confirm_event)
         self.bind("<Escape>", self.cancel_event)
 
 
