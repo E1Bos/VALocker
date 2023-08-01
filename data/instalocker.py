@@ -1887,14 +1887,6 @@ class InstalockerGUIMain(customtkinter.CTk):
                     self.hide_default_save_file = user_settings[
                         "HIDE_DEFAULT_SAVE_FILE"
                     ]
-                    self.favorited_save_files = user_settings["FAVORITED_SAVE_FILES"]
-                    self.total_games_used = user_settings["TIMES_USED"]
-                    self.time_to_lock_list = user_settings["TIME_TO_LOCK"]
-
-                    if len(self.time_to_lock_list) != len(self.safe_mode_timing) + 1:
-                        self.time_to_lock_list = list(
-                            list() for _ in range(len(self.safe_mode_timing) + 1)
-                        )
 
             # Creates a new user_settings.json file if one does not exist
             except Exception:
@@ -1924,11 +1916,34 @@ class InstalockerGUIMain(customtkinter.CTk):
                     "GRAB_KEYBINDS": self.grab_keybinds,
                     "FAST_MODE_TIMINGS": self.fast_mode_timings,
                     "HIDE_DEFAULT_SAVE_FILE": self.hide_default_save_file,
-                    "FAVORITED_SAVE_FILES": self.favorited_save_files,
-                    "TIMES_USED": self.total_games_used,
-                    "TIME_TO_LOCK": self.time_to_lock_list,
                 }
                 us.write(json.dumps(user_settings_file_json, indent=4))
+
+            # Loads stats
+            try:
+                with open(resource_path("data/stats.json"), "r") as stats_file:
+                    stats_json = json.load(stats_file)
+                    self.favorited_save_files = stats_json["FAVORITED_SAVE_FILES"]
+                    self.total_games_used = stats_json["TIMES_USED"]
+                    self.time_to_lock_list = stats_json["TIME_TO_LOCK"]
+                    print(stats_json)
+                    
+
+                if len(self.time_to_lock_list) != len(self.safe_mode_timing) + 1:
+                        self.time_to_lock_list = list(
+                            list() for _ in range(len(self.safe_mode_timing) + 1)
+                        )
+
+            # Creates stats file if it does not exist
+            except Exception:
+                with open(resource_path("data/stats.json"), "w") as stats:
+                    stats_json = {
+                        "FAVORITED_SAVE_FILES": self.favorited_save_files,
+                        "TIMES_USED": self.total_games_used,
+                        "TIME_TO_LOCK": self.time_to_lock_list,
+                    }
+                    stats.write(json.dumps(stats_json, indent=4))
+
 
         # Loads the save file data
         with open(
@@ -2038,14 +2053,14 @@ class InstalockerGUIMain(customtkinter.CTk):
             }
             sf.write(json.dumps(save_file_json, indent=4))
 
-    # Updates the stats in config.json
+    # Updates the stats.json file
     def update_user_settings(self):
-        with open(resource_path("data/user_settings.json"), "r") as config_file:
-            config = json.load(config_file)
+        with open(resource_path("data/stats.json"), "r") as stats_file:
+            config = json.load(stats_file)
             config["FAVORITED_SAVE_FILES"] = self.favorited_save_files
             config["TIMES_USED"] = self.total_games_used
             config["TIME_TO_LOCK"] = self.time_to_lock_list
-        with open(resource_path("data/user_settings.json"), "w") as file:
+        with open(resource_path("data/stats.json"), "w") as file:
             file.write(json.dumps(config, indent=4))
 
     # endregion
