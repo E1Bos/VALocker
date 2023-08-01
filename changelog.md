@@ -3,6 +3,20 @@ Changelog
 
 Date Format: YYYY-MM-DD
 
+## Version 1.5.4 - 2023-08-01
+
+### Added
+- [Feature] VALocker now checks for the latest version on startup. If a new version is available, a popup will appear with a link to the latest release.
+- [Feature] Stats are now saved in a separate "stats.json" file, when VALocker is updated, your stats will not be lost.
+
+### Changed
+- [Feature] Default keybinds now stored in the config.json file instead of its own file.
+
+## Version 1.5.3 - 2023-08-01
+
+### Added
+- [Feature] Added settings tab, allowing the user to change most settings without having to edit the user settings file.
+
 ## Version 1.5.2 - 2023-07-11
 
 ### Added
