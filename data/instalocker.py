@@ -54,6 +54,8 @@ import tkinter as tk
 # region PyInstaller Requirement
 def resource_path(relative):
     return os.path.join(os.environ.get("_MEIPASS2", os.path.abspath(".")), relative)
+
+
 # endregion
 
 
@@ -70,8 +72,8 @@ class InstalockerGUIMain(customtkinter.CTk):
         super().__init__()
 
         # Version
-        CURRENT_VERSION = ("v1.5.4")
-        
+        CURRENT_VERSION = "v1.5.4"
+
         # Locking Variables
         self.enabled = False
         self.active_thread = True
@@ -171,20 +173,24 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         # Finds the latest version
         latest_version = self.get_latest_version()
-        needs_update = self.compare_versions(CURRENT_VERSION, latest_version)
-        if needs_update:
-            update_now = UpdatePopup(
-            window_geometry=self.winfo_geometry(),
-            current_version=CURRENT_VERSION,
-            latest_version=latest_version,
-            colors=self.button_colors,
-            main_font=self.main_font).get_input()
+        if latest_version is not None:
+            needs_update = self.compare_versions(CURRENT_VERSION, latest_version)
+            if needs_update:
+                update_now = UpdatePopup(
+                    window_geometry=self.winfo_geometry(),
+                    current_version=CURRENT_VERSION,
+                    latest_version=latest_version,
+                    colors=self.button_colors,
+                    main_font=self.main_font,
+                ).get_input()
 
-            # Opens the latest release page and closes the program if the user wants to update
-            if update_now:
-                webbrowser.open("https://www.github.com/E1Bos/VALocker/releases/latest/")
-                self.exit()
-                quit()
+                # Opens the latest release page and closes the program if the user wants to update
+                if update_now:
+                    webbrowser.open(
+                        "https://www.github.com/E1Bos/VALocker/releases/latest/"
+                    )
+                    self.exit()
+                    quit()
 
         # Defines Controllers
         self.mouse = pynmouse.Controller()
@@ -869,7 +875,9 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         # General Settings
 
-        general_settings_frame = customtkinter.CTkFrame(scrolling_settings_frame, fg_color="gray16")
+        general_settings_frame = customtkinter.CTkFrame(
+            scrolling_settings_frame, fg_color="gray16"
+        )
         general_settings_frame.pack(padx=10, pady=10, ipady=5, fill=tk.X)
         general_settings_frame.columnconfigure((0, 1), weight=1)
 
@@ -924,8 +932,21 @@ class InstalockerGUIMain(customtkinter.CTk):
             column=0, row=2, padx=10, pady=5, sticky="nsew"
         )
 
+        self.anti_afk_mode_button = customtkinter.CTkButton(
+            general_settings_frame,
+            text=f"Anti AFK Mode: {self.anti_afk_mode.title()}",
+            height=40,
+            width=200,
+            hover=False,
+            font=self.button_font_and_size,
+            command=lambda: self.toggle_setting("change_anti_afk_mode"),
+        )
+        self.anti_afk_mode_button.grid(column=1, row=2, padx=10, pady=5, sticky="nsew")
+
         # On Startup Settings
-        on_startup_frame = customtkinter.CTkFrame(scrolling_settings_frame, fg_color="gray16")
+        on_startup_frame = customtkinter.CTkFrame(
+            scrolling_settings_frame, fg_color="gray16"
+        )
         on_startup_frame.pack(padx=10, pady=10, ipady=5, fill=tk.X)
         on_startup_frame.columnconfigure((0, 1), weight=1)
 
@@ -1721,12 +1742,19 @@ class InstalockerGUIMain(customtkinter.CTk):
                         fg_color=f"{self.button_colors['enabled'] if user_settings['SAFE_MODE_ON_STARTUP'] is True else self.button_colors['disabled']}",
                     )
                 case "safe_mode_strength_on_startup":
-                    self.safe_mode_strength_on_startup = user_settings["SAFE_MODE_STRENGTH_ON_STARTUP"]
-                    if self.safe_mode_strength_on_startup >= len(self.safe_mode_timing) - 1:
+                    self.safe_mode_strength_on_startup = user_settings[
+                        "SAFE_MODE_STRENGTH_ON_STARTUP"
+                    ]
+                    if (
+                        self.safe_mode_strength_on_startup
+                        >= len(self.safe_mode_timing) - 1
+                    ):
                         self.safe_mode_strength_on_startup = 0
                     else:
                         self.safe_mode_strength_on_startup += 1
-                    user_settings["SAFE_MODE_STRENGTH_ON_STARTUP"] = self.safe_mode_strength_on_startup
+                    user_settings[
+                        "SAFE_MODE_STRENGTH_ON_STARTUP"
+                    ] = self.safe_mode_strength_on_startup
                     self.safe_mode_strength_on_startup_button.configure(
                         text=f"Safe Mode Strength: {list(self.safe_mode_timing.keys())[self.safe_mode_strength_on_startup]}",
                     )
@@ -1764,6 +1792,32 @@ class InstalockerGUIMain(customtkinter.CTk):
                         fg_color=f"{self.button_colors['enabled'] if user_settings['HIDE_DEFAULT_SAVE_FILE'] is True else self.button_colors['disabled']}",
                     )
                     self.update_save_file_tab()
+
+                case "change_anti_afk_mode":
+                    states_list = [
+                        "forward",
+                        "strafe",
+                        "circle",
+                        "random",
+                        "random ctr.",
+                    ]
+                    try:
+                        current_index = states_list.index(
+                            user_settings["ANTI_AFK_MODE"]
+                        )
+                        next_index = (current_index + 1) % len(states_list)
+                        next_state = states_list[next_index]
+                    except ValueError:
+                        next_state = states_list[0]
+
+                    user_settings["ANTI_AFK_MODE"] = (
+                        next_state if setting_value is None else setting_value
+                    )
+                    self.anti_afk_mode = user_settings["ANTI_AFK_MODE"]
+
+                    self.anti_afk_mode_button.configure(
+                        text=f"Anti AFK Mode: {self.anti_afk_mode.title()}",
+                    )
 
         with open(resource_path("data/user_settings.json"), "w") as user_settings_file:
             json.dump(user_settings, user_settings_file, indent=4)
@@ -1910,6 +1964,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                     self.hide_default_save_file = user_settings[
                         "HIDE_DEFAULT_SAVE_FILE"
                     ]
+                    self.anti_afk_mode = user_settings["ANTI_AFK_MODE"]
 
             # Creates a new user_settings.json file if one does not exist
             except Exception:
@@ -1924,6 +1979,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                 self.enable_on_startup = False
                 self.safe_mode_on_startup = True
                 self.safe_mode_strength_on_startup = 0
+                self.anti_afk_mode = "forward"
 
             with open(resource_path("data/user_settings.json"), "w") as us:
                 user_settings_file_json = {
@@ -1939,6 +1995,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                     "GRAB_KEYBINDS": self.grab_keybinds,
                     "FAST_MODE_TIMINGS": self.fast_mode_timings,
                     "HIDE_DEFAULT_SAVE_FILE": self.hide_default_save_file,
+                    "ANTI_AFK_MODE": self.anti_afk_mode,
                 }
                 us.write(json.dumps(user_settings_file_json, indent=4))
 
@@ -1949,12 +2006,11 @@ class InstalockerGUIMain(customtkinter.CTk):
                     self.favorited_save_files = stats_json["FAVORITED_SAVE_FILES"]
                     self.total_games_used = stats_json["TIMES_USED"]
                     self.time_to_lock_list = stats_json["TIME_TO_LOCK"]
-                    
 
                 if len(self.time_to_lock_list) != len(self.safe_mode_timing) + 1:
-                        self.time_to_lock_list = list(
-                            list() for _ in range(len(self.safe_mode_timing) + 1)
-                        )
+                    self.time_to_lock_list = list(
+                        list() for _ in range(len(self.safe_mode_timing) + 1)
+                    )
 
             # Creates stats file if it does not exist
             except Exception:
@@ -1965,7 +2021,6 @@ class InstalockerGUIMain(customtkinter.CTk):
                         "TIME_TO_LOCK": self.time_to_lock_list,
                     }
                     stats.write(json.dumps(stats_json, indent=4))
-
 
         # Loads the save file data
         with open(
@@ -2406,17 +2461,22 @@ class InstalockerGUIMain(customtkinter.CTk):
 
     # region Check Updates
 
-    def get_latest_version(self, timeout=5):
-        URL = 'https://api.github.com/repos/E1Bos/VALocker/releases/latest'
-        r = requests.get(URL, timeout=timeout)
-        if r.status_code == 200:
-            return r.json()['tag_name']
-        else:
+    def get_latest_version(self, timeout=1):
+        URL = "https://api.github.com/repos/E1Bos/VALocker/releases/latest"
+        try:
+            r = requests.get(URL, timeout=timeout)
+            if r.status_code == 200:
+                return r.json()["tag_name"]
+            else:
+                return None
+        except requests.exceptions.Timeout:
             return None
 
     def compare_versions(self, current_version, latest_version):
-        current_version = current_version[1:].split('.')  # Remove 'v' and split into parts
-        latest_version = latest_version[1:].split('.')
+        current_version = current_version[1:].split(
+            "."
+        )  # Remove 'v' and split into parts
+        latest_version = latest_version[1:].split(".")
 
         for v1, v2 in zip(current_version, latest_version):
             if int(v1) < int(v2):
@@ -2425,7 +2485,9 @@ class InstalockerGUIMain(customtkinter.CTk):
                 return False  # The current version is higher or equal, no update needed
 
         if len(current_version) < len(latest_version):
-            return True  # The latest version has more parts, indicating a higher version
+            return (
+                True  # The latest version has more parts, indicating a higher version
+            )
         elif len(current_version) == len(latest_version):
             return False  # Both versions are equal
 
@@ -2576,7 +2638,9 @@ class InstalockerGUIMain(customtkinter.CTk):
     def find_game_end(self):
         confirmations = 0
         while (
-            self.enabled is True and self.active_thread is True and self.locking is False
+            self.enabled is True
+            and self.active_thread is True
+            and self.locking is False
         ):
             player_banner = self.is_matching(
                 self.return_screenshot_pixels(
@@ -2719,7 +2783,7 @@ class InstalockerGUIMain(customtkinter.CTk):
 
                     if current_time - last_press_time >= 7.5:
                         self.register_keyboard_input = False
-                        self.anti_afk_method()
+                        self.anti_afk_method(anti_afk_type=self.anti_afk_mode)
                         self.register_keyboard_input = True
                         last_press_time = current_time
 
@@ -2738,9 +2802,9 @@ class InstalockerGUIMain(customtkinter.CTk):
                     )
                 time.sleep(1)
 
-    def anti_afk_method(self, anti_afk_type="default", hold_time=0.2):
+    def anti_afk_method(self, anti_afk_type: str = None, hold_time: float = 0.2):
         match anti_afk_type:
-            case "default":
+            case "forward":
                 for key in [
                     self.keybinds["MoveForward"],
                     self.keybinds["MoveBackward"],
@@ -2749,6 +2813,14 @@ class InstalockerGUIMain(customtkinter.CTk):
                     time.sleep(hold_time if hold_time > 0 else random.uniform(0.1, 0.3))
                     self.keyboard.release(key)
                     time.sleep(hold_time if hold_time > 0 else random.uniform(0.1, 0.3))
+
+            case "strafe":
+                for key in [self.keybinds["MoveRight"], self.keybinds["MoveLeft"]]:
+                    self.keyboard.press(key)
+                    time.sleep(hold_time if hold_time > 0 else random.uniform(0.1, 0.3))
+                    self.keyboard.release(key)
+                    time.sleep(hold_time if hold_time > 0 else random.uniform(0.1, 0.3))
+
             case "circle":
                 for key in [
                     self.keybinds["MoveForward"],
@@ -2760,18 +2832,63 @@ class InstalockerGUIMain(customtkinter.CTk):
                     time.sleep(hold_time if hold_time > 0 else random.uniform(0.1, 0.3))
                     self.keyboard.release(key)
                     time.sleep(hold_time if hold_time > 0 else random.uniform(0.1, 0.3))
+
             case "random":
-                key = random.choice(
-                    [
-                        self.keybinds["MoveForward"],
-                        self.keybinds["MoveRight"],
-                        self.keybinds["MoveBackward"],
-                        self.keybinds["MoveLeft"],
-                    ]
-                )
-                self.keyboard.press(key)
+                hold_time = 0  # bmakes the hold time random, hold time will be an available setting to change later
+                possible_directions = [
+                    self.keybinds["MoveForward"],
+                    self.keybinds["MoveRight"],
+                    self.keybinds["MoveBackward"],
+                    self.keybinds["MoveLeft"],
+                ]
+                direction = random.choice(possible_directions)
+
+                self.keyboard.press(direction)
                 time.sleep(hold_time if hold_time > 0 else random.uniform(0.1, 0.3))
-                self.keyboard.release(key)
+                self.keyboard.release(direction)
+
+            case "random ctr.":
+                hold_time = 0  # makes the hold time random, hold time will be an available setting to change later
+                direction = random.choice(
+                    ["long", "lat", "longreversed", "latreversed"]
+                )
+                match direction:
+                    case "long":
+                        keybind_order = [
+                            self.keybinds["MoveForward"],
+                            self.keybinds["MoveBackward"],
+                        ]
+                    case "longreversed":
+                        keybind_order = [
+                            self.keybinds["MoveBackward"],
+                            self.keybinds["MoveForward"],
+                        ]
+                    case "lat":
+                        keybind_order = [
+                            self.keybinds["MoveRight"],
+                            self.keybinds["MoveLeft"],
+                        ]
+                    case "latreversed":
+                        keybind_order = [
+                            self.keybinds["MoveLeft"],
+                            self.keybinds["MoveRight"],
+                        ]
+
+                for key in keybind_order:
+                    self.keyboard.press(key)
+                    time.sleep(hold_time if hold_time > 0 else random.uniform(0.1, 0.3))
+                    self.keyboard.release(key)
+                    time.sleep(hold_time if hold_time > 0 else random.uniform(0.1, 0.3))
+
+            case _:  # default in case something goes wrong, same as forward
+                for key in [
+                    self.keybinds["MoveForward"],
+                    self.keybinds["MoveBackward"],
+                ]:
+                    self.keyboard.press(key)
+                    time.sleep(hold_time if hold_time > 0 else random.uniform(0.1, 0.3))
+                    self.keyboard.release(key)
+                    time.sleep(hold_time if hold_time > 0 else random.uniform(0.1, 0.3))
 
     def tools_keyboard_on_press(self, key):
         if (
@@ -3265,9 +3382,12 @@ class ConfirmDeletePopup(customtkinter.CTkToplevel):
         self.bind("<Return>", self.cancel_event)
         self.bind("<Escape>", self.cancel_event)
 
+
 # Popup when update is available
 class UpdatePopup(customtkinter.CTkToplevel):
-    def __init__(self, window_geometry, current_version, latest_version, colors, main_font):
+    def __init__(
+        self, window_geometry, current_version, latest_version, colors, main_font
+    ):
         super().__init__()
         _, x, y = window_geometry.split("+")
         self.main_window_x, self.main_window_y = int(x), int(y)
