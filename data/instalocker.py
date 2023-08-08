@@ -45,7 +45,7 @@ except Exception:
 
 
 # Imports modules that are installed with Python
-import json, os, random, threading, time, ctypes, shutil, re, webbrowser
+import json, os, random, threading, time, ctypes, shutil, re, webbrowser, sys
 import tkinter as tk
 
 # endregion
@@ -190,7 +190,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                         "https://www.github.com/E1Bos/VALocker/releases/latest/"
                     )
                     self.exit()
-                    quit()
+                    sys.exit()
 
         # Defines Controllers
         self.mouse = pynmouse.Controller()
@@ -246,6 +246,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             pass
 
         self.destroy()
+        sys.exit()
 
     # endregion
 
