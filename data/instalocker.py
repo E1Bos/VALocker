@@ -72,7 +72,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         super().__init__()
 
         # Version
-        CURRENT_VERSION = "v1.5.4"
+        CURRENT_VERSION = "v1.5.5"
 
         # Locking Variables
         self.enabled = False
@@ -83,7 +83,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         self.agent_coords_offset = (15, 15)
         self.menu_screen_coords = {
             "main_menu": (815, 243, 820, 244),
-            "progress_text": (1325, 334, 1327, 346),
+            "progress_text": (1325, 337, 1327, 349),
         }
         self.pixel_patterns = {
             "locking": [178, 238, 234, 255],
@@ -965,8 +965,10 @@ class InstalockerGUIMain(customtkinter.CTk):
             hover=False,
             fg_color=f"{self.button_colors['enabled'] if self.start_minimized is True else self.button_colors['disabled']}",
             font=self.button_font_and_size,
-            command=lambda: self.toggle_setting("start_minimized"),
+            state=tk.DISABLED if self.minimize_to_tray is False else tk.NORMAL,    
+            command=lambda: self.toggle_setting("start_minimized")
         )
+
         self.start_minimized_button.grid(
             column=0, row=1, padx=10, pady=5, sticky="nsew"
         )
@@ -1706,8 +1708,10 @@ class InstalockerGUIMain(customtkinter.CTk):
                     if self.minimize_to_tray is True:
                         self.protocol("WM_DELETE_WINDOW", self.withdraw_window)
                         self.create_tray_icon()
+                        self.start_minimized_button.configure(state=tk.NORMAL)
 
                     else:
+                        self.start_minimized_button.configure(state=tk.DISABLED)
                         self.protocol("WM_DELETE_WINDOW", self.exit)
                         try:
                             self.icon.stop()
@@ -1720,8 +1724,9 @@ class InstalockerGUIMain(customtkinter.CTk):
                         if setting_value is None
                         else setting_value
                     )
+
                     self.start_minimized_button.configure(
-                        fg_color=f"{self.button_colors['enabled'] if user_settings['START_MINIMIZED'] is True else self.button_colors['disabled']}",
+                        fg_color=f"{self.button_colors['enabled'] if user_settings['START_MINIMIZED'] is True else self.button_colors['disabled']}"
                     )
                 case "enable_on_startup":
                     user_settings["ENABLE_ON_STARTUP"] = (

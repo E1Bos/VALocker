@@ -3,6 +3,15 @@ Changelog
 
 Date Format: YYYY-MM-DD
 
+## Version 1.5.5 - 2023-08-08
+
+### Added
+- [Feature] Type of anti-afk movement now configurable in the settings tab. The options are "Forward", "Strafe", "Circle", "Random", and "Random Centered. VALocker will be unable to detect when you return from being AFK while it is moving your character, so longer movement cycles such as "Circle" may not be ideal, however, it offers more movement. Default is set to "Forward".
+- [Feature] Start minimized not toggleable if minimize to tray is disabled.
+
+### Fixed
+- [Bug] VALocker would not switch back to "Locking" right after a game because the text was moved slightly. This has been fixed.
+
 ## Version 1.5.4 - 2023-08-01
 
 ### Added
