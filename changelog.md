@@ -3,6 +3,11 @@ Changelog
 
 Date Format: YYYY-MM-DD
 
+## Version 1.5.6 - 2023-XX-XX
+
+### Fixed
+- [Bug] VALocker would not switch to "Locking" when unranked and playing comp.
+
 ## Version 1.5.5 - 2023-08-08
 
 ### Added

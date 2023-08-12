@@ -84,6 +84,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         self.menu_screen_coords = {
             "main_menu": (815, 243, 820, 244),
             "progress_text": (1325, 337, 1327, 349),
+            "progress_text_ranked": (1477, 337, 1479, 349),
         }
         self.pixel_patterns = {
             "locking": [178, 238, 234, 255],
@@ -2662,7 +2663,15 @@ class InstalockerGUIMain(customtkinter.CTk):
                 self.pixel_patterns["progress_text"],
             )
 
-            if progress_text is True or player_banner is True:
+            progress_text_ranked = self.is_matching(
+                self.return_screenshot_pixels(
+                    self.locking_screenshotter,
+                    self.menu_screen_coords["progress_text_ranked"],
+                ),
+                self.pixel_patterns["progress_text"],
+            )
+
+            if progress_text or progress_text_ranked or player_banner:
                 confirmations += 1
 
                 if confirmations >= self.menu_screen_confirmaions_required:
