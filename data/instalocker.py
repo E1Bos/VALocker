@@ -90,6 +90,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             "locking": [178, 238, 234, 255],
             "main_menu": [240, 244, 245, 255],
             "progress_text": [255, 255, 255, 255],
+            "spectating": [225, 237, 170, 255],
             "has_spike": [255, 255, 255, 255],
             "can_plant": [255, 255, 255, 255],
             "is_planting": [178, 238, 235, 255],
@@ -100,6 +101,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         self.enable_tools = False
         self.tools_thread = None
         self.tools_locations = {
+            "spectating": (135, 856, 138, 861),
             "spike": (1852, 684, 1856, 687),
             "can_plant": (910, 140, 920, 141),
             "is_planting": (832, 174, 833, 193),
@@ -109,6 +111,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         self.anti_afk = False
         self.register_keyboard_input = True
         self.anti_aim = False
+        self.chat_is_open = False
 
         # GUI Settings
         self.window_width = 650
@@ -156,6 +159,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         self.save_files = list()
         self.current_account_id = None
         self.grab_keybinds = False
+        self.is_1920x1080 = True
 
         # Stats
         self.total_games_used = 0
@@ -945,6 +949,34 @@ class InstalockerGUIMain(customtkinter.CTk):
         )
         self.anti_afk_mode_button.grid(column=1, row=2, padx=10, pady=5, sticky="nsew")
 
+        self.anti_afk_toggles_auto_drop_button = customtkinter.CTkButton(
+            general_settings_frame,
+            text=f"Anti AFK Drops Spike",
+            height=40,
+            width=200,
+            hover=False,
+            fg_color=f"{self.button_colors['enabled'] if self.anti_afk_toggles_auto_drop is True else self.button_colors['disabled']}",
+            font=self.button_font_and_size,
+            command=lambda: self.toggle_setting("anti_afk_toggles_auto_drop"),
+        )
+        self.anti_afk_toggles_auto_drop_button.grid(
+            column=0, row=3, padx=10, pady=5, sticky="nsew"
+        )
+
+        self.detect_open_chat_mode_button = customtkinter.CTkButton(
+            general_settings_frame,
+            text=f"Detect Opened Chat (KB)",
+            height=40,
+            width=200,
+            hover=False,
+            fg_color=f"{self.button_colors['enabled'] if self.detect_open_chat_keyboard is True else self.button_colors['disabled']}",
+            font=self.button_font_and_size,
+            command=lambda: self.toggle_setting("detect_open_chat_keyboard"),
+        )
+        self.detect_open_chat_mode_button.grid(
+            column=1, row=3, padx=10, pady=5, sticky="nsew"
+        )
+
         # On Startup Settings
         on_startup_frame = customtkinter.CTkFrame(
             scrolling_settings_frame, fg_color="gray16"
@@ -1697,15 +1729,12 @@ class InstalockerGUIMain(customtkinter.CTk):
             user_settings = json.load(user_settings_file)
             match setting_name:
                 case "minimize_to_tray":
-                    user_settings["MINIMIZE_TO_TRAY"] = (
-                        not user_settings["MINIMIZE_TO_TRAY"]
-                        if setting_value is None
-                        else setting_value
-                    )
+                    self.minimize_to_tray = not self.minimize_to_tray if setting_value is None else setting_value
+                    user_settings["MINIMIZE_TO_TRAY"] = self.minimize_to_tray
+
                     self.minimize_to_tray_button.configure(
-                        fg_color=f"{self.button_colors['enabled'] if user_settings['MINIMIZE_TO_TRAY'] is True else self.button_colors['disabled']}",
+                        fg_color=f"{self.button_colors['enabled'] if self.minimize_to_tray is True else self.button_colors['disabled']}",
                     )
-                    self.minimize_to_tray = user_settings["MINIMIZE_TO_TRAY"]
 
                     if self.minimize_to_tray is True:
                         self.protocol("WM_DELETE_WINDOW", self.withdraw_window)
@@ -1766,37 +1795,25 @@ class InstalockerGUIMain(customtkinter.CTk):
                         text=f"Safe Mode Strength: {list(self.safe_mode_timing.keys())[self.safe_mode_strength_on_startup]}",
                     )
                 case "persistent_random_agents":
-                    user_settings["PERSISTENT_RANDOM_AGENTS"] = (
-                        not user_settings["PERSISTENT_RANDOM_AGENTS"]
-                        if setting_value is None
-                        else setting_value
-                    )
-                    self.persistent_random_agents = user_settings[
-                        "PERSISTENT_RANDOM_AGENTS"
-                    ]
+                    self.persistent_random_agents = not self.persistent_random_agents if setting_value is None else setting_value
+                    user_settings["PERSISTENT_RANDOM_AGENTS"] = self.persistent_random_agents
+
                     self.persistent_random_agents_button.configure(
-                        fg_color=f"{self.button_colors['enabled'] if user_settings['PERSISTENT_RANDOM_AGENTS'] is True else self.button_colors['disabled']}",
+                        fg_color=f"{self.button_colors['enabled'] if self.persistent_random_agents is True else self.button_colors['disabled']}",
                     )
                 case "grab_keybinds":
-                    user_settings["GRAB_KEYBINDS"] = (
-                        not user_settings["GRAB_KEYBINDS"]
-                        if setting_value is None
-                        else setting_value
-                    )
+                    self.grab_keybinds = not self.grab_keybinds if setting_value is None else setting_value
+                    user_settings["GRAB_KEYBINDS"] = self.grab_keybinds
+
                     self.grab_keybinds_button.configure(
-                        fg_color=f"{self.button_colors['enabled'] if user_settings['GRAB_KEYBINDS'] is True else self.button_colors['disabled']}",
+                        fg_color=f"{self.button_colors['enabled'] if self.grab_keybinds is True else self.button_colors['disabled']}",
                     )
                 case "hide_default_save_file":
-                    user_settings["HIDE_DEFAULT_SAVE_FILE"] = (
-                        not user_settings["HIDE_DEFAULT_SAVE_FILE"]
-                        if setting_value is None
-                        else setting_value
-                    )
-                    self.hide_default_save_file = user_settings[
-                        "HIDE_DEFAULT_SAVE_FILE"
-                    ]
+                    self.hide_default_save_file = not self.hide_default_save_file if setting_value is None else setting_value
+                    user_settings["HIDE_DEFAULT_SAVE_FILE"] = self.hide_default_save_file
+
                     self.hide_default_save_file_button.configure(
-                        fg_color=f"{self.button_colors['enabled'] if user_settings['HIDE_DEFAULT_SAVE_FILE'] is True else self.button_colors['disabled']}",
+                        fg_color=f"{self.button_colors['enabled'] if self.hide_default_save_file is True else self.button_colors['disabled']}",
                     )
                     self.update_save_file_tab()
 
@@ -1825,6 +1842,24 @@ class InstalockerGUIMain(customtkinter.CTk):
                     self.anti_afk_mode_button.configure(
                         text=f"Anti AFK Mode: {self.anti_afk_mode.title()}",
                     )
+
+                case "anti_afk_toggles_auto_drop":
+                    self.anti_afk_toggles_auto_drop = not self.anti_afk_toggles_auto_drop if setting_value is None else setting_value
+
+                    user_settings["ANTIAFK_TOGGLES_AUTODROPSPIKE"] = self.anti_afk_toggles_auto_drop
+
+                    self.anti_afk_toggles_auto_drop_button.configure(
+                        fg_color=f"{self.button_colors['enabled'] if self.anti_afk_toggles_auto_drop is True else self.button_colors['disabled']}",
+                    )
+
+                case 'detect_open_chat_keyboard':
+                    self.detect_open_chat_keyboard = not self.detect_open_chat_keyboard if setting_value is None else setting_value
+                    user_settings["DETECT_OPEN_CHAT_THROUGH_KEYBOARD"] = self.detect_open_chat_keyboard
+
+                    self.detect_open_chat_mode_button.configure(
+                        fg_color=f"{self.button_colors['enabled'] if self.detect_open_chat_keyboard is True else self.button_colors['disabled']}",
+                    )
+
 
         with open(resource_path("data/user_settings.json"), "w") as user_settings_file:
             json.dump(user_settings, user_settings_file, indent=4)
@@ -1972,6 +2007,8 @@ class InstalockerGUIMain(customtkinter.CTk):
                         "HIDE_DEFAULT_SAVE_FILE"
                     ]
                     self.anti_afk_mode = user_settings["ANTI_AFK_MODE"]
+                    self.anti_afk_toggles_auto_drop = user_settings["ANTIAFK_TOGGLES_AUTODROPSPIKE"]
+                    self.detect_open_chat_keyboard = user_settings["DETECT_OPEN_CHAT_THROUGH_KEYBOARD"]
 
             # Creates a new user_settings.json file if one does not exist
             except Exception:
@@ -1987,6 +2024,8 @@ class InstalockerGUIMain(customtkinter.CTk):
                 self.safe_mode_on_startup = True
                 self.safe_mode_strength_on_startup = 0
                 self.anti_afk_mode = "forward"
+                self.anti_afk_toggles_auto_drop = False
+                self.detect_open_chat_keyboard = True
 
             with open(resource_path("data/user_settings.json"), "w") as us:
                 user_settings_file_json = {
@@ -2003,6 +2042,8 @@ class InstalockerGUIMain(customtkinter.CTk):
                     "FAST_MODE_TIMINGS": self.fast_mode_timings,
                     "HIDE_DEFAULT_SAVE_FILE": self.hide_default_save_file,
                     "ANTI_AFK_MODE": self.anti_afk_mode,
+                    "ANTIAFK_TOGGLES_AUTODROPSPIKE": self.anti_afk_toggles_auto_drop,
+                    "DETECT_OPEN_CHAT_THROUGH_KEYBOARD": self.detect_open_chat_keyboard,
                 }
                 us.write(json.dumps(user_settings_file_json, indent=4))
 
@@ -2738,15 +2779,34 @@ class InstalockerGUIMain(customtkinter.CTk):
             self.tools_keyboard_listener = pynkeyboard.Listener(
                 on_press=self.tools_keyboard_on_press
             )
+            self.tools_keyboard_listener.start()
         spike_drop_confirmations = 0
+        last_press_time = None
         while self.active_thread is True:
             if self.enable_tools is True and (
                 self.locking is False or self.enabled is False
             ):
+                if not self.tools_keyboard_listener.running:
+                    self.tools_keyboard_listener.start()
+
                 time.sleep(0.1)
 
+                # region Check Spectating
+                is_spectating = self.is_matching(
+                    self.return_screenshot_pixels(
+                        self.tools_screenshotter, self.tools_locations["spectating"]
+                    ),
+                    self.pixel_patterns["spectating"],
+                )
+                if is_spectating:
+                    # print("Spectating, waiting...")
+                    time.sleep(3)
+                    continue
+
+                # endregion
+
                 # region Auto Drop Spike
-                if self.auto_drop_spike is True:  # or self.anti_afk is True
+                if (self.auto_drop_spike or (self.anti_afk_toggles_auto_drop and self.anti_afk)) and not self.chat_is_open:
                     has_spike = self.is_matching(
                         self.return_screenshot_pixels(
                             self.tools_screenshotter, self.tools_locations["spike"]
@@ -2788,10 +2848,8 @@ class InstalockerGUIMain(customtkinter.CTk):
                 # endregion
 
                 # region Anti AFK
-                if self.anti_afk is True:
-                    if self.tools_keyboard_listener.running is False:
-                        self.tools_keyboard_listener.start()
-                        self.tools_keyboard_listener.wait()
+                if self.anti_afk and not self.chat_is_open:
+                    if last_press_time is None:
                         last_press_time = time.time()
 
                     current_time = time.time()
@@ -2801,16 +2859,10 @@ class InstalockerGUIMain(customtkinter.CTk):
                         self.anti_afk_method(anti_afk_type=self.anti_afk_mode)
                         self.register_keyboard_input = True
                         last_press_time = current_time
-
-                elif self.tools_keyboard_listener.running is True:
-                    self.tools_keyboard_listener.stop()
-                    self.tools_keyboard_listener = pynkeyboard.Listener(
-                        on_press=self.tools_keyboard_on_press
-                    )
                 # endregion
 
             else:
-                if self.tools_keyboard_listener.running is True:
+                if self.tools_keyboard_listener.running:
                     self.tools_keyboard_listener.stop()
                     self.tools_keyboard_listener = pynkeyboard.Listener(
                         on_press=self.tools_keyboard_on_press
@@ -2906,11 +2958,18 @@ class InstalockerGUIMain(customtkinter.CTk):
                     time.sleep(hold_time if hold_time > 0 else random.uniform(0.1, 0.3))
 
     def tools_keyboard_on_press(self, key):
+        if self.detect_open_chat_keyboard:
+            if self.chat_is_open and (key == pynkeyboard.Key.enter or key == pynkeyboard.Key.esc):
+                self.chat_is_open = False
+            elif key == pynkeyboard.Key.enter:
+                self.chat_is_open = True
+
         if (
             hasattr(key, "char")
             and self.register_keyboard_input
             and self.enable_tools
             and self.anti_afk
+            and not self.chat_is_open
         ):
             if key.char in [
                 self.keybinds["MoveForward"],
@@ -2944,7 +3003,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         ).tobytes()
         return screenshot
 
-    def return_screenshot_pixels(self, screenshotter, bbox):
+    def return_screenshot_pixels(self, screenshotter, bbox): # i think it returns gbr instead of rgb but it doesnt really matter
         agent_screen_section = screenshotter.grab(bbox)
         return np.array(agent_screen_section, dtype=np.uint8)
 
@@ -3037,6 +3096,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             self.screen_resolution = (int(resolution_size_x), int(resolution_size_y))
 
             if self.screen_resolution != (1920, 1080):
+                self.is_1920x1080 = False
                 ErrorPopup(
                     window_geometry=self.winfo_geometry(),
                     title="Warning",
