@@ -72,7 +72,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         super().__init__()
 
         # Version
-        CURRENT_VERSION = "v1.5.5"
+        CURRENT_VERSION = "v1.5.6"
 
         # Locking Variables
         self.enabled = False
