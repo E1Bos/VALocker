@@ -3,7 +3,14 @@ Changelog
 
 Date Format: YYYY-MM-DD
 
-## Version 1.5.6 - 2023-XX-XX
+## Version 1.5.6 - 2023-08-14
+
+### Added
+- [Feature] New Setting, "Anti AFK Drops Spike". When Anti AFK is enabled, the spike will be automatically dropped while you are AFK. This gives your team a fighting chance if they drop you the spike while AFK. Its disabled by default.
+- [Feature] Tools will stop running if the user is spectating a player, however, detection stops when chat is open, and may be disabled when multiple chat messages are sent, so it may not be 100% accurate.
+- [Feature] New setting "Detect Opened Chat (KB)" uses a keyboard listener to detect when the enter and esc keys are pressed. Pressing the enter key will toggle between the program thinking the chat is open and closed, and pressing the esc key will signal that the chat is closed. This is enabled by default. When the chat is flagged as opened, tools will not function, so you can type without tools interfering. This setting is enabled by default.
+    - > Note: This implementation **WILL NOT** work perfectly. Pressing enter to autofill when private messaging someone will trick the program into thinking the chat is closed. Use the tab key instead. Clicking on the chat box will **not** flag the chat as opened. I am working on an implementation that works using visuals, but it is not ready yet. VALocker **cannot** detect is the focused window, so if you alt-tab out of the game, and use your keyboard, the chat flag may change, and tools may run and interfere with other applications.
+    - When visual detection is added, this setting will switch between detection through visuals and detection through keyboard inputs.
 
 ### Fixed
 - [Bug] VALocker would not switch to "Locking" when unranked and playing comp.
