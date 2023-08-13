@@ -23,6 +23,7 @@ VALocker is a program written in Python that allows you to automatically lock an
 ## 📚 Features
 - Provides a user-friendly GUI for easy interaction.
 - Can be run as an executable, no Python installation required.
+- Automatically checks for updates.
 - Installs all necessary dependencies automatically.
 - Allows the window to be minimized into an icon.
 - Load-to-lock time of 70ms on average.
@@ -39,12 +40,12 @@ VALocker is a program written in Python that allows you to automatically lock an
 - Selects random part of agent and locking button to deter detection.
 - Allows for multiple save files for different accounts and/or configurations.
 - Utilizes screenshot analysis to obtain game data, ensuring a safer approach and reducing the risk of bans compared to other aggressive methods such as direct memory reading.
+- Automatically grabs your keybinds to ensure that the correct keys are pressed when using non-instalocking related functions.
 - Features non-instalocking related tools to improve quality of life. Tools only work when the instalocker is disabled or "In Game". The currently implemented tools are:
   - Auto drop spike
   - Anti-AFK
     - Anti-AFK can be used in conjuction with the instalocker to take an break from your computer while queuing and return without being kicked for inactivity.
     - Anti-AFK automatically disables if your movement keys are pressed. If "GRAB_KEYBINDS" is set to false in the user settings file, if WASD are pressed.
-- Automatically checks for updates.
 > Tools are still a work in progress. Feel free to suggest any tools you would like to see implemented.
 
 ## ⚙️ Installation
