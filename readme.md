@@ -77,8 +77,12 @@ VALocker is a program written in Python that allows you to automatically lock an
 **Note:** VALocker relies on specific display settings for accurate functionality. Please ensure that your VALORANT game is running at a screen resolution of 1920x1080 in letterbox mode. VALocker relies heavily on the Valorant UI to determine what is going on in game, and adding an FPS cap is recommended. At higher framerates, Valorant sometimes does not render the UI, which can cause issues with the program. VALocker has been tested at 60 FPS and 144 FPS, and works reliably at this framerate. It may work at higher framerates if thats what your monitor supports. Deviating from these settings may result in incorrect behavior of the program.
 
 ## 🔧 Configuration
-VALocker provides a `user_settings.json` file in the data directory where you can customize certain aspects of the program. The `user_settings.json` file is created when running the program for the first time. The configuration file allows you to:
+> **THIS SECTION IS NOT UP TO DATE**  
+> Most settings can be changed via the settings tab. The `user_settings.json` file should not be edited manually unless you know what you're doing.
 
+VALocker provides a `user_settings.json` file in the data directory where you can customize certain aspects of the program. The `user_settings.json` file is created when running the program for the first time. 
+
+The configuration file allows you to:
 - Toggle the option to minimize VALocker to the system tray.
 - Enable or disable the automatic minimization of VALocker on startup.
 - Choose whether to enable instalocking automatically on startup.
