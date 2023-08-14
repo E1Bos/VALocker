@@ -7,7 +7,7 @@
   <img alt="License" src="https://img.shields.io/github/license/E1Bos/VALocker?color=brightgreen&link=https%3A%2F%2Fgithub.com%2FE1Bos%2FVALocker%2Fblob%2Fmaster%2FLICENSE">
   <img alt="GitHub release version" src="https://img.shields.io/github/v/release/E1Bos/VALocker?color=blue&link=https%3A%2F%2Fgithub.com%2FE1Bos%2FVALocker%2Freleases">
   <img alt="GitHub all releases" src="https://img.shields.io/github/downloads/E1Bos/VALocker/total?color=yellow&link=https%3A%2F%2Fgithub.com%2FE1Bos%2FVALocker%2Frelease">
-  <a href="https://ko-fi.com/G2G8O67MO"><img alt="Kofi donate link" src="https://ko-fi.com/img/githubbutton_sm.svg" height=20></a>
+  <a href="https://ko-fi.com/G2G8O67MO" target="_blank"><img alt="Kofi donate link" src="https://ko-fi.com/img/githubbutton_sm.svg" height=20px></a>
 </div>
 <br>
 
