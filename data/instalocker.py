@@ -1970,76 +1970,54 @@ class InstalockerGUIMain(customtkinter.CTk):
                     self.map_lookup[None] = map_name
 
             # Loads the user_settings.json file, clears time_to_lock if new timings are added
-            try:
-                with open(
-                    resource_path("data/user_settings.json"), "r"
-                ) as user_settings_file:
-                    user_settings = json.load(user_settings_file)
-                    self.current_save_file = (
-                        user_settings["ACTIVE_SAVE_FILE"]
-                        if user_settings["ACTIVE_SAVE_FILE"] in self.save_files
-                        else "default"
-                    )
-                    self.minimize_to_tray = user_settings["MINIMIZE_TO_TRAY"]
-                    self.start_minimized = user_settings["START_MINIMIZED"]
-                    self.enabled = user_settings["ENABLE_ON_STARTUP"]
-                    self.enable_on_startup = user_settings["ENABLE_ON_STARTUP"]
-                    self.safe_mode = user_settings["SAFE_MODE_ON_STARTUP"]
-                    self.safe_mode_on_startup = user_settings["SAFE_MODE_ON_STARTUP"]
-                    self.safe_mode_strength = user_settings[
-                        "SAFE_MODE_STRENGTH_ON_STARTUP"
-                    ]
-                    self.safe_mode_strength_on_startup = user_settings[
-                        "SAFE_MODE_STRENGTH_ON_STARTUP"
-                    ]
-                    self.persistent_random_agents = user_settings[
-                        "PERSISTENT_RANDOM_AGENTS"
-                    ]
-                    self.locking_confirmations_required = user_settings[
-                        "LOCKING_CONFIRMATIONS"
-                    ]
-                    self.menu_screen_confirmaions_required = user_settings[
-                        "MENU_CONFIRMATIONS"
-                    ]
-                    self.grab_keybinds = user_settings["GRAB_KEYBINDS"]
-                    self.fast_mode_timings = user_settings["FAST_MODE_TIMINGS"]
-                    self.hide_default_save_file = user_settings[
-                        "HIDE_DEFAULT_SAVE_FILE"
-                    ]
-                    self.anti_afk_mode = user_settings["ANTI_AFK_MODE"]
-                    self.anti_afk_toggles_auto_drop = user_settings["ANTIAFK_TOGGLES_AUTODROPSPIKE"]
-                    self.detect_open_chat_keyboard = user_settings["DETECT_OPEN_CHAT_THROUGH_KEYBOARD"]
+            # try:
+            with open(
+                resource_path("data/user_settings.json"), "r"
+            ) as user_settings_file:
+                user_settings = json.load(user_settings_file)
 
-            # Creates a new user_settings.json file if one does not exist
-            except Exception:
-                self.minimize_to_tray = False
-                self.start_minimized = False
-                self.persistent_random_agents = False
-                self.hide_default_save_file = True
-                self.locking_confirmations_required = 3
-                self.menu_screen_confirmaions_required = 3
-                self.grab_keybinds = True
-                self.fast_mode_timings = [0.02, 0.02, 0.02]
-                self.enable_on_startup = False
-                self.safe_mode_on_startup = True
-                self.safe_mode_strength_on_startup = 0
-                self.anti_afk_mode = "forward"
-                self.anti_afk_toggles_auto_drop = False
-                self.detect_open_chat_keyboard = True
+                active_save_file = user_settings.get("ACTIVE_SAVE_FILE", None)
+                self.current_save_file = active_save_file if active_save_file in self.save_files else 'default'
+
+                self.minimize_to_tray = user_settings.get("MINIMIZE_TO_TRAY", False)
+                self.start_minimized = user_settings.get("START_MINIMIZED", False)
+
+                self.enabled = self.enable_on_startup = user_settings.get("ENABLE_ON_STARTUP", False)
+
+                self.safe_mode = self.safe_mode_on_startup = user_settings.get("SAFE_MODE_ON_STARTUP", True)
+                self.safe_mode_strength = self.safe_mode_strength_on_startup = user_settings.get("SAFE_MODE_STRENGTH_ON_STARTUP", 0)
+
+                self.persistent_random_agents = user_settings.get("PERSISTENT_RANDOM_AGENTS", False)
+
+                self.locking_confirmations_required = user_settings.get("LOCKING_CONFIRMATIONS", 3)
+                self.menu_screen_confirmaions_required = user_settings.get("MENU_CONFIRMATIONS", 3)
+
+                self.grab_keybinds = user_settings.get("GRAB_KEYBINDS", True)
+
+                self.fast_mode_timings = user_settings.get("FAST_MODE_TIMINGS", [0.02, 0.02, 0.02])
+
+                self.hide_default_save_file = user_settings.get("HIDE_DEFAULT_SAVE_FILE", True)
+
+                self.anti_afk_mode = user_settings.get("ANTI_AFK_MODE", "forward")
+
+                self.anti_afk_toggles_auto_drop = user_settings.get("ANTIAFK_TOGGLES_AUTODROPSPIKE", False)
+
+                self.detect_open_chat_keyboard = user_settings.get("DETECT_OPEN_CHAT_THROUGH_KEYBOARD", True)
+
 
             with open(resource_path("data/user_settings.json"), "w") as us:
                 user_settings_file_json = {
                     "ACTIVE_SAVE_FILE": self.current_save_file,
+                    "ENABLE_ON_STARTUP": self.enable_on_startup,
                     "MINIMIZE_TO_TRAY": self.minimize_to_tray,
                     "START_MINIMIZED": self.start_minimized,
-                    "ENABLE_ON_STARTUP": self.enable_on_startup,
                     "SAFE_MODE_ON_STARTUP": self.safe_mode_on_startup,
                     "SAFE_MODE_STRENGTH_ON_STARTUP": self.safe_mode_strength_on_startup,
-                    "PERSISTENT_RANDOM_AGENTS": self.persistent_random_agents,
                     "LOCKING_CONFIRMATIONS": self.locking_confirmations_required,
                     "MENU_CONFIRMATIONS": self.menu_screen_confirmaions_required,
-                    "GRAB_KEYBINDS": self.grab_keybinds,
                     "FAST_MODE_TIMINGS": self.fast_mode_timings,
+                    "GRAB_KEYBINDS": self.grab_keybinds,
+                    "PERSISTENT_RANDOM_AGENTS": self.persistent_random_agents,
                     "HIDE_DEFAULT_SAVE_FILE": self.hide_default_save_file,
                     "ANTI_AFK_MODE": self.anti_afk_mode,
                     "ANTIAFK_TOGGLES_AUTODROPSPIKE": self.anti_afk_toggles_auto_drop,
