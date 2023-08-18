@@ -1,0 +1,46 @@
+name: Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+    build:
+      runs-on: windows-latest
+  
+      steps:
+        - name: Check-out repository
+          uses: actions/checkout@v3
+  
+        - name: Setup Python
+          uses: actions/setup-python@v4
+          with:
+            python-version: 'latest'
+            architecture: 'x64'
+            cache: 'pip'
+            cache-dependency-path: |
+              **/requirements*.txt
+  
+        - name: Install Dependencies
+          run: |
+            pip install -r requirements.txt
+  
+        - name: Build Executable
+          uses: Nuitka/Nuitka-Action@main
+          with:
+            nuitka-version: main
+            script-name: VALocker.pyw
+            onefile: true
+            standalone: true
+            assume-yes-for-downloads: true
+            enable-plugins: tk-inter
+            include-data-dir: data/, images/
+            disable-console: true
+            windows-icon-from-ico: images/icons/valocker-enabled.ico
+
+  
+        - name: Upload Artifacts
+          uses: actions/upload-artifact@v3
+          with:
+            name: Windows Build
+            path: |
+              build/*.exe
