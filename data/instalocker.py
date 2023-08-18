@@ -75,37 +75,42 @@ class InstalockerGUIMain(customtkinter.CTk):
         CURRENT_VERSION = "v1.5.6"
 
         # Locking Variables
-        self.enabled = False
-        self.active_thread = True
-        self.locking = True
-        self.locking_coords = (947, 866, 952, 867)
-        self.map_selection_coords = (878, 437, 1047, 646)
-        self.agent_coords_offset = (15, 15)
-        self.menu_screen_coords = {
+        self.coords = {
+            # Locking Screen
+            "locking": (947, 866, 952, 867),
+            # Finding Menu
             "main_menu": (815, 243, 820, 244),
+            "play_button": (920, 45, 930, 50),
             "progress_text": (1325, 337, 1327, 349),
             "progress_text_ranked": (1477, 337, 1479, 349),
-        }
-        self.pixel_patterns = {
-            "locking": [178, 238, 234, 255],
-            "main_menu": [240, 244, 245, 255],
-            "progress_text": [255, 255, 255, 255],
-            "spectating": [225, 237, 170, 255],
-            "has_spike": [255, 255, 255, 255],
-            "can_plant": [255, 255, 255, 255],
-            "is_planting": [178, 238, 235, 255],
-        }
-        self.locking_button = None
-
-        # Tool Variables
-        self.enable_tools = False
-        self.tools_thread = None
-        self.tools_locations = {
+            # Tools
             "spectating": (135, 856, 138, 861),
             "spike": (1852, 684, 1856, 687),
             "can_plant": (910, 140, 920, 141),
             "is_planting": (832, 174, 833, 193),
         }
+        self.pixel_patterns = {
+            # Locking Screen
+            "locking": (234, 238, 178),
+            # Menu Screen
+            "main_menu": (245, 244, 240),
+            "red_button": (216, 57, 70),
+            # Tools
+            "spectating": (170, 237, 225),
+            "is_planting": (235, 238, 178),
+            # Pure White (Used by menu screen and tools)
+            "pure_white": (255, 255, 255),
+        }
+        self.enabled = False
+        self.active_thread = True
+        self.locking = True
+        self.map_selection_coords = (878, 437, 1047, 646)
+        self.agent_coords_offset = (15, 15)
+        self.locking_button = None
+
+        # Tool Variables
+        self.enable_tools = False
+        self.tools_thread = None
         self.auto_drop_spike = False
         self.spike_drop_confirmations_required = 2
         self.anti_afk = False
@@ -999,8 +1004,8 @@ class InstalockerGUIMain(customtkinter.CTk):
             hover=False,
             fg_color=f"{self.button_colors['enabled'] if self.start_minimized is True else self.button_colors['disabled']}",
             font=self.button_font_and_size,
-            state=tk.DISABLED if self.minimize_to_tray is False else tk.NORMAL,    
-            command=lambda: self.toggle_setting("start_minimized")
+            state=tk.DISABLED if self.minimize_to_tray is False else tk.NORMAL,
+            command=lambda: self.toggle_setting("start_minimized"),
         )
 
         self.start_minimized_button.grid(
@@ -1729,7 +1734,11 @@ class InstalockerGUIMain(customtkinter.CTk):
             user_settings = json.load(user_settings_file)
             match setting_name:
                 case "minimize_to_tray":
-                    self.minimize_to_tray = not self.minimize_to_tray if setting_value is None else setting_value
+                    self.minimize_to_tray = (
+                        not self.minimize_to_tray
+                        if setting_value is None
+                        else setting_value
+                    )
                     user_settings["MINIMIZE_TO_TRAY"] = self.minimize_to_tray
 
                     self.minimize_to_tray_button.configure(
@@ -1795,22 +1804,38 @@ class InstalockerGUIMain(customtkinter.CTk):
                         text=f"Safe Mode Strength: {list(self.safe_mode_timing.keys())[self.safe_mode_strength_on_startup]}",
                     )
                 case "persistent_random_agents":
-                    self.persistent_random_agents = not self.persistent_random_agents if setting_value is None else setting_value
-                    user_settings["PERSISTENT_RANDOM_AGENTS"] = self.persistent_random_agents
+                    self.persistent_random_agents = (
+                        not self.persistent_random_agents
+                        if setting_value is None
+                        else setting_value
+                    )
+                    user_settings[
+                        "PERSISTENT_RANDOM_AGENTS"
+                    ] = self.persistent_random_agents
 
                     self.persistent_random_agents_button.configure(
                         fg_color=f"{self.button_colors['enabled'] if self.persistent_random_agents is True else self.button_colors['disabled']}",
                     )
                 case "grab_keybinds":
-                    self.grab_keybinds = not self.grab_keybinds if setting_value is None else setting_value
+                    self.grab_keybinds = (
+                        not self.grab_keybinds
+                        if setting_value is None
+                        else setting_value
+                    )
                     user_settings["GRAB_KEYBINDS"] = self.grab_keybinds
 
                     self.grab_keybinds_button.configure(
                         fg_color=f"{self.button_colors['enabled'] if self.grab_keybinds is True else self.button_colors['disabled']}",
                     )
                 case "hide_default_save_file":
-                    self.hide_default_save_file = not self.hide_default_save_file if setting_value is None else setting_value
-                    user_settings["HIDE_DEFAULT_SAVE_FILE"] = self.hide_default_save_file
+                    self.hide_default_save_file = (
+                        not self.hide_default_save_file
+                        if setting_value is None
+                        else setting_value
+                    )
+                    user_settings[
+                        "HIDE_DEFAULT_SAVE_FILE"
+                    ] = self.hide_default_save_file
 
                     self.hide_default_save_file_button.configure(
                         fg_color=f"{self.button_colors['enabled'] if self.hide_default_save_file is True else self.button_colors['disabled']}",
@@ -1844,22 +1869,33 @@ class InstalockerGUIMain(customtkinter.CTk):
                     )
 
                 case "anti_afk_toggles_auto_drop":
-                    self.anti_afk_toggles_auto_drop = not self.anti_afk_toggles_auto_drop if setting_value is None else setting_value
+                    self.anti_afk_toggles_auto_drop = (
+                        not self.anti_afk_toggles_auto_drop
+                        if setting_value is None
+                        else setting_value
+                    )
 
-                    user_settings["ANTIAFK_TOGGLES_AUTODROPSPIKE"] = self.anti_afk_toggles_auto_drop
+                    user_settings[
+                        "ANTIAFK_TOGGLES_AUTODROPSPIKE"
+                    ] = self.anti_afk_toggles_auto_drop
 
                     self.anti_afk_toggles_auto_drop_button.configure(
                         fg_color=f"{self.button_colors['enabled'] if self.anti_afk_toggles_auto_drop is True else self.button_colors['disabled']}",
                     )
 
-                case 'detect_open_chat_keyboard':
-                    self.detect_open_chat_keyboard = not self.detect_open_chat_keyboard if setting_value is None else setting_value
-                    user_settings["DETECT_OPEN_CHAT_THROUGH_KEYBOARD"] = self.detect_open_chat_keyboard
+                case "detect_open_chat_keyboard":
+                    self.detect_open_chat_keyboard = (
+                        not self.detect_open_chat_keyboard
+                        if setting_value is None
+                        else setting_value
+                    )
+                    user_settings[
+                        "DETECT_OPEN_CHAT_THROUGH_KEYBOARD"
+                    ] = self.detect_open_chat_keyboard
 
                     self.detect_open_chat_mode_button.configure(
                         fg_color=f"{self.button_colors['enabled'] if self.detect_open_chat_keyboard is True else self.button_colors['disabled']}",
                     )
-
 
         with open(resource_path("data/user_settings.json"), "w") as user_settings_file:
             json.dump(user_settings, user_settings_file, indent=4)
@@ -1977,33 +2013,56 @@ class InstalockerGUIMain(customtkinter.CTk):
                 user_settings = json.load(user_settings_file)
 
                 active_save_file = user_settings.get("ACTIVE_SAVE_FILE", None)
-                self.current_save_file = active_save_file if active_save_file in self.save_files else 'default'
+                self.current_save_file = (
+                    active_save_file
+                    if active_save_file in self.save_files
+                    else "default"
+                )
 
                 self.minimize_to_tray = user_settings.get("MINIMIZE_TO_TRAY", False)
                 self.start_minimized = user_settings.get("START_MINIMIZED", False)
 
-                self.enabled = self.enable_on_startup = user_settings.get("ENABLE_ON_STARTUP", False)
+                self.enabled = self.enable_on_startup = user_settings.get(
+                    "ENABLE_ON_STARTUP", False
+                )
 
-                self.safe_mode = self.safe_mode_on_startup = user_settings.get("SAFE_MODE_ON_STARTUP", True)
-                self.safe_mode_strength = self.safe_mode_strength_on_startup = user_settings.get("SAFE_MODE_STRENGTH_ON_STARTUP", 0)
+                self.safe_mode = self.safe_mode_on_startup = user_settings.get(
+                    "SAFE_MODE_ON_STARTUP", True
+                )
+                self.safe_mode_strength = (
+                    self.safe_mode_strength_on_startup
+                ) = user_settings.get("SAFE_MODE_STRENGTH_ON_STARTUP", 0)
 
-                self.persistent_random_agents = user_settings.get("PERSISTENT_RANDOM_AGENTS", False)
+                self.persistent_random_agents = user_settings.get(
+                    "PERSISTENT_RANDOM_AGENTS", False
+                )
 
-                self.locking_confirmations_required = user_settings.get("LOCKING_CONFIRMATIONS", 3)
-                self.menu_screen_confirmaions_required = user_settings.get("MENU_CONFIRMATIONS", 3)
+                self.locking_confirmations_required = user_settings.get(
+                    "LOCKING_CONFIRMATIONS", 3
+                )
+                self.menu_screen_confirmaions_required = user_settings.get(
+                    "MENU_CONFIRMATIONS", 3
+                )
 
                 self.grab_keybinds = user_settings.get("GRAB_KEYBINDS", True)
 
-                self.fast_mode_timings = user_settings.get("FAST_MODE_TIMINGS", [0.02, 0.02, 0.02])
+                self.fast_mode_timings = user_settings.get(
+                    "FAST_MODE_TIMINGS", [0.02, 0.02, 0.02]
+                )
 
-                self.hide_default_save_file = user_settings.get("HIDE_DEFAULT_SAVE_FILE", True)
+                self.hide_default_save_file = user_settings.get(
+                    "HIDE_DEFAULT_SAVE_FILE", True
+                )
 
                 self.anti_afk_mode = user_settings.get("ANTI_AFK_MODE", "forward")
 
-                self.anti_afk_toggles_auto_drop = user_settings.get("ANTIAFK_TOGGLES_AUTODROPSPIKE", False)
+                self.anti_afk_toggles_auto_drop = user_settings.get(
+                    "ANTIAFK_TOGGLES_AUTODROPSPIKE", False
+                )
 
-                self.detect_open_chat_keyboard = user_settings.get("DETECT_OPEN_CHAT_THROUGH_KEYBOARD", True)
-
+                self.detect_open_chat_keyboard = user_settings.get(
+                    "DETECT_OPEN_CHAT_THROUGH_KEYBOARD", True
+                )
 
             with open(resource_path("data/user_settings.json"), "w") as us:
                 user_settings_file_json = {
@@ -2576,10 +2635,9 @@ class InstalockerGUIMain(customtkinter.CTk):
             and self.enabled is True
             and self.map_specific_mode is map_specific_toggle
         ):
-            if self.is_matching(
-                self.return_screenshot_pixels(
-                    self.locking_screenshotter, self.locking_coords
-                ),
+            if self.compare_screenshot_to_pattern(
+                self.locking_screenshotter,
+                self.coords["locking"],
                 self.pixel_patterns["locking"],
             ):
                 confirmations += 1
@@ -2604,16 +2662,18 @@ class InstalockerGUIMain(customtkinter.CTk):
                 )
             )
             self.find_agent_coords(randomly_selected_agent)
+
         if self.safe_mode is False:
             self.mouse.position = (self.agent_coords[0], self.agent_coords[1])
             time.sleep(self.fast_mode_timings[0])
             self.mouse.click(pynmouse.Button.left, 1)
             time.sleep(self.fast_mode_timings[1])
-            self.mouse.position = (self.lock_button[0], self.lock_button[1])
-            time.sleep(self.fast_mode_timings[2])
 
             if self.hover_mode is False:
+                self.mouse.position = (self.lock_button[0], self.lock_button[1])
+                time.sleep(self.fast_mode_timings[2])
                 self.mouse.click(pynmouse.Button.left, 1)
+
         else:
             low_timing = (
                 list(self.safe_mode_timing.values())[self.safe_mode_strength][0] / 4
@@ -2627,13 +2687,14 @@ class InstalockerGUIMain(customtkinter.CTk):
             time.sleep(round(random.uniform(low_timing, high_timing), 2))
             self.mouse.click(pynmouse.Button.left, 1)
             time.sleep(round(random.uniform(low_timing, high_timing), 2))
-            self.mouse.position = (self.lock_button[0], self.lock_button[1])
-            time.sleep(round(random.uniform(low_timing, high_timing), 2))
 
             if self.hover_mode is False:
+                self.mouse.position = (self.lock_button[0], self.lock_button[1])
+                time.sleep(round(random.uniform(low_timing, high_timing), 2))
                 self.mouse.click(pynmouse.Button.left, 1)
 
         time_to_lock = round((time.time() - start_time) * 1000, 2)
+
         if self.safe_mode is True:
             self.time_to_lock_list[self.safe_mode_strength].append(time_to_lock)
         else:
@@ -2668,29 +2729,31 @@ class InstalockerGUIMain(customtkinter.CTk):
             and self.active_thread is True
             and self.locking is False
         ):
-            player_banner = self.is_matching(
-                self.return_screenshot_pixels(
-                    self.locking_screenshotter, self.menu_screen_coords["main_menu"]
-                ),
+            player_banner = self.compare_screenshot_to_pattern(
+                self.locking_screenshotter,
+                self.coords["main_menu"],
                 self.pixel_patterns["main_menu"],
             )
 
-            progress_text = self.is_matching(
-                self.return_screenshot_pixels(
-                    self.locking_screenshotter, self.menu_screen_coords["progress_text"]
-                ),
-                self.pixel_patterns["progress_text"],
+            red_button = self.compare_screenshot_to_pattern(
+                self.locking_screenshotter,
+                self.coords["play_button"],
+                self.pixel_patterns["red_button"],
             )
 
-            progress_text_ranked = self.is_matching(
-                self.return_screenshot_pixels(
-                    self.locking_screenshotter,
-                    self.menu_screen_coords["progress_text_ranked"],
-                ),
-                self.pixel_patterns["progress_text"],
+            progress_text = self.compare_screenshot_to_pattern(
+                self.locking_screenshotter,
+                self.coords["progress_text"],
+                self.pixel_patterns["pure_white"],
             )
 
-            if progress_text or progress_text_ranked or player_banner:
+            progress_text_ranked = self.compare_screenshot_to_pattern(
+                self.locking_screenshotter,
+                self.coords["progress_text_ranked"],
+                self.pixel_patterns["pure_white"],
+            )
+
+            if player_banner or red_button or progress_text or progress_text_ranked:
                 confirmations += 1
 
                 if confirmations >= self.menu_screen_confirmaions_required:
@@ -2770,10 +2833,9 @@ class InstalockerGUIMain(customtkinter.CTk):
                 time.sleep(0.1)
 
                 # region Check Spectating
-                is_spectating = self.is_matching(
-                    self.return_screenshot_pixels(
-                        self.tools_screenshotter, self.tools_locations["spectating"]
-                    ),
+                is_spectating = self.compare_screenshot_to_pattern(
+                    self.tools_screenshotter,
+                    self.coords["spectating"],
                     self.pixel_patterns["spectating"],
                 )
                 if is_spectating:
@@ -2784,24 +2846,23 @@ class InstalockerGUIMain(customtkinter.CTk):
                 # endregion
 
                 # region Auto Drop Spike
-                if (self.auto_drop_spike or (self.anti_afk_toggles_auto_drop and self.anti_afk)) and not self.chat_is_open:
-                    has_spike = self.is_matching(
-                        self.return_screenshot_pixels(
-                            self.tools_screenshotter, self.tools_locations["spike"]
-                        ),
-                        self.pixel_patterns["has_spike"],
+                if (
+                    self.auto_drop_spike
+                    or (self.anti_afk_toggles_auto_drop and self.anti_afk)
+                ) and not self.chat_is_open:
+                    has_spike = self.compare_screenshot_to_pattern(
+                        self.tools_screenshotter,
+                        self.coords["has_spike"],
+                        self.pixel_patterns["pure_white"],
                     )
-                    can_plant = self.is_matching(
-                        self.return_screenshot_pixels(
-                            self.tools_screenshotter, self.tools_locations["can_plant"]
-                        ),
-                        self.pixel_patterns["can_plant"],
+                    can_plant = self.compare_screenshot_to_pattern(
+                        self.tools_screenshotter,
+                        self.coords["can_plant"],
+                        self.pixel_patterns["pure_white"],
                     )
-                    is_planting = self.is_matching(
-                        self.return_screenshot_pixels(
-                            self.tools_screenshotter,
-                            self.tools_locations["is_planting"],
-                        ),
+                    is_planting = self.compare_screenshot_to_pattern(
+                        self.tools_screenshotter,
+                        self.coords["is_planting"],
                         self.pixel_patterns["is_planting"],
                     )
 
@@ -2937,7 +2998,9 @@ class InstalockerGUIMain(customtkinter.CTk):
 
     def tools_keyboard_on_press(self, key):
         if self.detect_open_chat_keyboard:
-            if self.chat_is_open and (key == pynkeyboard.Key.enter or key == pynkeyboard.Key.esc):
+            if self.chat_is_open and (
+                key == pynkeyboard.Key.enter or key == pynkeyboard.Key.esc
+            ):
                 self.chat_is_open = False
             elif key == pynkeyboard.Key.enter:
                 self.chat_is_open = True
@@ -2981,12 +3044,42 @@ class InstalockerGUIMain(customtkinter.CTk):
         ).tobytes()
         return screenshot
 
-    def return_screenshot_pixels(self, screenshotter, bbox): # i think it returns gbr instead of rgb but it doesnt really matter
-        agent_screen_section = screenshotter.grab(bbox)
-        return np.array(agent_screen_section, dtype=np.uint8)
+    def compare_screenshot_to_pattern(  # Average 0.0163127713s
+        self,
+        sct: mss,
+        bbox: tuple[int, int, int, int],
+        expected_pattern: tuple[int, int, int],
+    ) -> bool:
+        pixel_data = sct.grab(bbox).pixels
 
-    def is_matching(self, pixels, expected_pixels):
-        return bool(np.all(pixels == expected_pixels, axis=2).all())
+        processed_pixels = np.array(pixel_data, dtype=np.uint8)
+
+        rgb_values = processed_pixels.reshape(-1, 3)
+
+        return all(np.all(rgb_values == expected_pattern, axis=1))
+
+    def _compare_screenshot_to_pattern_alternative(  # Average 0.0164257998s
+        self,
+        sct: mss,
+        bbox: tuple[int, int, int, int],
+        expected_pattern: tuple[int, int, int],
+    ) -> bool:
+        pixel_data = sct.grab(bbox).pixels
+
+        return np.allclose(pixel_data, expected_pattern)
+
+    def _compare_screenshot_to_patterns( # NOT TESTED, BUT SHOULD WORK
+        self,
+        sct: mss,
+        bbox: tuple[int, int, int, int],
+        expected_patterns: list[tuple[int, int, int]],
+    ) -> bool:
+        pixel_data = sct.grab(bbox).pixels
+
+        return any(
+            np.allclose(pixel_data, pattern)
+            for pattern in expected_patterns
+        )
 
     # endregion
 
