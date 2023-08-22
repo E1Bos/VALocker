@@ -463,7 +463,6 @@ class InstalockerGUIMain(customtkinter.CTk):
         )
         self.select_agent_dropdown.set(f"{self.selected_agent}")
         self.select_agent_dropdown.pack(padx=10, pady=(0, 5))
-        self.select_agent_dropdown.bind('<KeyRelease>', self.filter_options)
 
         self.select_map_enabled_label = customtkinter.CTkLabel(
             select_agent_frame, text="Map Specific:", font=self.label_font_and_size
