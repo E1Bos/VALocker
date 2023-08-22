@@ -22,31 +22,36 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+## ADD SUPPORT FOR 1440x1080 4:3
+
+
 # region Imports
 
+import sys
 # Imports all modules, if it fails it will install them
-try:
-    # Modules that are not installed by default
-    import customtkinter, pystray, PIL.Image, mss, requests
-    import pynput.mouse as pynmouse
-    import pynput.keyboard as pynkeyboard
-    import numpy as np
+if getattr(sys, "frozen", True):
+    try:
+        # Modules that are not installed by default
+        import customtkinter, pystray, PIL.Image, mss, requests
+        import pynput.mouse as pynmouse
+        import pynput.keyboard as pynkeyboard
+        import numpy as np
 
-except Exception:
-    # Installs missing modules if exception is raised
-    import subprocess
+    except Exception:
+        # Installs missing modules if exception is raised
+        import subprocess
 
-    subprocess.run(["pip", "install", "-r", "requirements.txt"])
+        subprocess.run(["pip", "install", "-r", "requirements.txt"])
 
-    import customtkinter, pystray, PIL.Image, mss, requests
-    import pynput.mouse as pynmouse
-    import pynput.keyboard as pynkeyboard
-    import numpy as np
+        import customtkinter, pystray, PIL.Image, mss, requests
+        import pynput.mouse as pynmouse
+        import pynput.keyboard as pynkeyboard
+        import numpy as np
 
 
-# Imports modules that are installed with Python
-import json, os, random, threading, time, ctypes, shutil, re, webbrowser, sys
-import tkinter as tk
+    # Imports modules that are installed with Python
+    import json, os, random, threading, time, ctypes, shutil, re, webbrowser, sys
+    import tkinter as tk
 
 # endregion
 
@@ -72,7 +77,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         super().__init__()
 
         # Version
-        CURRENT_VERSION = "v1.5.6"
+        CURRENT_VERSION = "v1.5.7"
 
         # Locking Variables
         self.coords = {
@@ -85,7 +90,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             "progress_text_ranked": (1477, 337, 1479, 349),
             # Tools
             "spectating": (135, 856, 138, 861),
-            "spike": (1852, 684, 1856, 687),
+            "has_spike": (1852, 684, 1856, 687),
             "can_plant": (910, 140, 920, 141),
             "is_planting": (832, 174, 833, 193),
         }
@@ -106,7 +111,6 @@ class InstalockerGUIMain(customtkinter.CTk):
         self.locking = True
         self.map_selection_coords = (878, 437, 1047, 646)
         self.agent_coords_offset = (15, 15)
-        self.locking_button = None
 
         # Tool Variables
         self.enable_tools = False
@@ -217,9 +221,7 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         # Creates GUI
         self.create_gui()
-
-        # Updates GUI
-        self.update_gui()
+        self.update_icon()
 
         # Checks if program should close to tray
         if self.minimize_to_tray is True:
@@ -353,8 +355,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         # endregion
 
         # region Overview Tab
-
-        # self.overview_frame.rowconfigure(0, weight=1)
+        self.overview_frame.rowconfigure(0, weight=1)
 
         current_status_frame = customtkinter.CTkFrame(self.overview_frame)
         current_status_frame.grid(row=0, column=0, pady=20, padx=10, sticky="nsew")
@@ -385,6 +386,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             hover=False,
             font=self.button_font_and_size,
             command=self.toggle_thread_mode,
+            state=tk.NORMAL if self.enabled else tk.DISABLED,
         )
         self.current_task_button.pack(padx=10, pady=(0, 5))
 
@@ -461,6 +463,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         )
         self.select_agent_dropdown.set(f"{self.selected_agent}")
         self.select_agent_dropdown.pack(padx=10, pady=(0, 5))
+        self.select_agent_dropdown.bind('<KeyRelease>', self.filter_options)
 
         self.select_map_enabled_label = customtkinter.CTkLabel(
             select_agent_frame, text="Map Specific:", font=self.label_font_and_size
@@ -474,8 +477,10 @@ class InstalockerGUIMain(customtkinter.CTk):
             fg_color=f"{self.button_colors['enabled'] if self.map_specific_mode is True else self.button_colors['disabled']}",
             font=self.button_font_and_size,
             command=self.toggle_map_specific,
+            state=tk.NORMAL if all(agent is not None for agent in self.map_specific_agents_dict.values()) else tk.DISABLED,
         )
         self.select_map_specific_button.pack(padx=10, pady=(0, 5))
+
 
         random_agent_label = customtkinter.CTkLabel(
             select_agent_frame, text="Random Agent:", font=self.label_font_and_size
@@ -489,6 +494,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             fg_color=f"{self.button_colors['enabled'] if self.random_agent_mode is True else self.button_colors['disabled']}",
             font=self.button_font_and_size,
             command=self.toggle_random_agent_mode,
+            state=tk.NORMAL if any(is_selected for is_selected in self.random_agents_dict.values()) else tk.DISABLED,
         )
         self.toggle_random_agent_button.pack(padx=10, pady=(0, 5))
 
@@ -515,9 +521,12 @@ class InstalockerGUIMain(customtkinter.CTk):
         stats_label.pack(padx=10, pady=(5, 0))
 
         if self.safe_mode is False:
-            time_to_lock_text = f"{self.time_to_lock_list[-1] if len(self.time_to_lock_list[-1]) != 0 else '-'}"
+            stats_index = -1
         else:
-            time_to_lock_text = f"{self.time_to_lock_list[self.safe_mode_strength][-1] if len(self.time_to_lock_list[self.safe_mode_strength]) != 0 else '-'}"
+            stats_index = self.safe_mode_strength
+
+        time_to_lock_text = self.time_to_lock_list[stats_index][-1] if len(self.time_to_lock_list[stats_index]) != 0 else '-'
+        average_time_to_lock_text = round(sum(self.time_to_lock_list[stats_index])/len(self.time_to_lock_list[stats_index]), 2) if len(self.time_to_lock_list[stats_index]) != 0 else '-'
 
         self.time_to_lock_label = customtkinter.CTkLabel(
             stats_frame,
@@ -533,7 +542,7 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         self.average_time_to_lock_value = customtkinter.CTkLabel(
             stats_frame,
-            text=f"{'-' if len(self.time_to_lock_list[self.safe_mode_strength]) == 0 else round(sum(self.time_to_lock_list[self.safe_mode_strength])/len(self.time_to_lock_list[self.safe_mode_strength]),2)} ms",
+            text=f"{average_time_to_lock_text} ms",
             font=self.button_font_and_size,
         )
         self.average_time_to_lock_value.pack(padx=10, pady=(0, 5))
@@ -555,11 +564,15 @@ class InstalockerGUIMain(customtkinter.CTk):
         # endregion
 
         # region Agent Toggle Tab
-
         mass_select_frame = customtkinter.CTkFrame(self.agent_toggle_frame)
         mass_select_frame.pack(padx=10, pady=20)
 
         mass_select_frame.grid_columnconfigure((0, 1), weight=1)
+
+        all_agents_selected = all(
+                    self.unlocked_agents_dict[agent] is True
+                    for agent in self.unlocked_agents_dict
+                )
 
         self.toggle_all_agent_button = customtkinter.CTkCheckBox(
             mass_select_frame,
@@ -567,16 +580,27 @@ class InstalockerGUIMain(customtkinter.CTk):
             width=100,
             font=self.button_font_and_size,
             command=lambda: self.toggle_unlocked_agent_status("all"),
+            state=tk.DISABLED if all_agents_selected else tk.NORMAL,
         )
+        if all_agents_selected:
+            self.toggle_all_agent_button.select()
         self.toggle_all_agent_button.grid(row=0, column=0, pady=10, padx=(10, 5))
 
+        no_agents_selected = all(
+                    self.unlocked_agents_dict[agent] is False
+                    for agent in self.unlocked_agents_dict
+                    if agent not in self.default_agents
+                )
         self.toggle_none_agent_button = customtkinter.CTkCheckBox(
             mass_select_frame,
             text="None",
             width=100,
             font=self.button_font_and_size,
             command=lambda: self.toggle_unlocked_agent_status("none"),
+            state=tk.DISABLED if no_agents_selected else tk.NORMAL,
         )
+        if no_agents_selected:
+            self.toggle_none_agent_button.select()
         self.toggle_none_agent_button.grid(row=0, column=1, pady=10, padx=(5, 10))
 
         toggle_agent_checkbox_frame = customtkinter.CTkFrame(self.agent_toggle_frame)
@@ -601,6 +625,8 @@ class InstalockerGUIMain(customtkinter.CTk):
                 font=self.button_font_and_size,
                 command=lambda agent=agent: self.toggle_unlocked_agent_status(agent),
             )
+            if self.unlocked_agents_dict[agent]:
+                self.agent_checkboxes[f"self.{agent}_checkbox"].select()
             self.agent_checkboxes[f"self.{agent}_checkbox"].grid(
                 row=row, column=column, pady=10, padx=5
             )
@@ -634,20 +660,32 @@ class InstalockerGUIMain(customtkinter.CTk):
         )
         random_agent_all_none_toggle_frame.pack(padx=0, pady=0)
 
+        all_selected = all(
+                    self.random_agents_dict[agent]
+                    for agent in self.unlocked_agents_dict
+                    if self.unlocked_agents_dict[agent])
+
         self.all_random_agent_radio_button = customtkinter.CTkCheckBox(
             random_agent_all_none_toggle_frame,
             text="All",
             font=self.button_font_and_size,
             command=lambda: self.toggle_random_agent_status("all"),
+            state=tk.DISABLED if all_selected else tk.NORMAL,
         )
+        if all_selected:
+            self.all_random_agent_radio_button.select()
         self.all_random_agent_radio_button.pack(side="left", padx=(20, 0), pady=10)
 
+        none_selected = all(value is False for value in self.random_agents_dict.values())
         self.none_random_agent_radio_button = customtkinter.CTkCheckBox(
             random_agent_all_none_toggle_frame,
             text="None",
             font=self.button_font_and_size,
             command=lambda: self.toggle_random_agent_status("none"),
+            state=tk.DISABLED if none_selected else tk.NORMAL,
         )
+        if none_selected:
+            self.none_random_agent_radio_button.select()
         self.none_random_agent_radio_button.pack(side="right", padx=20, pady=10)
 
         random_agent_role_toggle_frame = customtkinter.CTkFrame(self.random_agent_frame)
@@ -655,8 +693,8 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         # Creates the checkboxes for each role
         self.agent_role_checkboxes = dict()
-        for index, role in enumerate(self.config_file_agents.keys()):
-            role = role.lower()
+        for index, role_upper in enumerate(self.config_file_agents.keys()):
+            role = role_upper.lower()
 
             self.agent_role_checkboxes[role] = customtkinter.CTkCheckBox(
                 random_agent_role_toggle_frame,
@@ -668,6 +706,11 @@ class InstalockerGUIMain(customtkinter.CTk):
                 command=lambda role=role: self.toggle_random_agent_status(role),
             )
             # padx_amount = (5, 10) if index == 0 else 10
+            if all(
+                self.random_agents_dict[agent] is True
+                for agent in self.config_file_agents[role_upper]
+            ):
+                self.agent_role_checkboxes[role].select()
             self.agent_role_checkboxes[role].grid(row=0, column=index, padx=5, pady=10)
 
         # Creates frames for agents of each role
@@ -707,7 +750,12 @@ class InstalockerGUIMain(customtkinter.CTk):
                 text_color=self.role_colors[agent_role],
                 font=self.button_font_and_size,
                 command=lambda agent=agent: self.toggle_random_agent_status(agent),
+                state=tk.NORMAL if self.unlocked_agents_dict[agent] else tk.DISABLED,
             )
+            if self.random_agents_dict[agent]:
+                self.random_agent_checkboxes[
+                    f"self.{agent}_random_checkbox"
+                ].select()
             self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].pack(
                 padx=5, pady=5
             )
@@ -745,17 +793,29 @@ class InstalockerGUIMain(customtkinter.CTk):
 
             self.map_dropdowns[map_name] = customtkinter.CTkOptionMenu(
                 map_frames[f"{map_name}_frame"],
-                values=list(
-                    agent
-                    for agent, unlock_status in self.unlocked_agents_dict.items()
-                    if unlock_status is True
-                ),
+                values=list(agent for agent, unlock_status in self.unlocked_agents_dict.items() if unlock_status),
                 width=110,
                 font=self.button_font_and_size,
                 command=lambda agent_name, map_name=map_name: self.toggle_map_specific_agent(
                     agent_name=agent_name, map_name=map_name
                 ),
             )
+
+            if (
+                self.map_specific_agents_dict[map_name] is not None
+                and self.unlocked_agents_dict[self.map_specific_agents_dict[map_name]]
+            ):
+                self.map_dropdowns[map_name].configure(
+                    fg_color="#1f6aa5", button_color="#203a4f", hover=True
+                )
+                self.map_dropdowns[map_name].set(
+                    self.map_specific_agents_dict[map_name]
+                )
+            else:
+                self.map_dropdowns[map_name].set("None")
+                self.map_dropdowns[map_name].configure(
+                    fg_color=self.button_colors["disabled"], button_color="#4e2126", hover=False
+                )
 
             self.map_dropdowns[map_name].pack(padx=(0, 10), pady=5, side=tk.RIGHT)
 
@@ -824,7 +884,6 @@ class InstalockerGUIMain(customtkinter.CTk):
         # endregion
 
         # region Tools Tab
-
         self.toggle_tools_button = customtkinter.CTkButton(
             self.tools_frame,
             text=f"Tools {'Enabled' if self.enable_tools is True else 'Disabled'}",
@@ -866,21 +925,20 @@ class InstalockerGUIMain(customtkinter.CTk):
         )
         self.anti_afk_button.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
 
-        self.anti_aim_button = customtkinter.CTkButton(
-            scrollable_frame,
-            text=f"Anti Aim",
-            height=40,
-            hover=False,
-            fg_color=f"{self.button_colors['enabled'] if self.anti_afk is True else self.button_colors['disabled']}",
-            font=self.button_font_and_size,
-            command=self.toggle_anti_aim,
-        )
+        # self.anti_aim_button = customtkinter.CTkButton(
+        #     scrollable_frame,
+        #     text=f"Anti Aim",
+        #     height=40,
+        #     hover=False,
+        #     fg_color=f"{self.button_colors['enabled'] if self.anti_afk is True else self.button_colors['disabled']}",
+        #     font=self.button_font_and_size,
+        #     command=self.toggle_anti_aim,
+        # )
         # self.anti_aim_button.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
 
         # endregion
 
         # region Settings Tab
-
         scrolling_settings_frame = customtkinter.CTkScrollableFrame(self.settings_frame)
         scrolling_settings_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=20)
 
@@ -1133,21 +1191,6 @@ class InstalockerGUIMain(customtkinter.CTk):
 
     # region GUI Updates
 
-    # Updates All GUI Elements
-    def update_gui(self, from_agent_tab=False, from_save_tab=False):
-        try:
-            if from_save_tab is True:
-                self.update_save_file_tab()
-            if from_agent_tab is False:
-                self.update_agent_toggle_tab()
-                self.update_random_agent_tab()
-                self.update_icon()
-            self.update_overview_tab()
-            self.update_map_specific_tab()
-            self.update_tools_tab()
-        except AttributeError:
-            pass
-
     # Updates overview tab
     def update_overview_tab(self):
         # Stats
@@ -1155,6 +1198,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             average_time_to_lock_index = -1
         else:
             average_time_to_lock_index = self.safe_mode_strength
+
         self.average_time_to_lock_value.configure(
             text=f"{'-' if len(self.time_to_lock_list[average_time_to_lock_index]) == 0 else round(sum(self.time_to_lock_list[average_time_to_lock_index])/len(self.time_to_lock_list[average_time_to_lock_index]),2)} ms",
         )
@@ -1265,36 +1309,6 @@ class InstalockerGUIMain(customtkinter.CTk):
                 for agent in self.unlocked_agents_dict:
                     if agent not in self.default_agents:
                         self.agent_checkboxes[f"self.{agent}_checkbox"].deselect()
-
-            case None:  # Updates the entire tab, used only when the tab is first created or when loading a new save file
-                for agent in self.all_agents:
-                    if agent not in self.default_agents:
-                        if self.unlocked_agents_dict[agent] is True:
-                            self.agent_checkboxes[f"self.{agent}_checkbox"].select()
-                        else:
-                            self.agent_checkboxes[f"self.{agent}_checkbox"].deselect()
-
-                if all(
-                    value is True
-                    for agent, value in self.unlocked_agents_dict.items()
-                    if agent not in self.default_agents
-                ):
-                    self.toggle_all_agent_button.select()
-                    self.toggle_all_agent_button.configure(state=tk.DISABLED)
-                else:
-                    self.toggle_all_agent_button.deselect()
-                    self.toggle_all_agent_button.configure(state=tk.NORMAL)
-
-                if all(
-                    value is False
-                    for agent, value in self.unlocked_agents_dict.items()
-                    if agent not in self.default_agents
-                ):
-                    self.toggle_none_agent_button.select()
-                    self.toggle_none_agent_button.configure(state=tk.DISABLED)
-                else:
-                    self.toggle_none_agent_button.deselect()
-                    self.toggle_none_agent_button.configure(state=tk.NORMAL)
 
             case _:  # Updates a single agent
                 all_agents_selected = all(
@@ -1408,8 +1422,6 @@ class InstalockerGUIMain(customtkinter.CTk):
                                 self.random_agent_checkboxes[
                                     f"self.{agent}_random_checkbox"
                                 ].deselect()
-                    case None:
-                        pass
                     case _:
                         if self.unlocked_agents_dict[toggled_agent_name] is True:
                             self.random_agent_checkboxes[
@@ -1470,65 +1482,6 @@ class InstalockerGUIMain(customtkinter.CTk):
                         else:
                             self.agent_role_checkboxes[role.lower()].deselect()
 
-            case None:  # Updates the entire tab, used only when the tab is first created or loading a new save file
-                # Select all if all possible agents are selected
-                if all(
-                    self.random_agents_dict[agent] is True
-                    for agent in self.unlocked_agents_dict
-                    if self.unlocked_agents_dict[agent] is True
-                ):
-                    self.all_random_agent_radio_button.select()
-                    self.all_random_agent_radio_button.configure(state=tk.DISABLED)
-                else:
-                    self.all_random_agent_radio_button.deselect()
-                    self.all_random_agent_radio_button.configure(state=tk.NORMAL)
-
-                # Select none if no agents are selected
-                if all(value is False for value in self.random_agents_dict.values()):
-                    self.none_random_agent_radio_button.select()
-                    self.none_random_agent_radio_button.configure(state=tk.DISABLED)
-                else:
-                    self.none_random_agent_radio_button.deselect()
-                    self.none_random_agent_radio_button.configure(state=tk.NORMAL)
-
-                # Selects all roles if all possible agents are selected
-                for role in self.config_file_agents:
-                    for agent in self.config_file_agents[role]:
-                        if self.random_agents_dict[agent] is True:
-                            self.random_agent_checkboxes[
-                                f"self.{agent}_random_checkbox"
-                            ].select()
-                        else:
-                            self.random_agent_checkboxes[
-                                f"self.{agent}_random_checkbox"
-                            ].deselect()
-                    if all(
-                        self.random_agents_dict[agent] is True
-                        for agent in self.config_file_agents[role]
-                        if self.unlocked_agents_dict[agent] is True
-                    ):
-                        self.agent_role_checkboxes[role.lower()].select()
-                    else:
-                        self.agent_role_checkboxes[role.lower()].deselect()
-
-                # Disables agents that are not unlocked
-                if exclusiselect_mode is False:
-                    for agent in self.unlocked_agents_dict:
-                        if (
-                            agent not in self.default_agents
-                            and self.unlocked_agents_dict[agent] is False
-                        ):
-                            self.random_agent_checkboxes[
-                                f"self.{agent}_random_checkbox"
-                            ].configure(state=tk.DISABLED)
-                            self.random_agent_checkboxes[
-                                f"self.{agent}_random_checkbox"
-                            ].deselect()
-                        else:
-                            self.random_agent_checkboxes[
-                                f"self.{agent}_random_checkbox"
-                            ].configure(state=tk.NORMAL)
-
             case _:  # Updates the tab when a single agent is selected
                 if exclusiselect_mode is True:
                     self.random_agent_checkboxes[
@@ -1568,27 +1521,22 @@ class InstalockerGUIMain(customtkinter.CTk):
 
     # Updates map specific tab
     def update_map_specific_tab(self):
-        unlocked_agents = list(
-            agent
-            for agent, unlock_status in self.unlocked_agents_dict.items()
-            if unlock_status is True
-        )
+        unlocked_agents = list(agent for agent, unlock_status in self.unlocked_agents_dict.items() if unlock_status)
+
         for map_name in self.map_names:
             self.map_dropdowns[map_name].configure(values=unlocked_agents)
-            if (
-                self.map_specific_agents_dict[map_name] is not None
-                and self.map_specific_agents_dict[map_name] in unlocked_agents
-            ):
-                self.map_dropdowns[map_name].configure(
-                    fg_color="#1f6aa5", button_color="#203a4f"
-                )
-                self.map_dropdowns[map_name].set(
-                    self.map_specific_agents_dict[map_name]
-                )
-            else:
+            
+            if self.map_specific_agents_dict[map_name] is None:
                 self.map_dropdowns[map_name].set("None")
                 self.map_dropdowns[map_name].configure(
-                    fg_color=self.button_colors["disabled"], button_color="#4e2126"
+                    fg_color=self.button_colors["disabled"], button_color="#4e2126", hover=False
+                )
+            else:
+                self.map_dropdowns[map_name].set(
+                    f"{self.map_specific_agents_dict[map_name]}"
+                )
+                self.map_dropdowns[map_name].configure(
+                    fg_color="#1f6aa5", button_color="#203a4f", hover=True
                 )
 
     # Updates the save file tab
@@ -1638,9 +1586,9 @@ class InstalockerGUIMain(customtkinter.CTk):
             fg_color=f"{self.button_colors['enabled'] if self.anti_afk is True else self.button_colors['disabled']}",
         )
 
-        self.anti_aim_button.configure(
-            fg_color=f"{self.button_colors['enabled'] if self.anti_aim is True else self.button_colors['disabled']}",
-        )
+        # self.anti_aim_button.configure(
+        #     fg_color=f"{self.button_colors['enabled'] if self.anti_aim is True else self.button_colors['disabled']}",
+        # )
 
     # Changes the active frame
     def select_frame_by_name(self, frame_name):
@@ -2241,7 +2189,11 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         self.load_data_from_files()
 
-        self.update_gui(from_save_tab=True)
+        self.update_save_file_tab()
+        self.update_overview_tab()
+        self.update_agent_toggle_tab()
+        self.update_map_specific_tab()
+        self.update_random_agent_tab()
 
     # Favorites the save file indicated by the file_name
     def favorite_save_file(self, file_name):
@@ -2487,7 +2439,12 @@ class InstalockerGUIMain(customtkinter.CTk):
         self.update_random_agent_tab(
             "toggle_unlocked_agent_status", toggled_agent_name=agent_name
         )
-        self.update_gui(from_agent_tab=True)
+
+        self.update_agent_toggle_tab()
+        self.update_overview_tab()
+        self.update_map_specific_tab()
+        self.update_random_agent_tab()
+
         self.find_agent_coords(self.selected_agent)
         self.save_current_data()
 
@@ -2810,7 +2767,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             self.enabled = False
 
     # endregion
-
+    
     # region Tools Thread
 
     def tools_main(self):
