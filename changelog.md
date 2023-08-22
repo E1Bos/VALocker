@@ -3,6 +3,15 @@ Changelog
 
 Date Format: YYYY-MM-DD
 
+## Version 1.5.7 - 2023-08-22
+
+### Changed
+- GUI boot speeds have been improved. The GUI should now load in ~1.5 seconds (confirmed running `VALocker.pyw`), compared to the previous ~5-6 seconds. Previously, the GUI had to be updated after being created to display the correct information. The GUI creation function has been modified and the GUI is now ready-to-go after being created.
+    - This improvement is NOT seen when running `VALocker.exe`, however, when built using onedir instead of onefile, the GUI should load in ~1.5 seconds.
+- Hover mode no longer moves the mouse over the lock button. This stops you from accidentally clicking and locking your agent.
+- Uses faster screenshot method, you should lock your agent even faster.
+- Using the .get method, user settings are no longer reset to default values whenever new settings are added. All setting should persist between updates. If you are updating from a version prior to 1.5.7, your settings will be reset to default values. If you are updating from a version after 1.5.7, your settings will be preserved.
+
 ## Version 1.5.6 - 2023-08-14
 
 ### Added
