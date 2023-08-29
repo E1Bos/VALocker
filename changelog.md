@@ -3,6 +3,19 @@ Changelog
 
 Date Format: YYYY-MM-DD
 
+## Version 1.5.8 - 2023-08-29
+
+### Added
+- Anti AFK and Auto Drop Spike can now be enabled from the overview tab.
+- New setting "Auto Start Tools" automatically enables the tools thread when specific tools are enabled. i.e. If you enable anti-afk, it will automatically enable the tools thread. This is enabled by default.
+
+### Changed
+- Overview tab is less cluttered, buttons that are just "Enabled" and "Disabled" have been had their label integrated into the button. Hover, Random Agents, and Map Specific are under the "Options" label.
+- Button sizes have been increased on the overview tab.
+
+### Fixed
+- Toggle agent tab and random agent tab would not update when loading a save file or creating a new save file. This was due to the GUI being rewritten. This has been fixed.
+
 ## Version 1.5.7 - 2023-08-22
 
 ### Changed
