@@ -28,6 +28,7 @@ SOFTWARE.
 # region Imports
 
 import sys
+
 # Imports all modules, if it fails it will install them
 if getattr(sys, "frozen", True):
     try:
@@ -47,7 +48,6 @@ if getattr(sys, "frozen", True):
         import pynput.mouse as pynmouse
         import pynput.keyboard as pynkeyboard
         import numpy as np
-
 
     # Imports modules that are installed with Python
     import json, os, random, threading, time, ctypes, shutil, re, webbrowser, sys
@@ -77,7 +77,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         super().__init__()
 
         # Version
-        CURRENT_VERSION = "v1.5.7"
+        CURRENT_VERSION = "v1.5.8"
 
         # Locking Variables
         self.coords = {
@@ -113,6 +113,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         self.agent_coords_offset = (15, 15)
 
         # Tool Variables
+        self.running_tools = set()
         self.enable_tools = False
         self.tools_thread = None
         self.auto_drop_spike = False
@@ -367,23 +368,27 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         self.current_status_button = customtkinter.CTkButton(
             current_status_frame,
-            text=f"{'Running' if self.enabled is True else 'Stopped'}",
+            text='Running' if self.enabled is True else 'Stopped',
             hover=False,
-            fg_color=f"{self.button_colors['enabled'] if self.enabled is True else self.button_colors['disabled']}",
+            height=35,
+            width=140,
+            fg_color=self.button_colors['enabled'] if self.enabled else self.button_colors['disabled'],
             font=self.button_font_and_size,
             command=self.toggle_active,
         )
         self.current_status_button.pack(padx=10, pady=(0, 5))
 
         current_task_label = customtkinter.CTkLabel(
-            current_status_frame, text=f"Current Task:", font=self.label_font_and_size
+            current_status_frame, text="Current Task:", font=self.label_font_and_size
         )
         current_task_label.pack(padx=10, pady=(5, 0))
 
         self.current_task_button = customtkinter.CTkButton(
             current_status_frame,
-            text=f"{'None' if self.enabled is False else 'Locking' if self.locking is True else 'In Game'}",
+            text='None' if self.enabled is False else 'Locking' if self.locking is True else 'In Game',
             hover=False,
+            height=35,
+            width=140,
             font=self.button_font_and_size,
             command=self.toggle_thread_mode,
             state=tk.NORMAL if self.enabled else tk.DISABLED,
@@ -396,16 +401,17 @@ class InstalockerGUIMain(customtkinter.CTk):
         safe_mode_frame.pack(padx=10, pady=(5, 0), ipadx=0)
 
         safe_mode_label = customtkinter.CTkLabel(
-            safe_mode_frame, text=f"Safe Mode:", font=self.label_font_and_size
+            safe_mode_frame, text="Safe Mode:", font=self.label_font_and_size
         )
         safe_mode_label.pack(anchor=tk.N, padx=10)
 
         self.safe_mode_enabled_button = customtkinter.CTkButton(
             safe_mode_frame,
             width=int(f"{140 if self.safe_mode is False else 70}"),
+            height=35,
             hover=False,
-            text=f"{'On' if self.safe_mode is True else 'Off'}",
-            fg_color=f"{self.button_colors['enabled'] if self.enabled is True else self.button_colors['disabled']}",
+            text='On' if self.safe_mode is True else 'Off',
+            fg_color=self.button_colors['enabled'] if self.enabled else self.button_colors['disabled'],
             font=self.button_font_and_size,
             command=self.toggle_safe_mode,
         )
@@ -414,6 +420,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         self.safe_mode_strength_button = customtkinter.CTkButton(
             safe_mode_frame,
             width=70,
+            height=35,
             hover=False,
             text=f"{list(self.safe_mode_timing.keys())[self.safe_mode_strength]}",
             font=self.button_font_and_size,
@@ -426,17 +433,18 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         current_save_label = customtkinter.CTkLabel(
             current_status_frame,
-            text=f"Current Save:",
+            text="Current Save:",
             font=self.label_font_and_size,
         )
         current_save_label.pack(padx=10, pady=(5, 0))
 
         self.current_save_button = customtkinter.CTkButton(
             current_status_frame,
-            text=f"{self.current_save_file}",
+            text=self.current_save_file,
             hover=False,
             fg_color="gray20",
             corner_radius=5,
+            height=35,
             width=140,
             font=self.button_font_and_size,
             command=lambda tab_name="Save File": self.select_frame_by_name(tab_name),
@@ -459,57 +467,91 @@ class InstalockerGUIMain(customtkinter.CTk):
                 for agent, unlock_status in self.unlocked_agents_dict.items()
                 if unlock_status is True
             ),
+            height=35,
+            width=140,
             command=lambda x: self.toggle_selected_agent(x),
+            font=self.button_font_and_size,
         )
         self.select_agent_dropdown.set(f"{self.selected_agent}")
         self.select_agent_dropdown.pack(padx=10, pady=(0, 5))
 
-        self.select_map_enabled_label = customtkinter.CTkLabel(
-            select_agent_frame, text="Map Specific:", font=self.label_font_and_size
+        select_agent_frame_options_label = customtkinter.CTkLabel(
+            select_agent_frame, text="Options:", font=self.label_font_and_size
         )
-        self.select_map_enabled_label.pack(padx=10, pady=(5, 0))
+        select_agent_frame_options_label.pack(padx=10, pady=(5, 0))
 
-        self.select_map_specific_button = customtkinter.CTkButton(
-            select_agent_frame,
-            text=f"{'Enabled' if self.map_specific_mode is True else 'Disabled'}",
-            hover=False,
-            fg_color=f"{self.button_colors['enabled'] if self.map_specific_mode is True else self.button_colors['disabled']}",
-            font=self.button_font_and_size,
-            command=self.toggle_map_specific,
-            state=tk.NORMAL if all(agent is not None for agent in self.map_specific_agents_dict.values()) else tk.DISABLED,
-        )
-        self.select_map_specific_button.pack(padx=10, pady=(0, 5))
-
-
-        random_agent_label = customtkinter.CTkLabel(
-            select_agent_frame, text="Random Agent:", font=self.label_font_and_size
-        )
-        random_agent_label.pack(padx=10, pady=(5, 0))
-
-        self.toggle_random_agent_button = customtkinter.CTkButton(
-            select_agent_frame,
-            text=f"{'Enabled' if self.random_agent_mode is True else 'Disabled'}",
-            hover=False,
-            fg_color=f"{self.button_colors['enabled'] if self.random_agent_mode is True else self.button_colors['disabled']}",
-            font=self.button_font_and_size,
-            command=self.toggle_random_agent_mode,
-            state=tk.NORMAL if any(is_selected for is_selected in self.random_agents_dict.values()) else tk.DISABLED,
-        )
-        self.toggle_random_agent_button.pack(padx=10, pady=(0, 5))
-
-        hover_mode_label = customtkinter.CTkLabel(
-            select_agent_frame, text="Hover Mode:", font=self.label_font_and_size
-        )
-        hover_mode_label.pack(padx=10, pady=(5, 0))
         self.hover_mode_button = customtkinter.CTkButton(
             select_agent_frame,
-            text=f"{'Enabled' if self.hover_mode is True else 'Disabled'}",
+            text="Hover",
             hover=False,
-            fg_color=f"{self.button_colors['enabled'] if self.hover_mode is True else self.button_colors['disabled']}",
+            height=35,
+            width=140,
+            fg_color=self.button_colors['enabled'] if self.hover_mode else self.button_colors['disabled'],
             font=self.button_font_and_size,
             command=self.toggle_hover_mode,
         )
-        self.hover_mode_button.pack(padx=10, pady=(0, 10))
+        self.hover_mode_button.pack(padx=10, pady=(0, 5))
+
+        self.select_map_specific_button = customtkinter.CTkButton(
+            select_agent_frame,
+            text="Map Specific",
+            hover=False,
+            height=35,
+            width=140,
+            fg_color=self.button_colors['enabled'] if self.map_specific_mode else self.button_colors['disabled'],
+            font=self.button_font_and_size,
+            command=self.toggle_map_specific,
+            state=tk.NORMAL
+            if all(
+                agent is not None for agent in self.map_specific_agents_dict.values()
+            )
+            else tk.DISABLED,
+        )
+        self.select_map_specific_button.pack(padx=10, pady=5)
+
+        self.toggle_random_agent_button = customtkinter.CTkButton(
+            select_agent_frame,
+            text="Random Agent",
+            hover=False,
+            height=35,
+            width=140,
+            fg_color=self.button_colors['enabled'] if self.random_agent_mode else self.button_colors['disabled'],
+            font=self.button_font_and_size,
+            command=self.toggle_random_agent_mode,
+            state=tk.NORMAL
+            if any(is_selected for is_selected in self.random_agents_dict.values())
+            else tk.DISABLED,
+        )
+        self.toggle_random_agent_button.pack(padx=10, pady=(5, 0))
+
+        overview_tools_label = customtkinter.CTkLabel(
+            select_agent_frame, text="Tools:", font=self.label_font_and_size
+        )
+        overview_tools_label.pack(padx=10, pady=(5, 0))
+
+        self.overview_anti_afk_button = customtkinter.CTkButton(
+            select_agent_frame,
+            text="Anti AFK",
+            hover=False,
+            height=35,
+            width=140,
+            fg_color=self.button_colors['enabled'] if self.anti_afk else self.button_colors['disabled'],
+            font=self.button_font_and_size,
+            command=self.toggle_anti_afk,
+        )
+        self.overview_anti_afk_button.pack(padx=10, pady=5)
+
+        self.overview_drop_spike_button = customtkinter.CTkButton(
+            select_agent_frame,
+            text="Drop Spike",
+            hover=False,
+            height=35,
+            width=140,
+            fg_color=self.button_colors['enabled'] if self.auto_drop_spike else self.button_colors['disabled'],
+            font=self.button_font_and_size,
+            command=self.toggle_auto_drop_spike,
+        )
+        self.overview_drop_spike_button.pack(padx=10, pady=5)
 
         stats_frame = customtkinter.CTkFrame(self.overview_frame)
         stats_frame.grid(row=0, column=2, pady=20, padx=10, sticky="nsew")
@@ -524,36 +566,51 @@ class InstalockerGUIMain(customtkinter.CTk):
         else:
             stats_index = self.safe_mode_strength
 
-        time_to_lock_text = self.time_to_lock_list[stats_index][-1] if len(self.time_to_lock_list[stats_index]) != 0 else '-'
-        average_time_to_lock_text = round(sum(self.time_to_lock_list[stats_index])/len(self.time_to_lock_list[stats_index]), 2) if len(self.time_to_lock_list[stats_index]) != 0 else '-'
+        time_to_lock_text = (
+            self.time_to_lock_list[stats_index][-1]
+            if len(self.time_to_lock_list[stats_index]) != 0
+            else "-"
+        )
+        average_time_to_lock_text = (
+            round(
+                sum(self.time_to_lock_list[stats_index])
+                / len(self.time_to_lock_list[stats_index]),
+                2,
+            )
+            if len(self.time_to_lock_list[stats_index]) != 0
+            else "-"
+        )
 
         self.time_to_lock_label = customtkinter.CTkLabel(
             stats_frame,
             text=f"{time_to_lock_text} ms",
+            height=35,
             font=self.button_font_and_size,
         )
         self.time_to_lock_label.pack(padx=10, pady=(0, 5))
 
         average_time_to_lock_label = customtkinter.CTkLabel(
-            stats_frame, text=f"Average:", font=self.label_font_and_size
+            stats_frame, text="Average:", font=self.label_font_and_size
         )
         average_time_to_lock_label.pack(padx=10, pady=(5, 0))
 
         self.average_time_to_lock_value = customtkinter.CTkLabel(
             stats_frame,
             text=f"{average_time_to_lock_text} ms",
+            height=35,
             font=self.button_font_and_size,
         )
         self.average_time_to_lock_value.pack(padx=10, pady=(0, 5))
 
         total_games_locked_label = customtkinter.CTkLabel(
-            stats_frame, text=f"Deployed:", font=self.label_font_and_size
+            stats_frame, text="Deployed:", font=self.label_font_and_size
         )
         total_games_locked_label.pack(padx=10, pady=(5, 0))
 
         self.total_games_locked_value = customtkinter.CTkLabel(
             stats_frame,
             text=f"{self.total_games_used} {'times' if self.total_games_used != 1 else 'time'}",
+            height=35,
             font=self.button_font_and_size,
         )
         self.total_games_locked_value.pack(padx=10, pady=(0, 5))
@@ -569,9 +626,9 @@ class InstalockerGUIMain(customtkinter.CTk):
         mass_select_frame.grid_columnconfigure((0, 1), weight=1)
 
         all_agents_selected = all(
-                    self.unlocked_agents_dict[agent] is True
-                    for agent in self.unlocked_agents_dict
-                )
+            self.unlocked_agents_dict[agent] is True
+            for agent in self.unlocked_agents_dict
+        )
 
         self.toggle_all_agent_button = customtkinter.CTkCheckBox(
             mass_select_frame,
@@ -586,10 +643,10 @@ class InstalockerGUIMain(customtkinter.CTk):
         self.toggle_all_agent_button.grid(row=0, column=0, pady=10, padx=(10, 5))
 
         no_agents_selected = all(
-                    self.unlocked_agents_dict[agent] is False
-                    for agent in self.unlocked_agents_dict
-                    if agent not in self.default_agents
-                )
+            self.unlocked_agents_dict[agent] is False
+            for agent in self.unlocked_agents_dict
+            if agent not in self.default_agents
+        )
         self.toggle_none_agent_button = customtkinter.CTkCheckBox(
             mass_select_frame,
             text="None",
@@ -645,7 +702,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             text="ExclusiSelect",
             hover=False,
             font=self.button_font_and_size,
-            fg_color=f"{self.button_colors['enabled'] if self.random_agent_exclusiselect is True else self.button_colors['disabled']}",
+            fg_color=self.button_colors['enabled'] if self.random_agent_exclusiselect else self.button_colors['disabled'],
             command=self.toggle_random_agent_exclusiselect,
         )
         self.random_agent_exclusiselect_button.pack(
@@ -660,9 +717,10 @@ class InstalockerGUIMain(customtkinter.CTk):
         random_agent_all_none_toggle_frame.pack(padx=0, pady=0)
 
         all_selected = all(
-                    self.random_agents_dict[agent]
-                    for agent in self.unlocked_agents_dict
-                    if self.unlocked_agents_dict[agent])
+            self.random_agents_dict[agent]
+            for agent in self.unlocked_agents_dict
+            if self.unlocked_agents_dict[agent]
+        )
 
         self.all_random_agent_radio_button = customtkinter.CTkCheckBox(
             random_agent_all_none_toggle_frame,
@@ -675,7 +733,9 @@ class InstalockerGUIMain(customtkinter.CTk):
             self.all_random_agent_radio_button.select()
         self.all_random_agent_radio_button.pack(side="left", padx=(20, 0), pady=10)
 
-        none_selected = all(value is False for value in self.random_agents_dict.values())
+        none_selected = all(
+            value is False for value in self.random_agents_dict.values()
+        )
         self.none_random_agent_radio_button = customtkinter.CTkCheckBox(
             random_agent_all_none_toggle_frame,
             text="None",
@@ -752,9 +812,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                 state=tk.NORMAL if self.unlocked_agents_dict[agent] else tk.DISABLED,
             )
             if self.random_agents_dict[agent]:
-                self.random_agent_checkboxes[
-                    f"self.{agent}_random_checkbox"
-                ].select()
+                self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].select()
             self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].pack(
                 padx=5, pady=5
             )
@@ -792,7 +850,11 @@ class InstalockerGUIMain(customtkinter.CTk):
 
             self.map_dropdowns[map_name] = customtkinter.CTkOptionMenu(
                 map_frames[f"{map_name}_frame"],
-                values=list(agent for agent, unlock_status in self.unlocked_agents_dict.items() if unlock_status),
+                values=list(
+                    agent
+                    for agent, unlock_status in self.unlocked_agents_dict.items()
+                    if unlock_status
+                ),
                 width=110,
                 font=self.button_font_and_size,
                 command=lambda agent_name, map_name=map_name: self.toggle_map_specific_agent(
@@ -813,7 +875,9 @@ class InstalockerGUIMain(customtkinter.CTk):
             else:
                 self.map_dropdowns[map_name].set("None")
                 self.map_dropdowns[map_name].configure(
-                    fg_color=self.button_colors["disabled"], button_color="#4e2126", hover=False
+                    fg_color=self.button_colors["disabled"],
+                    button_color="#4e2126",
+                    hover=False,
                 )
 
             self.map_dropdowns[map_name].pack(padx=(0, 10), pady=5, side=tk.RIGHT)
@@ -888,9 +952,9 @@ class InstalockerGUIMain(customtkinter.CTk):
             text=f"Tools {'Enabled' if self.enable_tools is True else 'Disabled'}",
             hover=False,
             height=40,
-            fg_color=f"{self.button_colors['enabled'] if self.enable_tools is True else self.button_colors['disabled']}",
+            fg_color=self.button_colors['enabled'] if self.enable_tools else self.button_colors['disabled'],
             font=(self.main_font, 16),
-            command=self.toggle_tools,
+            command=self.explicitly_toggle_tools,
         )
         self.toggle_tools_button.pack(padx=10, pady=20, fill=tk.X)
 
@@ -902,10 +966,10 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         self.auto_drop_spike_button = customtkinter.CTkButton(
             scrollable_frame,
-            text=f"Auto Drop Spike",
+            text="Auto Drop Spike",
             height=40,
             hover=False,
-            fg_color=f"{self.button_colors['enabled'] if self.auto_drop_spike is True else self.button_colors['disabled']}",
+            fg_color=self.button_colors['enabled'] if self.auto_drop_spike else self.button_colors['disabled'],
             font=self.button_font_and_size,
             command=self.toggle_auto_drop_spike,
         )
@@ -915,10 +979,10 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         self.anti_afk_button = customtkinter.CTkButton(
             scrollable_frame,
-            text=f"Anti AFK",
+            text="Anti AFK",
             height=40,
             hover=False,
-            fg_color=f"{self.button_colors['enabled'] if self.anti_afk is True else self.button_colors['disabled']}",
+            fg_color=self.button_colors['enabled'] if self.anti_afk else self.button_colors['disabled'],
             font=self.button_font_and_size,
             command=self.toggle_anti_afk,
         )
@@ -926,10 +990,10 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         # self.anti_aim_button = customtkinter.CTkButton(
         #     scrollable_frame,
-        #     text=f"Anti Aim",
+        #     text="Anti Aim",
         #     height=40,
         #     hover=False,
-        #     fg_color=f"{self.button_colors['enabled'] if self.anti_afk is True else self.button_colors['disabled']}",
+        #     fg_color=self.button_colors['enabled'] if self.anti_aim else self.button_colors['disabled'],
         #     font=self.button_font_and_size,
         #     command=self.toggle_anti_aim,
         # )
@@ -964,7 +1028,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             height=40,
             width=200,
             hover=False,
-            fg_color=f"{self.button_colors['enabled'] if self.minimize_to_tray is True else self.button_colors['disabled']}",
+            fg_color=self.button_colors['enabled'] if self.minimize_to_tray else self.button_colors['disabled'],
             font=self.button_font_and_size,
             command=lambda: self.toggle_setting("minimize_to_tray"),
         )
@@ -978,7 +1042,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             height=40,
             width=200,
             hover=False,
-            fg_color=f"{self.button_colors['enabled'] if self.persistent_random_agents is True else self.button_colors['disabled']}",
+            fg_color=self.button_colors['enabled'] if self.persistent_random_agents else self.button_colors['disabled'],
             font=self.button_font_and_size,
             command=lambda: self.toggle_setting("persistent_random_agents"),
         )
@@ -992,7 +1056,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             height=40,
             width=200,
             hover=False,
-            fg_color=f"{self.button_colors['enabled'] if self.hide_default_save_file is True else self.button_colors['disabled']}",
+            fg_color=self.button_colors['enabled'] if self.hide_default_save_file else self.button_colors['disabled'],
             font=self.button_font_and_size,
             command=lambda: self.toggle_setting("hide_default_save_file"),
         )
@@ -1013,11 +1077,13 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         self.anti_afk_toggles_auto_drop_button = customtkinter.CTkButton(
             general_settings_frame,
-            text=f"Anti AFK Drops Spike",
+            text="Anti AFK Drops Spike",
             height=40,
             width=200,
             hover=False,
-            fg_color=f"{self.button_colors['enabled'] if self.anti_afk_toggles_auto_drop is True else self.button_colors['disabled']}",
+            fg_color=self.button_colors["enabled"]
+            if self.anti_afk_toggles_auto_drop is True
+            else self.button_colors["disabled"],
             font=self.button_font_and_size,
             command=lambda: self.toggle_setting("anti_afk_toggles_auto_drop"),
         )
@@ -1027,16 +1093,34 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         self.detect_open_chat_mode_button = customtkinter.CTkButton(
             general_settings_frame,
-            text=f"Detect Opened Chat (KB)",
+            text="Detect Opened Chat (KB)",
             height=40,
             width=200,
             hover=False,
-            fg_color=f"{self.button_colors['enabled'] if self.detect_open_chat_keyboard is True else self.button_colors['disabled']}",
+            fg_color=self.button_colors["enabled"]
+            if self.detect_open_chat_keyboard is True
+            else self.button_colors["disabled"],
             font=self.button_font_and_size,
             command=lambda: self.toggle_setting("detect_open_chat_keyboard"),
         )
         self.detect_open_chat_mode_button.grid(
             column=1, row=3, padx=10, pady=5, sticky="nsew"
+        )
+
+        self.start_tools_thread_automatically_button = customtkinter.CTkButton(
+            general_settings_frame,
+            text="Auto Start Tools",
+            height=40,
+            width=200,
+            hover=False,
+            fg_color=self.button_colors["enabled"]
+            if self.start_tools_thread_automatically is True
+            else self.button_colors["disabled"],
+            font=self.button_font_and_size,
+            command=lambda: self.toggle_setting("start_tools_thread_automatically"),
+        )
+        self.start_tools_thread_automatically_button.grid(
+            column=0, row=4, padx=10, pady=5, sticky="nsew"
         )
 
         # On Startup Settings
@@ -1059,7 +1143,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             height=40,
             width=200,
             hover=False,
-            fg_color=f"{self.button_colors['enabled'] if self.start_minimized is True else self.button_colors['disabled']}",
+            fg_color=self.button_colors['enabled'] if self.start_minimized else self.button_colors['disabled'],
             font=self.button_font_and_size,
             state=tk.DISABLED if self.minimize_to_tray is False else tk.NORMAL,
             command=lambda: self.toggle_setting("start_minimized"),
@@ -1075,7 +1159,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             height=40,
             width=200,
             hover=False,
-            fg_color=f"{self.button_colors['enabled'] if self.enable_on_startup is True else self.button_colors['disabled']}",
+            fg_color=self.button_colors['enabled'] if self.enable_on_startup else self.button_colors['disabled'],
             font=self.button_font_and_size,
             command=lambda: self.toggle_setting("enable_on_startup"),
         )
@@ -1089,7 +1173,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             height=40,
             width=200,
             hover=False,
-            fg_color=f"{self.button_colors['enabled'] if self.safe_mode_on_startup is True else self.button_colors['disabled']}",
+            fg_color=self.button_colors['enabled'] if self.safe_mode_on_startup else self.button_colors['disabled'],
             font=self.button_font_and_size,
             command=lambda: self.toggle_setting("safe_mode_on_startup"),
         )
@@ -1115,7 +1199,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             height=40,
             width=200,
             hover=False,
-            fg_color=f"{self.button_colors['enabled'] if self.grab_keybinds is True else self.button_colors['disabled']}",
+            fg_color=self.button_colors['enabled'] if self.grab_keybinds else self.button_colors['disabled'],
             font=self.button_font_and_size,
             command=lambda: self.toggle_setting("grab_keybinds"),
         )
@@ -1143,7 +1227,7 @@ class InstalockerGUIMain(customtkinter.CTk):
 
             self.save_file_frame_items[f"{file_name}_button"] = customtkinter.CTkButton(
                 self.save_file_frame_items[f"{file_name}_frame"],
-                text=f"{file_name}",
+                text=file_name,
                 font=self.label_font_and_size,
                 fg_color="transparent",
                 hover_color="gray22",
@@ -1210,18 +1294,18 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         # Buttons Left Column
         self.current_status_button.configure(
-            text=f"{'Running' if self.enabled is True else 'Stopped'}",
-            fg_color=f"{self.button_colors['enabled'] if self.enabled is True else self.button_colors['disabled']}",
+            text='Running' if self.enabled else 'Stopped',
+            fg_color=self.button_colors['enabled'] if self.enabled else self.button_colors['disabled'],
         )
 
         self.current_task_button.configure(
-            text=f"{'None' if self.enabled is False else 'Locking' if self.locking is True else 'In Game'}",
+            text='None' if self.enabled is False else 'Locking' if self.locking is True else 'In Game',
             state=tk.DISABLED if self.enabled is False else tk.NORMAL,
         )
 
         self.safe_mode_enabled_button.configure(
-            text=f"{'On' if self.safe_mode is True else 'Off'}",
-            fg_color=f"{self.button_colors['enabled'] if self.safe_mode is True else self.button_colors['disabled']}",
+            text='On' if self.safe_mode is True else 'Off',
+            fg_color=self.button_colors['enabled'] if self.safe_mode is True else self.button_colors['disabled'],
             width=int(f"{140 if self.safe_mode is False else 70}"),
         )
 
@@ -1234,17 +1318,23 @@ class InstalockerGUIMain(customtkinter.CTk):
             text=f"{list(self.safe_mode_timing.keys())[self.safe_mode_strength]}"
         )
 
-        self.current_save_button.configure(text=f"{self.current_save_file}")
+        self.current_save_button.configure(text=self.current_save_file)
 
         # Buttons Middle Column
+
         self.hover_mode_button.configure(
-            text=f"{'Enabled' if self.hover_mode is True else 'Disabled'}",
-            fg_color=f"{self.button_colors['enabled'] if self.hover_mode is True else self.button_colors['disabled']}",
+            text="Hover",
+            fg_color=self.button_colors['enabled'] if self.hover_mode is True else self.button_colors['disabled'],
         )
 
         self.select_map_specific_button.configure(
-            text=f"{'Enabled' if self.map_specific_mode is True else 'Disabled'}",
-            fg_color=f"{self.button_colors['enabled'] if self.map_specific_mode is True else self.button_colors['disabled']}",
+            text="Map Specific",
+            fg_color=self.button_colors['enabled'] if self.map_specific_mode else self.button_colors['disabled'],
+        )
+
+        self.toggle_random_agent_button.configure(
+            text="Random Agent",
+            fg_color=self.button_colors['enabled'] if self.random_agent_mode else self.button_colors['disabled'],
         )
 
         self.select_agent_dropdown.configure(
@@ -1255,11 +1345,6 @@ class InstalockerGUIMain(customtkinter.CTk):
             )
         )
         self.select_agent_dropdown.set(f"{self.selected_agent}")
-
-        self.toggle_random_agent_button.configure(
-            text=f"{'Enabled' if self.random_agent_mode is True else 'Disabled'}",
-            fg_color=f"{self.button_colors['enabled'] if self.random_agent_mode is True else self.button_colors['disabled']}",
-        )
 
         # Disables random agent if map specific mode is enabled and vice versa
         match self.map_specific_mode, self.random_agent_mode:
@@ -1289,7 +1374,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         self.update_icon()
 
     # Updates agent toggle tab
-    def update_agent_toggle_tab(self, agent_name=None):
+    def update_agent_toggle_tab(self, agent_name=None, loading_new_save=None):
         match agent_name:
             case "all":
                 self.toggle_all_agent_button.configure(state=tk.DISABLED)
@@ -1334,9 +1419,19 @@ class InstalockerGUIMain(customtkinter.CTk):
                     self.toggle_none_agent_button.deselect()
                     self.toggle_none_agent_button.configure(state=tk.NORMAL)
 
+                if loading_new_save:
+                    for agent, value in self.unlocked_agents_dict.items():
+                        if agent not in self.default_agents:
+                            if value:
+                                self.agent_checkboxes[f"self.{agent}_checkbox"].select()
+                            else:
+                                self.agent_checkboxes[f"self.{agent}_checkbox"].deselect()
+
+                
+
     # Updates random agent tab
     def update_random_agent_tab(
-        self, agent_name=None, toggled_agent_name=None, exclusiselect_mode=False
+        self, agent_name=None, toggled_agent_name=None, exclusiselect_mode=False, loading_new_save=False
     ):
         match agent_name:
             case "all":
@@ -1482,7 +1577,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                             self.agent_role_checkboxes[role.lower()].deselect()
 
             case _:  # Updates the tab when a single agent is selected
-                if exclusiselect_mode is True:
+                if exclusiselect_mode and agent_name is not None:
                     self.random_agent_checkboxes[
                         f"self.{agent_name}_random_checkbox"
                     ].deselect()
@@ -1518,17 +1613,44 @@ class InstalockerGUIMain(customtkinter.CTk):
                     else:
                         self.agent_role_checkboxes[role.lower()].deselect()
 
+                if loading_new_save:
+                    for agent, value in self.unlocked_agents_dict.items():
+                        if agent not in self.default_agents:
+                            if self.random_agents_dict[agent]:
+                                self.random_agent_checkboxes[
+                                    f"self.{agent}_random_checkbox"
+                                ].select()
+                            else:
+                                self.random_agent_checkboxes[
+                                    f"self.{agent}_random_checkbox"
+                                ].deselect()
+
+                            if value:
+                                self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].configure(
+                                    state=tk.NORMAL
+                                )
+                            else:
+                                self.random_agent_checkboxes[f"self.{agent}_random_checkbox"].configure(
+                                    state=tk.DISABLED
+                                )
+
     # Updates map specific tab
     def update_map_specific_tab(self):
-        unlocked_agents = list(agent for agent, unlock_status in self.unlocked_agents_dict.items() if unlock_status)
+        unlocked_agents = list(
+            agent
+            for agent, unlock_status in self.unlocked_agents_dict.items()
+            if unlock_status
+        )
 
         for map_name in self.map_names:
             self.map_dropdowns[map_name].configure(values=unlocked_agents)
-            
+
             if self.map_specific_agents_dict[map_name] is None:
                 self.map_dropdowns[map_name].set("None")
                 self.map_dropdowns[map_name].configure(
-                    fg_color=self.button_colors["disabled"], button_color="#4e2126", hover=False
+                    fg_color=self.button_colors["disabled"],
+                    button_color="#4e2126",
+                    hover=False,
                 )
             else:
                 self.map_dropdowns[map_name].set(
@@ -1574,20 +1696,32 @@ class InstalockerGUIMain(customtkinter.CTk):
     def update_tools_tab(self):
         self.toggle_tools_button.configure(
             text=f"Tools {'Enabled' if self.enable_tools is True else 'Disabled'}",
-            fg_color=f"{self.button_colors['enabled'] if self.enable_tools is True else self.button_colors['disabled']}",
+            fg_color=self.button_colors['enabled'] if self.enable_tools else self.button_colors['disabled'],
         )
 
+        anto_drop_spike_color = (
+            self.button_colors["enabled"]
+            if self.auto_drop_spike is True
+            else self.button_colors["disabled"]
+        )
         self.auto_drop_spike_button.configure(
-            fg_color=f"{self.button_colors['enabled'] if self.auto_drop_spike is True else self.button_colors['disabled']}",
+            fg_color=anto_drop_spike_color,
+        )
+        self.overview_drop_spike_button.configure(
+            fg_color=anto_drop_spike_color,
         )
 
+        anti_afk_color = (
+            self.button_colors["enabled"]
+            if self.anti_afk is True
+            else self.button_colors["disabled"]
+        )
         self.anti_afk_button.configure(
-            fg_color=f"{self.button_colors['enabled'] if self.anti_afk is True else self.button_colors['disabled']}",
+            fg_color=anti_afk_color,
         )
-
-        # self.anti_aim_button.configure(
-        #     fg_color=f"{self.button_colors['enabled'] if self.anti_aim is True else self.button_colors['disabled']}",
-        # )
+        self.overview_anti_afk_button.configure(
+            fg_color=anti_afk_color,
+        )
 
     # Changes the active frame
     def select_frame_by_name(self, frame_name):
@@ -1689,7 +1823,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                     user_settings["MINIMIZE_TO_TRAY"] = self.minimize_to_tray
 
                     self.minimize_to_tray_button.configure(
-                        fg_color=f"{self.button_colors['enabled'] if self.minimize_to_tray is True else self.button_colors['disabled']}",
+                        fg_color=self.button_colors['enabled'] if self.minimize_to_tray else self.button_colors['disabled'],
                     )
 
                     if self.minimize_to_tray is True:
@@ -1713,7 +1847,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                     )
 
                     self.start_minimized_button.configure(
-                        fg_color=f"{self.button_colors['enabled'] if user_settings['START_MINIMIZED'] is True else self.button_colors['disabled']}"
+                        fg_color=self.button_colors['enabled'] if user_settings['START_MINIMIZED'] else self.button_colors['disabled']
                     )
                 case "enable_on_startup":
                     user_settings["ENABLE_ON_STARTUP"] = (
@@ -1722,7 +1856,9 @@ class InstalockerGUIMain(customtkinter.CTk):
                         else setting_value
                     )
                     self.enable_on_startup_button.configure(
-                        fg_color=f"{self.button_colors['enabled'] if user_settings['ENABLE_ON_STARTUP'] is True else self.button_colors['disabled']}",
+                        fg_color=self.button_colors["enabled"]
+                        if user_settings["ENABLE_ON_STARTUP"]
+                        else self.button_colors["disabled"],
                     )
                 case "safe_mode_on_startup":
                     user_settings["SAFE_MODE_ON_STARTUP"] = (
@@ -1731,7 +1867,9 @@ class InstalockerGUIMain(customtkinter.CTk):
                         else setting_value
                     )
                     self.safe_mode_on_startup_button.configure(
-                        fg_color=f"{self.button_colors['enabled'] if user_settings['SAFE_MODE_ON_STARTUP'] is True else self.button_colors['disabled']}",
+                        fg_color=self.button_colors["enabled"]
+                        if user_settings["SAFE_MODE_ON_STARTUP"]
+                        else self.button_colors["disabled"],
                     )
                 case "safe_mode_strength_on_startup":
                     self.safe_mode_strength_on_startup = user_settings[
@@ -1761,7 +1899,9 @@ class InstalockerGUIMain(customtkinter.CTk):
                     ] = self.persistent_random_agents
 
                     self.persistent_random_agents_button.configure(
-                        fg_color=f"{self.button_colors['enabled'] if self.persistent_random_agents is True else self.button_colors['disabled']}",
+                        fg_color=self.button_colors["enabled"]
+                        if self.persistent_random_agents
+                        else self.button_colors["disabled"],
                     )
                 case "grab_keybinds":
                     self.grab_keybinds = (
@@ -1772,7 +1912,9 @@ class InstalockerGUIMain(customtkinter.CTk):
                     user_settings["GRAB_KEYBINDS"] = self.grab_keybinds
 
                     self.grab_keybinds_button.configure(
-                        fg_color=f"{self.button_colors['enabled'] if self.grab_keybinds is True else self.button_colors['disabled']}",
+                        fg_color=self.button_colors["enabled"]
+                        if self.grab_keybinds
+                        else self.button_colors["disabled"],
                     )
                 case "hide_default_save_file":
                     self.hide_default_save_file = (
@@ -1785,7 +1927,9 @@ class InstalockerGUIMain(customtkinter.CTk):
                     ] = self.hide_default_save_file
 
                     self.hide_default_save_file_button.configure(
-                        fg_color=f"{self.button_colors['enabled'] if self.hide_default_save_file is True else self.button_colors['disabled']}",
+                        fg_color=self.button_colors["enabled"]
+                        if self.hide_default_save_file
+                        else self.button_colors["disabled"],
                     )
                     self.update_save_file_tab()
 
@@ -1827,7 +1971,9 @@ class InstalockerGUIMain(customtkinter.CTk):
                     ] = self.anti_afk_toggles_auto_drop
 
                     self.anti_afk_toggles_auto_drop_button.configure(
-                        fg_color=f"{self.button_colors['enabled'] if self.anti_afk_toggles_auto_drop is True else self.button_colors['disabled']}",
+                        fg_color=self.button_colors["enabled"]
+                        if self.anti_afk_toggles_auto_drop
+                        else self.button_colors["disabled"],
                     )
 
                 case "detect_open_chat_keyboard":
@@ -1841,7 +1987,25 @@ class InstalockerGUIMain(customtkinter.CTk):
                     ] = self.detect_open_chat_keyboard
 
                     self.detect_open_chat_mode_button.configure(
-                        fg_color=f"{self.button_colors['enabled'] if self.detect_open_chat_keyboard is True else self.button_colors['disabled']}",
+                        fg_color=self.button_colors["enabled"]
+                        if self.detect_open_chat_keyboard
+                        else self.button_colors["disabled"],
+                    )
+
+                case "start_tools_thread_automatically":
+                    self.start_tools_thread_automatically = (
+                        not self.start_tools_thread_automatically
+                        if setting_value is None
+                        else setting_value
+                    )
+                    user_settings[
+                        "START_TOOLS_THREAD_AUTOMATICALLY"
+                    ] = self.start_tools_thread_automatically
+
+                    self.start_tools_thread_automatically_button.configure(
+                        fg_color=self.button_colors["enabled"]
+                        if self.start_tools_thread_automatically
+                        else self.button_colors["disabled"],
                     )
 
         with open(resource_path("data/user_settings.json"), "w") as user_settings_file:
@@ -1900,29 +2064,47 @@ class InstalockerGUIMain(customtkinter.CTk):
             self.random_agents_dict = self.random_agents_dict_backup.copy()
 
         self.random_agent_exclusiselect_button.configure(
-            fg_color=f"{self.button_colors['enabled'] if self.random_agent_exclusiselect is True else self.button_colors['disabled']}",
+            fg_color=self.button_colors["enabled"]
+            if self.random_agent_exclusiselect
+            else self.button_colors["disabled"],
         )
 
         self.update_random_agent_tab(exclusiselect_mode=True)
 
     # Toggles different tools
-    def toggle_tools(self):
-        self.enable_tools = not self.enable_tools
+    def explicitly_toggle_tools(self):
+        # self.enable_tools = not self.enable_tools
+        self.toggle_tools(explicit_toggle=True)
         self.update_tools_tab()
 
     # Toggles auto drop spike
     def toggle_auto_drop_spike(self):
         self.auto_drop_spike = not self.auto_drop_spike
+
+        if self.auto_drop_spike:
+            self.running_tools.add("auto_drop_spike")
+        else:
+            self.running_tools.discard("auto_drop_spike")
+
+        self.toggle_tools()
         self.update_tools_tab()
 
     # Toggles anti afk
     def toggle_anti_afk(self):
         self.anti_afk = not self.anti_afk
+
+        if self.anti_afk:
+            self.running_tools.add("anti_afk")
+        else:
+            self.running_tools.discard("anti_afk")
+
+        self.toggle_tools()
         self.update_tools_tab()
 
     # Toggles anti aim (not implemented yet)
     def toggle_anti_aim(self):
         self.anti_aim = not self.anti_aim
+        self.toggle_tools()
         self.update_tools_tab()
 
     # endregion
@@ -1953,7 +2135,6 @@ class InstalockerGUIMain(customtkinter.CTk):
                     self.map_lookup[None] = map_name
 
             # Loads the user_settings.json file, clears time_to_lock if new timings are added
-            # try:
             with open(
                 resource_path("data/user_settings.json"), "r"
             ) as user_settings_file:
@@ -2011,6 +2192,10 @@ class InstalockerGUIMain(customtkinter.CTk):
                     "DETECT_OPEN_CHAT_THROUGH_KEYBOARD", True
                 )
 
+                self.start_tools_thread_automatically = user_settings.get(
+                    "START_TOOLS_THREAD_AUTOMATICALLY", True
+                )
+
             with open(resource_path("data/user_settings.json"), "w") as us:
                 user_settings_file_json = {
                     "ACTIVE_SAVE_FILE": self.current_save_file,
@@ -2028,6 +2213,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                     "ANTI_AFK_MODE": self.anti_afk_mode,
                     "ANTIAFK_TOGGLES_AUTODROPSPIKE": self.anti_afk_toggles_auto_drop,
                     "DETECT_OPEN_CHAT_THROUGH_KEYBOARD": self.detect_open_chat_keyboard,
+                    "START_TOOLS_THREAD_AUTOMATICALLY": self.start_tools_thread_automatically,
                 }
                 us.write(json.dumps(user_settings_file_json, indent=4))
 
@@ -2190,9 +2376,9 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         self.update_save_file_tab()
         self.update_overview_tab()
-        self.update_agent_toggle_tab()
+        self.update_agent_toggle_tab(loading_new_save=True)
         self.update_map_specific_tab()
-        self.update_random_agent_tab()
+        self.update_random_agent_tab(loading_new_save=True)
 
     # Favorites the save file indicated by the file_name
     def favorite_save_file(self, file_name):
@@ -2766,8 +2952,20 @@ class InstalockerGUIMain(customtkinter.CTk):
             self.enabled = False
 
     # endregion
-    
+
     # region Tools Thread
+
+    def toggle_tools(self, explicit_toggle: bool = False):
+        if explicit_toggle:
+            self.enable_tools = not self.enable_tools
+        
+        if self.start_tools_thread_automatically and not explicit_toggle:
+            if len(self.running_tools) > 0:
+                self.enable_tools = True
+            else:
+                self.enable_tools = False
+        
+        
 
     def tools_main(self):
         if self.tools_screenshotter is None:
@@ -3024,7 +3222,7 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         return np.allclose(pixel_data, expected_pattern)
 
-    def _compare_screenshot_to_patterns( # NOT TESTED, BUT SHOULD WORK
+    def _compare_screenshot_to_patterns(  # NOT TESTED, BUT SHOULD WORK
         self,
         sct: mss,
         bbox: tuple[int, int, int, int],
@@ -3032,10 +3230,7 @@ class InstalockerGUIMain(customtkinter.CTk):
     ) -> bool:
         pixel_data = sct.grab(bbox).pixels
 
-        return any(
-            np.allclose(pixel_data, pattern)
-            for pattern in expected_patterns
-        )
+        return any(np.allclose(pixel_data, pattern) for pattern in expected_patterns)
 
     # endregion
 
