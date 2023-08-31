@@ -38,7 +38,7 @@ if getattr(sys, "frozen", True):
         import pynput.keyboard as pynkeyboard
         import numpy as np
 
-    except Exception:
+    except ModuleNotFoundError:
         # Installs missing modules if exception is raised
         import subprocess
 
@@ -199,7 +199,8 @@ class InstalockerGUIMain(customtkinter.CTk):
                     main_font=self.main_font,
                 ).get_input()
 
-                # Opens the latest release page and closes the program if the user wants to update
+                # Opens the latest release page and closes the program if the
+                # user wants to update
                 if update_now:
                     webbrowser.open(
                         "https://www.github.com/E1Bos/VALocker/releases/latest/"
@@ -2286,7 +2287,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         # Makes sure any new maps are added to the map specific agents dict
         for map_name in self.map_names:
             if map_name not in self.map_specific_agents_dict:
-                self.map_specific_agents_dict[map_name] = self.default_agents[0]
+                self.map_specific_agents_dict[map_name] = None
 
         # Removes any maps from the save file that are not in the config file
         for map_name in self.map_specific_agents_dict.copy():
