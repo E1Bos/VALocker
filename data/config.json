@@ -48,34 +48,34 @@
     },
     "ALL_AGENTS": {
         "CONTROLLERS": [
-            "Brimstone",
-            "Omen",
-            "Viper",
             "Astra",
-            "Harbor"
+            "Brimstone",
+            "Harbor",
+            "Omen",
+            "Viper"
         ],
         "DUELISTS": [
-            "Phoenix",
             "Jett",
-            "Reyna",
+            "Neon",
+            "Phoenix",
             "Raze",
-            "Yoru",
-            "Neon"
+            "Reyna",
+            "Yoru"
         ],
         "INITIATORS": [
-            "Sova",
             "Breach",
-            "Skye",
-            "Kayo",
+            "Deadlock",
             "Fade",
             "Gekko",
-            "Deadlock"
+            "Kayo",
+            "Skye",
+            "Sova"
         ],
         "SENTINELS": [
-            "Killjoy",
+            "Chamber",
             "Cypher",
-            "Sage",
-            "Chamber"
+            "Killjoy",
+            "Sage"
         ]
     },
     "MAPS": [
@@ -85,8 +85,9 @@
         "Fracture",
         "Haven",
         "Icebox",
-        "Split",
         "Lotus",
-        "Pearl"
+        "Pearl",
+        "Split",
+        "Sunset"
     ]
 }
