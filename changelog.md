@@ -3,6 +3,12 @@ Changelog
 
 Date Format: YYYY-MM-DD
 
+## Version 1.5.9 - 2023-09-01
+
+### Added
+- Support for new Sunset map, old save files will automatically update themselves to include the new map without user input or data loss.
+- Sunset image added to map images.
+
 ## Version 1.5.8 - 2023-08-29
 
 ### Added
