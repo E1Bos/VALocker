@@ -2326,9 +2326,8 @@ class InstalockerGUIMain(customtkinter.CTk):
         # Sets map agents that are not unlocked to None
         for map_name in self.map_specific_agents_dict.keys():
             agent_name = self.map_specific_agents_dict[map_name]
-            if agent_name in self.unlocked_agents_dict:
-                if self.unlocked_agents_dict[agent_name] is False:
-                    self.map_specific_agents_dict[map_name] = None
+            if agent_name in self.unlocked_agents_dict and self.unlocked_agents_dict[agent_name] is False:
+                self.map_specific_agents_dict[map_name] = None
 
         # Gets Coords for the selected agent
         self.find_agent_coords(self.selected_agent)
@@ -2664,12 +2663,11 @@ class InstalockerGUIMain(customtkinter.CTk):
                 ]
 
         # Only updates the list if a checkbox is selected, not when the ExclusiSelect mode is toggled
-        if self.persistent_random_agents is False:
-            if (
-                self.random_agent_exclusiselect is True
-                and exclusiselect_toggle is False
-            ):
-                self.random_agents_dict_backup = self.random_agents_dict.copy()
+        if self.persistent_random_agents is False and (
+                        self.random_agent_exclusiselect is True
+                        and exclusiselect_toggle is False
+                    ):
+            self.random_agents_dict_backup = self.random_agents_dict.copy()
 
         self.update_random_agent_tab(
             agent_name, exclusiselect_mode=exclusiselect_toggle
@@ -2773,25 +2771,23 @@ class InstalockerGUIMain(customtkinter.CTk):
         confirmations = 0
         self.start_lock = float()
         while (
-            self.active_thread is True
-            and self.locking is True
-            and self.enabled is True
-            and self.map_specific_mode is map_specific_toggle
-        ):
+                    self.active_thread is True
+                    and self.locking is True
+                    and self.enabled is True
+                    and self.map_specific_mode is map_specific_toggle
+                ):
             if self.compare_screenshot_to_pattern(
                 self.locking_screenshotter,
                 self.coords["locking"],
                 self.pixel_patterns["locking"],
             ):
                 confirmations += 1
-
+        
                 if confirmations >= self.locking_confirmations_required:
                     self.lock_agent()
             else:
                 confirmations = 0
-
-        else:
-            self.find_game_end()
+        self.find_game_end()
 
     # Locks the agent
     def lock_agent(self):
@@ -3161,20 +3157,19 @@ class InstalockerGUIMain(customtkinter.CTk):
                 self.chat_is_open = True
 
         if (
-            hasattr(key, "char")
-            and self.register_keyboard_input
-            and self.enable_tools
-            and self.anti_afk
-            and not self.chat_is_open
-        ):
-            if key.char in [
-                self.keybinds["MoveForward"],
-                self.keybinds["MoveRight"],
-                self.keybinds["MoveBackward"],
-                self.keybinds["MoveLeft"],
-            ]:
-                self.anti_afk = False
-                self.update_tools_tab()
+                    hasattr(key, "char")
+                    and self.register_keyboard_input
+                    and self.enable_tools
+                    and self.anti_afk
+                    and not self.chat_is_open
+                ) and key.char in [
+                        self.keybinds["MoveForward"],
+                        self.keybinds["MoveRight"],
+                        self.keybinds["MoveBackward"],
+                        self.keybinds["MoveLeft"],
+                    ]:
+            self.anti_afk = False
+            self.update_tools_tab()
 
     # def tools_mouse_on_press(self, x, y, button, pressed):
     #     if self.enable_tools and self.anti_aim and self.register_mouse_input:
