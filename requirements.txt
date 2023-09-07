@@ -5,5 +5,5 @@ Pillow==10.0.0
 pynput==1.7.6
 pystray==0.19.4
 six==1.16.0
-numpy==1.25.0
+numpy==1.25.2
 requests==2.31.0
