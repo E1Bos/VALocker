@@ -18,6 +18,12 @@ VALocker is a program written in Python that allows you to automatically lock an
 
 📋 **Changelog:** For a detailed list of changes, improvements, and bug fixes, refer to the [Changelog](changelog.md) file.
 
+<br>
+
+**As of update v1.5.8, Windows Defender and other anti-virus programs detect VALocker as a virus or Trojan. This is a *false positive*. I have no idea why they have suddenly picked it up as malicious. If you want to still use VALocker, you may have to disable your anti-virus, allow it on your computer, or run the Python code.**
+
+<br>
+
 > **Disclaimer:**
 > This program is not affiliated with or endorsed by Riot Games or VALORANT. The software is provided "as is" without any warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, and non-infringement. In no event shall the authors or copyright holders be liable for any claim, damages, or other liability, whether in an action of contract, tort, or otherwise, arising from, out of, or in connection with the software or the use or other dealings in the software.
 
