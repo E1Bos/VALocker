@@ -18,12 +18,6 @@ VALocker is a program written in Python that allows you to automatically lock an
 
 📋 **Changelog:** For a detailed list of changes, improvements, and bug fixes, refer to the [Changelog](changelog.md) file.
 
-<br>
-
-**As of update v1.5.8, Windows Defender and other anti-virus programs detect VALocker as a virus or Trojan. This is a *false positive*. I have no idea why they have suddenly picked it up as malicious. If you want to still use VALocker, you may have to disable your anti-virus, allow it on your computer, or run the Python code.**
-
-<br>
-
 > **Disclaimer:**
 > This program is not affiliated with or endorsed by Riot Games or VALORANT. The software is provided "as is" without any warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, and non-infringement. In no event shall the authors or copyright holders be liable for any claim, damages, or other liability, whether in an action of contract, tort, or otherwise, arising from, out of, or in connection with the software or the use or other dealings in the software.
 
@@ -81,29 +75,21 @@ VALocker is a program written in Python that allows you to automatically lock an
 6. During the agent selection phase in VALORANT, VALocker will automatically lock in your chosen agent.
 7. Once the agent is locked, the button under "Current Task" will change to "In Game", once it detects the end of the game, it will automatically switch to "Locking". The mode can be changed at any time by clicking on the button.
 
-**Note:** VALocker relies on specific display settings for accurate functionality. Please ensure that your VALORANT game is running at a screen resolution of 1920x1080 in letterbox mode. VALocker relies heavily on the Valorant UI to determine what is going on in game, and adding an FPS cap is recommended. At higher framerates, Valorant sometimes does not render the UI, which can cause issues with the program. VALocker has been tested at 60 FPS and 144 FPS, and works reliably at this framerate. It may work at higher framerates if thats what your monitor supports. Deviating from these settings may result in incorrect behavior of the program.
+### Notes:
+- To function properly, VALORANT needs to be running at 1920x1080
+- Your framerate must be capped. An uncapped framerate leads to the VALORANT UI not rendering properly.
+- Any programs like AMD Radeon Image Sharpening or Nvidia Freestyle that modify the game's visuals should be disabled, they can slightly alter the UI and cause issues with VALocker.
 
 ## 🔧 Configuration
-> **THIS SECTION IS NOT UP TO DATE**  
-> Most settings can be changed via the settings tab. The `user_settings.json` file should not be edited manually unless you know what you're doing.
-
 VALocker provides a `user_settings.json` file in the data directory where you can customize certain aspects of the program. The `user_settings.json` file is created when running the program for the first time. 
 
-The configuration file allows you to:
-- Toggle the option to minimize VALocker to the system tray.
-- Enable or disable the automatic minimization of VALocker on startup.
-- Choose whether to enable instalocking automatically on startup.
-- Toggle the safe mode feature on startup.
-- Adjust the default strength of safe mode on startup.
-  - 0: Low (300 - 500ms)
-  - 1: Medium (500 - 800ms)
-  - 2: High (800 - 1000ms)
-- Toggle the persistence of random agents while using ExclusiSelect.
-- Change the amount of locking confirmations required, this is how many consecutive screenshots are required before the program is sure you're in the agent selection screen.
-- Change the amount of menu screen confirmations, this is how many consecutive screenshots are required before the program is sure you're in the main menu screen.
-- Toggle the automatic keybind-grabber.
-- Customize the timings between each action when safe mode is disabled.
-- Show or hide the default save file according to your preference.
+Settings should be changed via the settings tab. There are 3 settings that can only be changed in the `user_settings.json` file:
+
+- `"LOCKING_CONFIRMATIONS`: Defaulted to `3`. This determines how many times VALocker needs to detect the agent selection screen before locking the agent. This is to prevent false positives.
+- `"MENU_CONFIRMATIONS"`: Defaulted to `3`. This provides the same functionality as locking_confirmations but for the main menu.
+- `"FAST_MODE_TIMINGS"`: Defaulted to `[0.02, 0.02, 0.02]`. When safe mode is disabled, this determines the time between `[0]`: moving the mouse and selecting the agent, `[1]`: selecting the agent and moving over the lock button, and `[2]`: clicking the lock button. Making these values any smaller may lead to VALORANT not registering the mouse input. These values are in seconds.
+
+Please only edit these values if you know what you are doing.
 
 ## 📏 Display Size Compatibility
 I plan to add support for other display sizes in the future, but for now, VALocker only supports a resolution of 1920x1080. If you would like to see support for other display sizes, please let me know by [creating an issue](https://github.com/E1Bos/VALocker/issues).
