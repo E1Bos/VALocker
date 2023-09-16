@@ -419,7 +419,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             hover=False,
             text="On" if self.safe_mode is True else "Off",
             fg_color=self.button_colors["enabled"]
-            if self.enabled
+            if self.safe_mode
             else self.button_colors["disabled"],
             font=self.button_font_and_size,
             command=self.toggle_safe_mode,
@@ -2200,6 +2200,11 @@ class InstalockerGUIMain(customtkinter.CTk):
                     self.map_lookup[None] = map_name
 
             # Loads the user_settings.json file, clears time_to_lock if new timings are added
+            if not os.path.exists(resource_path("data/user_settings.json")):
+                with open(resource_path("data/user_settings.json"), "w") as empty_file:
+                    empty_file.write("{}")
+            
+            
             with open(
                 resource_path("data/user_settings.json"), "r"
             ) as user_settings_file:
@@ -2260,7 +2265,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                 self.start_tools_thread_automatically = user_settings.get(
                     "START_TOOLS_THREAD_AUTOMATICALLY", True
                 )
-
+            
             with open(resource_path("data/user_settings.json"), "w") as us:
                 user_settings_file_json = {
                     "ACTIVE_SAVE_FILE": self.current_save_file,
