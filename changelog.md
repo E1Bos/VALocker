@@ -3,6 +3,12 @@ Changelog
 
 Date Format: YYYY-MM-DD
 
+## Version 1.5.10 - 2023-09-16
+
+### Fixed
+- Fixed the "On" button for safe mode being red if safe mode is enabled on startup and instalocking is disabled.
+- Fixed the `user_settings.json` file not being created if it does not exist, leading to the program just crashing over and over.
+
 ## Version 1.5.9 - 2023-09-01
 
 ### Added
