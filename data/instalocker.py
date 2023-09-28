@@ -2945,11 +2945,11 @@ class InstalockerGUIMain(customtkinter.CTk):
                 self.pixel_patterns["main_menu"],
             )
 
-            # red_button = self.compare_screenshot_to_pattern(
-            #     self.locking_screenshotter,
-            #     self.coords["play_button"],
-            #     self.pixel_patterns["red_button"],
-            # )
+            red_button = self.compare_screenshot_to_pattern(
+                self.locking_screenshotter,
+                self.coords["play_button"],
+                self.pixel_patterns["red_button"],
+            )
 
             progress_text = self.compare_screenshot_to_pattern(
                 self.locking_screenshotter,
@@ -2963,7 +2963,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                 self.pixel_patterns["pure_white"],
             )
 
-            if player_banner or progress_text or progress_text_ranked: # or red_button:
+            if player_banner or red_button or progress_text or progress_text_ranked:
                 confirmations += 1
 
                 if confirmations >= self.menu_screen_confirmaions_required:
