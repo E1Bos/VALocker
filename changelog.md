@@ -3,6 +3,11 @@ Changelog
 
 Date Format: YYYY-MM-DD
 
+## Version 1.5.11 - 2023-09-28
+
+### Fixed
+- Fixed version number. VALocker v1.5.10 was stuck asking users to update their version, even though they were on the latest version. This was due to the version number being set to 1.5.9 instead of 1.5.10. This has been fixed with this new release.
+
 ## Version 1.5.10 - 2023-09-16
 
 ### Fixed
