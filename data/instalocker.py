@@ -98,7 +98,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             # Locking Screen
             "locking": (234, 238, 178),
             # Menu Screen
-            "main_menu": (245, 244, 240),
+            "main_menu": (246, 244, 240),
             "red_button": (216, 57, 70),
             # Tools
             "spectating": (170, 237, 225),
@@ -2945,11 +2945,11 @@ class InstalockerGUIMain(customtkinter.CTk):
                 self.pixel_patterns["main_menu"],
             )
 
-            red_button = self.compare_screenshot_to_pattern(
-                self.locking_screenshotter,
-                self.coords["play_button"],
-                self.pixel_patterns["red_button"],
-            )
+            # red_button = self.compare_screenshot_to_pattern(
+            #     self.locking_screenshotter,
+            #     self.coords["play_button"],
+            #     self.pixel_patterns["red_button"],
+            # )
 
             progress_text = self.compare_screenshot_to_pattern(
                 self.locking_screenshotter,
@@ -2963,7 +2963,7 @@ class InstalockerGUIMain(customtkinter.CTk):
                 self.pixel_patterns["pure_white"],
             )
 
-            if player_banner or red_button or progress_text or progress_text_ranked:
+            if player_banner or progress_text or progress_text_ranked: # or red_button:
                 confirmations += 1
 
                 if confirmations >= self.menu_screen_confirmaions_required:
@@ -3266,7 +3266,6 @@ class InstalockerGUIMain(customtkinter.CTk):
         processed_pixels = np.array(pixel_data, dtype=np.uint8)
 
         rgb_values = processed_pixels.reshape(-1, 3)
-
         return all(np.all(rgb_values == expected_pattern, axis=1))
 
     def _compare_screenshot_to_pattern_alternative(  # Average 0.0164257998s
