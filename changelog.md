@@ -3,6 +3,13 @@ Changelog
 
 Date Format: YYYY-MM-DD
 
+## Version 1.5.12 - 2023-10-02
+
+### Added
+- Added Iso to agent list.
+
+> I am currently working on a laptop, so there is a chance that VALocker isn't functioning properly. There is nothing I can do about this.
+
 ## Version 1.5.11 - 2023-09-28
 
 ### Fixed

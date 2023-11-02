@@ -77,7 +77,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         super().__init__()
 
         # Version
-        CURRENT_VERSION = "v1.5.11"
+        CURRENT_VERSION = "v1.5.12"
 
         # Locking Variables
         self.coords = {
