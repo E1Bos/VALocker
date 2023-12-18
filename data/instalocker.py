@@ -77,12 +77,12 @@ class InstalockerGUIMain(customtkinter.CTk):
         super().__init__()
 
         # Version
-        CURRENT_VERSION = "v1.5.12"
+        CURRENT_VERSION = "v1.5.13"
 
         # Locking Variables
         self.coords = {
             # Locking Screen
-            "locking": (947, 866, 952, 867),
+            "locking": (947, 782, 952, 783),
             # Finding Menu
             "main_menu": (815, 243, 820, 244),
             "play_button": (920, 45, 930, 50),
@@ -98,7 +98,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             # Locking Screen
             "locking": (234, 238, 178),
             # Menu Screen
-            "main_menu": (246, 244, 240),
+            "main_menu": (245, 244, 240),
             "red_button": (216, 57, 70),
             # Tools
             "spectating": (170, 237, 225),
@@ -3266,6 +3266,7 @@ class InstalockerGUIMain(customtkinter.CTk):
         processed_pixels = np.array(pixel_data, dtype=np.uint8)
 
         rgb_values = processed_pixels.reshape(-1, 3)
+        
         return all(np.all(rgb_values == expected_pattern, axis=1))
 
     def _compare_screenshot_to_pattern_alternative(  # Average 0.0164257998s
