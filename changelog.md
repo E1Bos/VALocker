@@ -3,6 +3,19 @@ Changelog
 
 Date Format: YYYY-MM-DD
 
+## Version 1.5.14 - 2024-03-28
+
+### Added
+- Added Clove to agent list.
+
+### Fixed
+- Slightly modified UI to fix width issue with the Safe Mode button.
+
+## Version 1.5.13 - 2023-12-18
+
+### Changed
+- Removed unnecessary python dependencies and updated to Python 3.11.
+
 ## Version 1.5.12 - 2023-10-02
 
 ### Added
