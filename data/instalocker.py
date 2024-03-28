@@ -414,7 +414,7 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         self.safe_mode_enabled_button = customtkinter.CTkButton(
             safe_mode_frame,
-            width=int(f"{140 if self.safe_mode is False else 70}"),
+            width=int(f"{139 if self.safe_mode is False else 70}"),
             height=35,
             hover=False,
             text="On" if self.safe_mode is True else "Off",
@@ -428,7 +428,7 @@ class InstalockerGUIMain(customtkinter.CTk):
 
         self.safe_mode_strength_button = customtkinter.CTkButton(
             safe_mode_frame,
-            width=70,
+            width=69,
             height=35,
             hover=False,
             text=f"{list(self.safe_mode_timing.keys())[self.safe_mode_strength]}",
@@ -1355,7 +1355,7 @@ class InstalockerGUIMain(customtkinter.CTk):
             fg_color=self.button_colors["enabled"]
             if self.safe_mode is True
             else self.button_colors["disabled"],
-            width=int(f"{140 if self.safe_mode is False else 70}"),
+            width=int(f"{139 if self.safe_mode is False else 70}"),
         )
 
         if self.safe_mode is True:
