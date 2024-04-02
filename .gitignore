@@ -1,0 +1,29 @@
+# This file is used to specify files and folders that should be ignored by git.
+
+# Venv and VSCode settings
+.vscode
+venv
+
+# Building to exe and compiled files
+build-to-exe
+output
+data/valorant_files
+VALocker
+
+# Folders
+__pycache__
+
+# Other files
+screenshotter.py
+user_settings.json
+
+# All json
+*.json
+
+# All bak
+*.bak
+
+# Ignore necessary files
+!default.json
+!config.json
+!default_keybinds.json
