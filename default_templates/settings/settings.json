@@ -1,0 +1,21 @@
+{
+    "ENABLE_ON_STARTUP": false,
+    "MINIMIZE_TO_TRAY": false,
+    "START_MINIMIZED": false,
+    "SAFE_MODE_ON_STARTUP": false,
+    "SAFE_MODE_STRENGTH_ON_STARTUP": 0,
+    "LOCKING_CONFIRMATIONS": 3,
+    "MENU_CONFIRMATIONS": 3,
+    "FAST_MODE_TIMINGS": [
+        0.02,
+        0.02,
+        0.02
+    ],
+    "GRAB_KEYBINDS": false,
+    "PERSISTENT_RANDOM_AGENTS": false,
+    "HIDE_DEFAULT_SAVE_FILE": false,
+    "ANTI_AFK_MODE": "forward",
+    "ANTIAFK_TOGGLES_AUTODROPSPIKE": false,
+    "DETECT_OPEN_CHAT_THROUGH_KEYBOARD": false,
+    "START_TOOLS_THREAD_AUTOMATICALLY": true
+}
