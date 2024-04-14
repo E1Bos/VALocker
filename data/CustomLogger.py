@@ -18,14 +18,14 @@ class CustomLogger:
 
     """
 
-    def __init__(self, name: str, log_dir: str, log_file: str):
+    def __init__(self, name: str, log_file: str):
         self.logger = logging.getLogger(name)
         self.logger.setLevel(logging.INFO)
         formatter = logging.Formatter(
             "%(asctime)s - %(name)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
         )
         
-        log_path = os.path.join(log_dir, "logs", log_file)
+        log_path = os.path.join(os.environ["APPDATA"], "VALocker", "logs", log_file)
         
         file_handler = logging.FileHandler(
             log_path, mode="w"
