@@ -14,16 +14,17 @@ class FileManager:
 
     Methods:
         setup_file_manager(): Sets up the FileManager by ensuring that the required files exist and reading them into memory.
+        update_file(file_name): Update a file by downloading the latest version from the repository.
         get_settings(): Returns the settings dictionary.
         get_user_settings(): Returns the user settings dictionary.
         get_stats(): Returns the stats dictionary.
         get_locking_info(): Returns the locking info dictionary.
-        get_config(): Returns the config dictionary.
+        get_agent_config(): Returns the agent config dictionary.
         set_settings(settings): Sets the settings dictionary.
         set_user_settings(user_settings): Sets the user settings dictionary.
         set_stats(stats): Sets the stats dictionary.
         set_locking_info(locking_info): Sets the locking info dictionary.
-        set_config(config): Sets the config dictionary.
+        set_agent_config(config): Sets the config dictionary.
     """
     
     def __init__(self) -> None:
@@ -46,10 +47,10 @@ class FileManager:
         self._user_settings = dict()
         self._stats = dict()
         self._locking_info = dict()
-        self._config = dict()
+        self._agent_config = dict()
 
         # Set up logging
-        self._logger = CustomLogger("FileManager", "file_manager.log").get_logger()
+        self._logger = CustomLogger("FileManager").get_logger()
 
     # Start Function
     def setup_file_manager(self) -> None:
@@ -100,14 +101,23 @@ class FileManager:
         Args:
             file_path (str): The path of the file in the repository.
             save_path (str): The path where the file should be saved.
+        
+        Raises:
+            requests.exceptions.RequestException: If the request to download the file fails.
         """
         url = f"{self._DOWNLOAD_URL}/{file_path}"
 
-        response = requests.get(url)
-        response.raise_for_status()  # Raise an exception if the request failed
-        with open(save_path, "wb") as f:
-            f.write(response.content)
-        self._logger.info(f"Downloaded {file_path}")
+        self._logger.info(f"Downloading {file_path} from {url}")
+
+        try:
+            response = requests.get(url)
+            response.raise_for_status()  # Raise an exception if the request failed
+            with open(save_path, "wb") as f:
+                f.write(response.content)
+            self._logger.info(f"Downloaded {file_path}")
+        except requests.exceptions.RequestException as e:
+            self._logger.error(f"Error downloading {file_path}: {e}")
+            raise e
 
     #endregion
 
@@ -149,14 +159,17 @@ class FileManager:
                 self._logger.info("Found old user_settings.json file, migrating to new directory")
                 self._override_json_file(user_settings_file, os.path.join("settings", "settings.json"), delete_old=False)
 
+            # Check for save_files directory
             save_files_dir = os.path.join(old_dir, "save_files")
             if os.path.exists(save_files_dir):
                 self._logger.info("Found old save_files directory, migrating to new directory")
+                # Iterate over the files in the save_files directory and move them to the new directory
                 for file_name in os.listdir(save_files_dir):
                     save_file_location = os.path.join(save_files_dir, file_name)
                     new_save_file_location = os.path.join(self._MAIN_DIR, "save_files", file_name)
                     shutil.move(save_file_location, new_save_file_location)
                     self._logger.info(f"Migrated {file_name} to {new_save_file_location}")
+                # Remove the old save_files directory
                 os.rmdir(save_files_dir)
                 self._logger.info(f"Deleted {save_files_dir}")
             
@@ -208,7 +221,7 @@ class FileManager:
         self._user_settings = json.load(open(os.path.join(self._MAIN_DIR, "settings", "user_settings.json"), "r"))
         self._stats = json.load(open(os.path.join(self._MAIN_DIR, "data", "stats.json"), "r"))
         self._locking_info = json.load(open(os.path.join(self._MAIN_DIR, "data", "locking_info.json"), "r"))
-        self._config = json.load(open(os.path.join(self._MAIN_DIR, "data", "agent_config.json"), "r"))
+        self._agent_config = json.load(open(os.path.join(self._MAIN_DIR, "data", "agent_config.json"), "r"))
         self._logger.info("Read all files into memory")
 
     #region:  Getters
@@ -237,11 +250,11 @@ class FileManager:
         """
         return self._locking_info
     
-    def get_config(self) -> dict:
+    def get_agent_config(self) -> dict:
         """
         Returns the config dictionary.
         """
-        return self._config
+        return self._agent_config
     
     #endregion
     
@@ -279,13 +292,47 @@ class FileManager:
         with open(os.path.join(self._MAIN_DIR, "data", "locking_info.json"), "w") as f:
             json.dump(locking_info, f, indent=4)
 
-    def set_config(self, config: dict) -> None:
+    def set_agent_config(self, config: dict) -> None:
         """
         Sets the config dictionary.
         """
-        self._config = config
+        self._agent_config = config
         with open(os.path.join(self._MAIN_DIR, "data", "agent_config.json"), "w") as f:
             json.dump(config, f, indent=4)
+
+    #endregion
+    
+    #region:  Update files
+    
+    def update_file(self, file_name: str) -> None:
+        """
+        Update a file by downloading the latest version from the repository.
+
+        Args:
+            file_path (str): The name of the file that needs to be updated.
+        """
+        self._logger.info(f"Updating {file_name} to the latest version")
+        
+        file_path = None
+        
+        # Gets the parent directory of the file
+        for parent_file, files in self._REQUIRED_FILES.items():
+            if file_name in files:
+                file_path = f"{parent_file}/{file_name}"
+                break
+        
+        # If the file is not found in the required files, log an error
+        if file_path is None:
+            self._logger.error(f"File {file_name} not found in required files")
+            return
+        
+        # Store the path where the file will be saved
+        save_path = os.path.join(self._MAIN_DIR, file_path.replace("/", os.sep))
+        
+        # Download the latest version of the file
+        self._download_file(file_path, save_path)
+        
+        self._logger.info(f"Updated {file_name} to the latest version")
 
     #endregion
 
