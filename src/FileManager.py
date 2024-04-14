@@ -38,7 +38,7 @@ class FileManager:
         self._MAIN_DIR = os.path.join(os.environ["APPDATA"], "VALocker")
         
         # URL to download the files from
-        self._DOWNLOAD_URL = "https://raw.githubusercontent.com/E1Bos/VALocker/valocker-v2/default_templates/"
+        self._DOWNLOAD_URL = "https://raw.githubusercontent.com/E1Bos/VALocker/valocker-v2/app_defaults/"
         
         # Dictionaries to store the data from the files
         self._settings = dict()
