@@ -4,6 +4,7 @@ import requests
 import json
 import shutil
 from CustomLogger import CustomLogger
+import constants
 
 class FileManager:
     """
@@ -38,7 +39,7 @@ class FileManager:
         self._MAIN_DIR = os.path.join(os.environ["APPDATA"], "VALocker")
         
         # URL to download the files from
-        self._DOWNLOAD_URL = "https://raw.githubusercontent.com/E1Bos/VALocker/valocker-v2/app_defaults/"
+        self._DOWNLOAD_URL = f"{constants.DOWNLOAD_URL}/{constants.TEMPLATE_FOLDER_NAME}/"
         
         # Dictionaries to store the data from the files
         self._settings = dict()
@@ -287,3 +288,6 @@ class FileManager:
             json.dump(config, f, indent=4)
 
     #endregion
+
+if __name__ == "__main__":
+    file_manager = FileManager()
