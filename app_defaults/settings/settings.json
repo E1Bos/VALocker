@@ -1,4 +1,5 @@
 {
+    "SETTINGS_VERSION": "1.0.0",
     "ENABLE_ON_STARTUP": false,
     "MINIMIZE_TO_TRAY": false,
     "START_MINIMIZED": false,
