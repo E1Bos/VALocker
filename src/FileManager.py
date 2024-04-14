@@ -29,7 +29,7 @@ class FileManager:
     def __init__(self) -> None:
         # Dictionary to store the required files
         self._REQUIRED_FILES = {
-            "data": ["config.json", "stats.json", "locking_info.json"],
+            "data": ["agent_config.json", "stats.json", "locking_info.json"],
             "settings": ["settings.json", "user_settings.json"],
             "save_files": ["default.json"],
             "logs": [],
@@ -208,7 +208,7 @@ class FileManager:
         self._user_settings = json.load(open(os.path.join(self._MAIN_DIR, "settings", "user_settings.json"), "r"))
         self._stats = json.load(open(os.path.join(self._MAIN_DIR, "data", "stats.json"), "r"))
         self._locking_info = json.load(open(os.path.join(self._MAIN_DIR, "data", "locking_info.json"), "r"))
-        self._config = json.load(open(os.path.join(self._MAIN_DIR, "data", "config.json"), "r"))
+        self._config = json.load(open(os.path.join(self._MAIN_DIR, "data", "agent_config.json"), "r"))
         self._logger.info("Read all files into memory")
 
     #region:  Getters
@@ -284,7 +284,7 @@ class FileManager:
         Sets the config dictionary.
         """
         self._config = config
-        with open(os.path.join(self._MAIN_DIR, "data", "config.json"), "w") as f:
+        with open(os.path.join(self._MAIN_DIR, "data", "agent_config.json"), "w") as f:
             json.dump(config, f, indent=4)
 
     #endregion
