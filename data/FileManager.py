@@ -21,6 +21,8 @@ class FileManager:
         set_settings(settings): Sets the settings dictionary.
         set_user_settings(user_settings): Sets the user settings dictionary.
         set_stats(stats): Sets the stats dictionary.
+        set_locking_info(locking_info): Sets the locking info dictionary.
+        set_config(config): Sets the config dictionary.
     """
     
     def __init__(self) -> None:
