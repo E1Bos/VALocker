@@ -5,7 +5,7 @@ import shutil
 
 # Custom imports
 from CustomLogger import CustomLogger
-from Constants import Urls, Folders, Files
+from Constants import URL, FOLDER, FILE
 
 
 class FileManager:
@@ -23,21 +23,31 @@ class FileManager:
     """
 
     def __init__(self) -> None:
+        self._REQUIRED_FOLDERS = {
+            FOLDER.SAVE_FILES,
+            FOLDER.DATA,
+            FOLDER.LOGS,
+            FOLDER.SETTINGS,
+            FOLDER.THEMES,
+        }
+        
+        
         # Stores the required file enums
         self._REQUIRED_FILES = {
-            Files.STATS,
-            Files.LOCKING_INFO,
-            Files.AGENT_CONFIG,
-            Files.USER_SETTINGS,
-            Files.SETTINGS,
-            Files.DEFAULT_SAVE,
+            FILE.STATS,
+            FILE.LOCKING_INFO,
+            FILE.AGENT_CONFIG,
+            FILE.USER_SETTINGS,
+            FILE.SETTINGS,
+            FILE.DEFAULT_SAVE,
+            FILE.DEFAULT_THEME
         }
 
         # Main directory for the files
         self._MAIN_DIR = os.path.join(os.environ["APPDATA"], "VALocker")
 
         # URL to download the files from
-        self._DOWNLOAD_URL = f"{Urls.DOWNLOAD_URL.value}/{Folders.DEFAULTS.value}/"
+        self._DOWNLOAD_URL = f"{URL.DOWNLOAD_URL.value}/{FOLDER.DEFAULTS.value}/"
 
         # Dictionary to store the data from the files in the form
         # {file_enum: config_dict}
@@ -67,28 +77,20 @@ class FileManager:
         # Creates appdata/roaming/VALocker if it doesn't exist
         os.makedirs(self._MAIN_DIR, exist_ok=True)
 
-        # Creates the required directories and files if they don't exist
-        for required_file in self._REQUIRED_FILES:
-            required_file_relative_path = required_file.value
-            parent_dir = os.path.dirname(required_file_relative_path)
-
+        # Creates the required directories if they don't exist
+        for folder in self._REQUIRED_FOLDERS:
             # Creates subdirs
-            os.makedirs(self._absolute_file_path(parent_dir), exist_ok=True)
+            os.makedirs(self._absolute_file_path(folder.value), exist_ok=True)
 
-            # # Checks files
-            file_path = self._absolute_file_path(required_file_relative_path)
-
-            # # If file is missing, download it
+        for file in self._REQUIRED_FILES:
+            file_path = self._absolute_file_path(file.value)
             if not os.path.isfile(file_path):
                 self._logger.info(
-                    f"{required_file_relative_path} not found, downloading"
+                    f"{file_path} not found, downloading"
                 )
-                online_file_path = required_file_relative_path
-                self._download_file(online_file_path, file_path)
+                self._download_file(file.value, file_path)
 
-        # if self._settings.
-
-        settings_rel_path = Files.SETTINGS.value
+        settings_rel_path = FILE.SETTINGS.value
         self._settings = json.load(
             open(self._absolute_file_path(settings_rel_path), "r")
         )
@@ -155,9 +157,9 @@ class FileManager:
             self._logger.info("Found old stats.json file, migrating to new directory")
 
             # Migrate the old stats.json file to the new directory
-            self._override_json_file(stats_file, Files.STATS.value, delete_old=False)
+            self._override_json_file(stats_file, FILE.STATS.value, delete_old=False)
             self._override_json_file(
-                stats_file, Files.USER_SETTINGS.value, delete_old=False
+                stats_file, FILE.USER_SETTINGS.value, delete_old=False
             )
 
         # Check for user_settings file
@@ -167,7 +169,7 @@ class FileManager:
                 "Found old user_settings.json file, migrating to new directory"
             )
             self._override_json_file(
-                user_settings_file, Files.SETTINGS.value, delete_old=False
+                user_settings_file, FILE.SETTINGS.value, delete_old=False
             )
 
         # Check for save_files directory
@@ -202,7 +204,7 @@ class FileManager:
             None
         """
         self._settings["ALREADY_MIGRATED"] = value
-        self.set_config(Files.SETTINGS, self._settings)
+        self.set_config(FILE.SETTINGS, self._settings)
 
     def _override_json_file(
         self, old_file_path, new_file_path, delete_old=False
@@ -245,7 +247,7 @@ class FileManager:
         """
         Reads all the files into memory.
         """
-        for file in Files:
+        for file in FILE:
             self.configs[file.name] = json.load(
                 open(self._absolute_file_path(file.value), "r")
             )
@@ -263,7 +265,7 @@ class FileManager:
         """
         return os.path.join(self._MAIN_DIR, *args)
 
-    def get_config(self, file: Files) -> dict:
+    def get_config(self, file: FILE) -> dict:
         """
         Returns the configuration dictionary for the specified file.
 
@@ -275,7 +277,7 @@ class FileManager:
         """
         return self.configs.get(file.name, None)
 
-    def set_config(self, file: Files, config: dict) -> None:
+    def set_config(self, file: FILE, config: dict) -> None:
         """
         Sets the configuration dictionary for the specified file.
 
@@ -288,7 +290,7 @@ class FileManager:
         with open(self._absolute_file_path(file.value), "w") as f:
             json.dump(config, f, indent=4)
 
-    def get_value(self, file: Files, key: str) -> any:
+    def get_value(self, file: FILE, key: str) -> any:
         """
         Returns the value of the specified key from the configuration dictionary of the specified file.
 
@@ -303,7 +305,7 @@ class FileManager:
 
     # region:  Update files
 
-    def update_file(self, file: Files) -> None:
+    def update_file(self, file: FILE) -> None:
         """
         Update a file by downloading the latest version from the repository.
         # TODO: Make this method not override settings already present
@@ -329,7 +331,7 @@ class FileManager:
             save_name (str): The name of the save file.
             config (dict): The configuration dictionary to save.
         """
-        parent_dir = os.pardir(Files.DEFAULT_SAVE.value)
+        parent_dir = os.pardir(FILE.DEFAULT_SAVE.value)
         save_path = os.path.join(self._absolute_file_path(parent_dir, save_name))
 
         with open(save_path, "w") as f:
