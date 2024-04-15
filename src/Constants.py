@@ -35,4 +35,4 @@ class FILE(Enum):
     SETTINGS = f"{FOLDER.SETTINGS.value}/settings.json"
     USER_SETTINGS = f"{FOLDER.SETTINGS.value}/user_settings.json"
     DEFAULT_SAVE = f"{FOLDER.SAVE_FILES.value}/default.json"
-    DEFAULT_THEME = f"{FOLDER.THEMES.value}/default.json"
+    DEFAULT_THEME = f"{FOLDER.THEMES.value}/default-theme.json"
