@@ -1,4 +1,5 @@
 from enum import Enum, auto
+from typing import Literal
 
 
 class Urls(Enum):
@@ -16,7 +17,8 @@ class Folders(Enum):
     Enum for Folders used in the project
     """
 
-    TEMPLATE_FOLDER_NAME = "app_defaults"
+    DEFAULTS = "app_defaults"
+    THEMES = "themes"
 
 
 class Files(Enum):
@@ -30,11 +32,3 @@ class Files(Enum):
     SETTINGS = "settings/settings.json"
     USER_SETTINGS = "settings/user_settings.json"
     DEFAULT_SAVE = "save_files/default.json"
-
-
-class State(Enum):
-    LOCKING = auto()
-    WAITING = auto()
-
-    def __str__(self):
-        return self.name
