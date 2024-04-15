@@ -67,7 +67,7 @@ class Updater:
         if self.compare_release_versions():
             self._logger.info("New version available, release needs updating")
             return True
-        
+
         return False
 
     def check_for_config_updates(self, file_manager: FileManager):
@@ -239,7 +239,7 @@ if __name__ == "__main__":
     # Test Updater class
     updater = Updater("v1.0.0")
     file_manager = FileManager()
-    file_manager.setup_file_manager()
+    file_manager.setup()
     updater.check_for_config_updates(file_manager)
     updater.check_for_version_update()
     updater.update_last_checked(file_manager)

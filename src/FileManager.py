@@ -22,7 +22,8 @@ class FileManager:
         update_save_file(str, dict): Update a save file by saving the configuration to the specified file.
     """
 
-    def __init__(self) -> None:
+    # TODO: Replace "app_defaults/" with None when the app is ready for release
+    def __init__(self, custom_folder="app_defaults/") -> None:
         self._REQUIRED_FOLDERS = {
             FOLDER.SAVE_FILES,
             FOLDER.DATA,
@@ -30,8 +31,7 @@ class FileManager:
             FOLDER.SETTINGS,
             FOLDER.THEMES,
         }
-        
-        
+
         # Stores the required file enums
         self._REQUIRED_FILES = {
             FILE.STATS,
@@ -40,11 +40,14 @@ class FileManager:
             FILE.USER_SETTINGS,
             FILE.SETTINGS,
             FILE.DEFAULT_SAVE,
-            FILE.DEFAULT_THEME
+            FILE.DEFAULT_THEME,
         }
 
         # Main directory for the files
-        self._MAIN_DIR = os.path.join(os.environ["APPDATA"], "VALocker")
+        if custom_folder:
+            self._MAIN_DIR = custom_folder
+        else:
+            self._MAIN_DIR = os.path.join(os.environ["APPDATA"], "VALocker")
 
         # URL to download the files from
         self._DOWNLOAD_URL = f"{URL.DOWNLOAD_URL.value}/{FOLDER.DEFAULTS.value}/"
@@ -57,7 +60,7 @@ class FileManager:
         self._logger = CustomLogger("FileManager").get_logger()
 
     # Start Function
-    def setup_file_manager(self) -> None:
+    def setup(self) -> None:
         """
         Sets up the FileManager by ensuring that the required files exist and reading them into memory.
         """
@@ -85,9 +88,7 @@ class FileManager:
         for file in self._REQUIRED_FILES:
             file_path = self._absolute_file_path(file.value)
             if not os.path.isfile(file_path):
-                self._logger.info(
-                    f"{file_path} not found, downloading"
-                )
+                self._logger.info(f"{file_path} not found, downloading")
                 self._download_file(file.value, file_path)
 
         settings_rel_path = FILE.SETTINGS.value
@@ -341,7 +342,24 @@ class FileManager:
 
     # endregion
 
+    def get_theme(self, theme_name: str) -> dict:
+        """
+        Load a theme from the themes directory.
+
+        Args:
+            theme_name (str): The name of the theme to load.
+
+        Returns:
+            dict: The theme configuration dictionary.
+        """
+        theme_path = os.path.join(
+            self._absolute_file_path(FOLDER.THEMES.value, theme_name)
+        )
+        return json.load(open(theme_path, "r"))
+
 
 if __name__ == "__main__":
+    # Test FileManager class
+    # file_manager = FileManager(custom_folder="app_defaults/")
     file_manager = FileManager()
-    file_manager.setup_file_manager()
+    file_manager.setup()
