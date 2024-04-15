@@ -1,60 +1,119 @@
 import requests
-import constants
+import time
+
+# Custom imports
+from Constants import Urls, Folders, Files
 from CustomLogger import CustomLogger
+from FileManager import FileManager
 
 
 class Updater:
-    def __init__(self, release_version):
+    def __init__(self, release_version, check_frequency=3600):
         """
         The Updater class is responsible for comparing versions and determining if an update is required.
 
         Args:
             release_version (str): The current release version of the agent.
+            check_frequency (int): How often the agent should check for updates. Default is 1 hour.
 
         Attributes:
             release_version (str): The current release version of the agent.
+            check_frequency (int): The frequency in seconds to check for updates.
 
         Methods:
-            compare_json_configs: Compares the version of a JSON config with the latest version available.
+            check_frequency_met: Checks if the check frequency has been met for the agent.
+            version_update_available: Checks if an update is available for the agent.
+            check_for_config_updates: Checks for updates and updates the agent if necessary.
+            compare_json_configs: Compares the version of the current agent configuration with the latest version available.
             compare_release_versions: Compares the version of the current agent with the latest version available.
             compare_versions: Compare two version numbers and determine if an update is required.
+            update_last_checked: Updates the last checked time in the settings file.
         """
         self.release_version = release_version
-        self.logger = CustomLogger("Updater").get_logger()
+        self.check_frequency = check_frequency
+        self.FILES_TO_CHECK = [Files.AGENT_CONFIG, Files.SETTINGS]
+        self._logger = CustomLogger("Updater").get_logger()
 
-    #region: JSON Config Versions
+    def check_frequency_met(self, file_manager: FileManager) -> bool:
+        """
+        Checks if the check frequency has been met for the agent.
 
-    def compare_json_configs(self, current_config: dict, path_to_json_config: str) -> bool:
+        Args:
+            file_manager (FileManager): The file manager instance to use for updating files.
+
+        Returns:
+            bool: True if the check frequency has been met, False otherwise.
+        """
+        last_checked_release = int(
+            file_manager.get_config(Files.SETTINGS).get("LAST_CHECKED", 0)
+        )
+
+        time_since_last_check = int(time.time()) - last_checked_release
+
+        if time_since_last_check < self.check_frequency:
+            self._logger.info(
+                f"Check frequency not met, checked {round(time_since_last_check / 60, 1)} minutes ago"
+            )
+            return False
+        return True
+
+    def version_update_available(self) -> bool:
+        """
+        Checks if an update is available for the agent.
+
+        Returns:
+            bool: True if an update is available, False otherwise.
+        """
+        if self.compare_release_versions():
+            self._logger.info("New version available, release needs updating")
+            # TODO: Implement release update
+
+    def check_for_config_updates(self, file_manager: FileManager):
+        """
+        Checks for updates and updates the agent if necessary.
+
+        Args:
+            file_manager (FileManager): The file manager instance to use for updating files.
+        """
+
+        self._logger.info(
+            f"Checking config files for updates: {', '.join([file.name for file in self.FILES_TO_CHECK])}"
+        )
+
+        for file in self.FILES_TO_CHECK:
+            if self.compare_json_configs(file_manager, file):
+                self._logger.info(f"{file.name} configuration needs updating")
+                file_manager.update_file(file)
+
+        self._logger.info("Config files checked.")
+
+    # region: JSON Config Versions
+
+    def compare_json_configs(
+        self, file_manager: FileManager, config_file: Files
+    ) -> bool:
         """
         Compares the version of the current agent configuration with the latest version available.
 
         Args:
-            current_config (dict): The current agent configuration.
-            path_to_json_config (str): The path to the json config.
+            file_manager (FileManager): The file manager instance to use for updating files.
+            config_file (constant.Files): The Enum of the configuration file to check.
 
         Returns:
             bool: True if the current version is older than the latest version, False otherwise.
         """
-        self.logger.info(f"Comparing JSON config versions for {path_to_json_config}")
-        current_version = self._get_current_config_version(current_config)
-        latest_version = self._get_latest_config_version(path_to_json_config)
-        self.logger.info(f"Current version: {current_version}, Latest version: {latest_version}")
+        self._logger.info(f"Comparing JSON config versions for {config_file.name}")
+        current_version = file_manager.get_config(config_file).get("VERSION", None)
+
+        latest_version = self._get_latest_config_version(config_file.value)
+
+        self._logger.info(
+            f"{config_file.name} : Current version: {current_version} | Latest version: {latest_version}"
+        )
 
         return self.compare_versions(current_version, latest_version)
 
-    #endregion
-
-    def _get_current_config_version(self, current_config: dict) -> str:
-        """
-        Retrieves the current configuration version from a JSON file.
-
-        Args:
-            current_config (dict): The dictionary containing the current configuration.
-
-        Returns:
-            str: The current configuration version, or None if it is not found.
-        """
-        return current_config.get("CONFIG_VERSION", None)
+    # endregion
 
     def _get_latest_config_version(self, download_path: str, timeout: int = 2) -> str:
         """
@@ -67,30 +126,34 @@ class Updater:
         Returns:
             str: The latest configuration version, or None if an error occurred during the request.
         """
-        config_url = f"{constants.DOWNLOAD_URL}/{constants.TEMPLATE_FOLDER_NAME}/{download_path}"
-        
+        config_url = (
+            f"{Urls.DOWNLOAD_URL.value}/{Folders.DEFAULTS.value}/{download_path}"
+        )
+
         try:
             config_file = requests.get(config_url, timeout=timeout).json()
-        
+
         except requests.exceptions.RequestException as e:
-            self.logger.error(f"Failed to retrieve configuration file from {config_url}, {e}")
+            self._logger.error(
+                f"Failed to retrieve configuration file from {config_url}, {e}"
+            )
             return None
+        return config_file.get("VERSION", None)
 
-        return config_file.get("CONFIG_VERSION", None)
-
-    #region: Release Versions
+    # region: Release Versions
 
     def compare_release_versions(self) -> bool:
         """
         Compares the version of the current agent with the latest version available.
 
-        Args:
-            current_version (str): The current agent version.
-
         Returns:
             bool: True if the current version is older than the latest version, False otherwise.
         """
         latest_version = self._get_latest_release_version()
+
+        self._logger.info(
+            f"RELEASE: Current version: {self.release_version} | Latest version: {latest_version}"
+        )
 
         return self.compare_versions(self.release_version, latest_version)
 
@@ -105,18 +168,29 @@ class Updater:
             str: The latest release version as a string, or None if an error occurred during the request.
         """
         try:
-            release_info = requests.get(constants.API_RELEASE_URL, timeout=timeout)
+            release_info = requests.get(Urls.API_RELEASE_URL.value, timeout=timeout)
             release_info.raise_for_status()
-            
-            return release_info.json().get("tag_name", None)
-        
+
+            release_json = release_info.json()
+            release_number = release_json.get("tag_name", None)
+
+            if release_number is None:
+                self._logger.error(
+                    f"tag_name not found in release info, web returned: {release_json}"
+                )
+                return None
+
+            return release_number.replace("v", "")
+
         except requests.exceptions.RequestException as e:
-            self.logger.error(f"Failed to retrieve release information from {constants.API_RELEASE_URL}, {e}")
+            self._logger.error(
+                f"Failed to retrieve release information from {Urls.API_RELEASE_URL.value}, {e}"
+            )
             return None
 
-    #endregion
+    # endregion
 
-    def compare_versions(self, current_version: str, latest_version: str):
+    def compare_versions(self, current_version: str, latest_version: str) -> bool:
         """
         Compare two version numbers and determine if an update is required.
         Both version should be in the format "v#.#.#" or "#.#.#".
@@ -128,10 +202,10 @@ class Updater:
         Returns:
             bool: True if an update is available, False otherwise.
         """
-        
+
         if current_version is None or latest_version is None:
             return False
-        
+
         current_version = current_version.replace("v", "").split(
             "."
         )  # Remove 'v' and split into parts
@@ -149,5 +223,13 @@ class Updater:
 
         return False
 
-if __name__ == "__main__":
-    updater = Updater("2.0.0")
+    def update_last_checked(self, file_manager: FileManager):
+        """
+        Updates the last checked time in the settings file.
+
+        Args:
+            file_manager (FileManager): The file manager instance to use for updating files.
+        """
+        settings = file_manager.get_config(Files.SETTINGS)
+        settings["LAST_CHECKED"] = int(time.time())
+        file_manager.set_config(Files.SETTINGS, settings)
