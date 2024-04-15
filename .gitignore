@@ -4,26 +4,10 @@
 .vscode
 venv
 
-# Building to exe and compiled files
-build-to-exe
-output
-data/valorant_files
-VALocker
-
 # Folders
 __pycache__
 
-# Other files
-screenshotter.py
-user_settings.json
+# Old Instalocker
+instalocker.py
+!src/Instalocker.py
 
-# All json
-*.json
-
-# All bak
-*.bak
-
-# Ignore necessary files
-!default.json
-!config.json
-!default_keybinds.json
