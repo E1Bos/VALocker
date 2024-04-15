@@ -1,0 +1,17 @@
+{
+    "background": "#110C0E",
+    "foreground": "#24191D",
+    "foreground-highlight": "#3A2A2E",
+    "accent-color": "#075F88",
+    "button-enabled": "#8CB369",
+    "button-disabled": "A63446",
+    "text": "#ECEBE4",
+    "controller": "#8CB369",
+    "controller-disabled": "#A63446",
+    "duelist": "#8CB369",
+    "duelist-disabled": "#A63446",
+    "initiator": "#8CB369",
+    "initiator-disabled": "#A63446",
+    "sentinel": "#8CB369",
+    "sentinel-disabled": "#A63446"
+}
