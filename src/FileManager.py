@@ -1,10 +1,11 @@
-# Updates files including settings, user data, and other data files
 import os
 import requests
 import json
 import shutil
+
+# Custom imports
 from CustomLogger import CustomLogger
-from constants import Urls, Folders, Files
+from Constants import Urls, Folders, Files
 
 
 class FileManager:
@@ -36,16 +37,11 @@ class FileManager:
         self._MAIN_DIR = os.path.join(os.environ["APPDATA"], "VALocker")
 
         # URL to download the files from
-        self._DOWNLOAD_URL = (
-            f"{Urls.DOWNLOAD_URL.value}/{Folders.TEMPLATE_FOLDER_NAME.value}/"
-        )
+        self._DOWNLOAD_URL = f"{Urls.DOWNLOAD_URL.value}/{Folders.DEFAULTS.value}/"
 
-        # Dictionaries to store the data from the files
-        self._settings = dict()
-        self._user_settings = dict()
-        self._stats = dict()
-        self._locking_info = dict()
-        self._agent_config = dict()
+        # Dictionary to store the data from the files in the form
+        # {file_enum: config_dict}
+        self.configs = dict()
 
         # Set up logging
         self._logger = CustomLogger("FileManager").get_logger()
@@ -249,19 +245,10 @@ class FileManager:
         """
         Reads all the files into memory.
         """
-        self._settings = json.load(
-            open(self._absolute_file_path(Files.SETTINGS.value), "r")
-        )
-        self._user_settings = json.load(
-            open(self._absolute_file_path(Files.USER_SETTINGS.value), "r")
-        )
-        self._stats = json.load(open(self._absolute_file_path(Files.STATS.value), "r"))
-        self._locking_info = json.load(
-            open(self._absolute_file_path(Files.LOCKING_INFO.value), "r")
-        )
-        self._agent_config = json.load(
-            open(self._absolute_file_path(Files.AGENT_CONFIG.value), "r")
-        )
+        for file in Files:
+            self.configs[file.name] = json.load(
+                open(self._absolute_file_path(file.value), "r")
+            )
         self._logger.info("Read all files into memory")
 
     def _absolute_file_path(self, *args) -> str:
@@ -286,20 +273,7 @@ class FileManager:
         Returns:
             dict: The configuration dictionary for the specified file.
         """
-        match file:
-            case Files.SETTINGS:
-                return self._settings
-            case Files.USER_SETTINGS:
-                return self._user_settings
-            case Files.STATS:
-                return self._stats
-            case Files.LOCKING_INFO:
-                return self._locking_info
-            case Files.AGENT_CONFIG:
-                return self._agent_config
-            case _:
-                self._logger.error(f"Invalid file: {file}")
-                return None
+        return self.configs.get(file.name, None)
 
     def set_config(self, file: Files, config: dict) -> None:
         """
@@ -309,28 +283,30 @@ class FileManager:
             file (constants.Files): The file enum for which the configuration is required.
             config (dict): The configuration dictionary to set.
         """
-        match file:
-            case Files.SETTINGS:
-                self._settings = config
-            case Files.USER_SETTINGS:
-                self._user_settings = config
-            case Files.STATS:
-                self._stats = config
-            case Files.LOCKING_INFO:
-                self._locking_info = config
-            case Files.AGENT_CONFIG:
-                self._agent_config = config
-            case _:
-                self._logger.error(f"Invalid file: {file}")
+        self.configs[file.name] = config
 
         with open(self._absolute_file_path(file.value), "w") as f:
             json.dump(config, f, indent=4)
+
+    def get_value(self, file: Files, key: str) -> any:
+        """
+        Returns the value of the specified key from the configuration dictionary of the specified file.
+
+        Args:
+            file (constants.Files): The file enum for which the configuration is required.
+            key (str): The key for which the value is required.
+
+        Returns:
+            any: The value of the specified key.
+        """
+        return self.configs[file.name].get(key, None)
 
     # region:  Update files
 
     def update_file(self, file: Files) -> None:
         """
         Update a file by downloading the latest version from the repository.
+        # TODO: Make this method not override settings already present
 
         Args:
             file_path (constants.Files): The file enum that needs to be updated.
