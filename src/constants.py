@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, auto
 
 
 class Urls(Enum):
@@ -30,3 +30,11 @@ class Files(Enum):
     SETTINGS = "settings/settings.json"
     USER_SETTINGS = "settings/user_settings.json"
     DEFAULT_SAVE = "save_files/default.json"
+
+
+class State(Enum):
+    LOCKING = auto()
+    WAITING = auto()
+
+    def __str__(self):
+        return self.name
