@@ -5,7 +5,7 @@ import shutil
 
 # Custom imports
 from CustomLogger import CustomLogger
-from Constants import URL, FOLDER, FILE
+from ProjectUtils import URL, FOLDER, FILE, GET_WORKING_DIR
 
 
 class FileManager:
@@ -44,10 +44,7 @@ class FileManager:
         }
 
         # Main directory for the files
-        if FOLDER.STORAGE_FOLDER.value:
-            self._MAIN_DIR = FOLDER.STORAGE_FOLDER.value
-        else:
-            self._MAIN_DIR = os.path.join(os.environ["APPDATA"], FOLDER.PARENT_FOLDER.value)
+        self._MAIN_DIR = GET_WORKING_DIR()
 
         # URL to download the files from
         self._DOWNLOAD_URL = f"{URL.DOWNLOAD_URL.value}/{FOLDER.DEFAULTS.value}/"
@@ -242,6 +239,10 @@ class FileManager:
             os.remove(old_file_path)
             self._logger.info(f"Deleted {old_file_path}")
 
+    def _migrate_old_save_files(self):
+        # TODO: Impletment migration in format agent: [unlocked, random]
+        pass
+
     # endregion
 
     def _read_all_files(self) -> None:
@@ -291,6 +292,20 @@ class FileManager:
         with open(self._absolute_file_path(file.value), "w") as f:
             json.dump(config, f, indent=4)
 
+    def set_value(self, file: FILE, key: str, value: any) -> None:
+        """
+        Sets the value of the specified key in the configuration dictionary of the specified file.
+
+        Args:
+            file (constants.Files): The file enum for which the configuration is required.
+            key (str): The key to set the value for.
+            value (any): The value to set for the key.
+        """
+        self.configs[file.name][key] = value
+
+        with open(self._absolute_file_path(file.value), "w") as f:
+            json.dump(self.configs[file.name], f, indent=4)
+
     def get_value(self, file: FILE, key: str) -> any:
         """
         Returns the value of the specified key from the configuration dictionary of the specified file.
@@ -303,6 +318,19 @@ class FileManager:
             any: The value of the specified key.
         """
         return self.configs[file.name].get(key, None)
+
+    def get_save_file(self, save_name: str) -> dict:
+        """
+        Returns the configuration dictionary for the specified save file.
+
+        Args:
+            save_name (str): The name of the save file.
+
+        Returns:
+            dict: The configuration dictionary for the specified save file.
+        """
+        save_path = os.path.join(self._absolute_file_path(FOLDER.SAVE_FILES.value, f"{save_name}.json"))
+        return json.load(open(save_path, "r"))
 
     # region:  Update files
 
@@ -324,6 +352,8 @@ class FileManager:
 
         self._logger.info(f"Updated {file.value} to the latest version")
 
+
+# TODO: FINISH SAVEMANAGER AND REMOVE SAVE RELATED METHODS
     def update_save_file(self, save_name: str, config: dict) -> None:
         """
         Update a save file by saving the latest configuration to the specified file.
@@ -352,6 +382,10 @@ class FileManager:
         Returns:
             dict: The theme configuration dictionary.
         """
+        
+        if theme_name.rfind("-theme.json") == -1:
+            theme_name += "-theme.json"
+        
         theme_path = os.path.join(
             self._absolute_file_path(FOLDER.THEMES.value, theme_name)
         )
