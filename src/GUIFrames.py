@@ -6,18 +6,7 @@ if TYPE_CHECKING:
     from GUI import GUI
 
 from ProjectUtils import BRIGHTEN_COLOR, FILE
-from CustomElements import (
-    ThemedFrame,
-    ThemedLabel,
-    ThemedButton,
-    ThemedDropdown,
-    IndependentButton,
-    DependentButton,
-    SplitButton,
-    DependentLabel,
-    SideFrame,
-    ThemedCheckbox,
-)
+from CustomElements import *
 
 # region: Navigation Frame
 
@@ -88,7 +77,7 @@ class NavigationFrame(ctk.CTkFrame):
                 text_color=self.theme["text"],
                 hover_color=BRIGHTEN_COLOR(self.theme["foreground"], 1.5),
                 font=self.parent.theme["button"],
-                command=lambda button=button_text: self.change_active_frame(button),
+                command=lambda button=button_text: self.parent.select_frame(button),
             )
             self.nav_buttons[button_text].pack(fill=ctk.X)
 
@@ -103,16 +92,6 @@ class NavigationFrame(ctk.CTkFrame):
             command=self.quit_program,
         )
         self.exit_button.pack(side=ctk.BOTTOM, pady=10, padx=10, fill=ctk.X)
-
-    def change_active_frame(self, button) -> None:
-        """
-        Raises the specified frame to the top of the stack of frames.
-
-        Parameters:
-        - button: The name of the frame to be raised.
-        """
-        self.parent.frames[button].tkraise()
-        self.highlight_button(button)
 
     def highlight_button(self, button) -> None:
         """
@@ -392,7 +371,7 @@ class OverviewFrame(SideFrame):
 
         This method raises the "Save Files" frame to the top, making it visible to the user.
         """
-        self.parent.frames["Save Files"].tkraise()
+        self.parent.select_frame("Save Files")
 
     def redirect_tools_frame(self) -> None:
         """
@@ -400,7 +379,7 @@ class OverviewFrame(SideFrame):
 
         This method raises the 'Tools' frame to the top, making it visible to the user.
         """
-        self.parent.frames["Tools"].tkraise()
+        self.parent.select_frame("Tools")
 
     def update_current_save_button(self) -> None:
         """
@@ -540,10 +519,11 @@ class AgentToggleFrame(SideFrame):
             self.specific_agent_frame.grid_rowconfigure(row, weight=1)
             self.specific_agent_frame.grid_columnconfigure(col, weight=1)
 
-            self.agent_buttons[agent_name].grid(row=row, column=col, sticky="nsew", padx=xpadding, pady=ypadding)
+            self.agent_buttons[agent_name].grid(
+                row=row, column=col, sticky="nsew", padx=xpadding, pady=ypadding
+            )
 
         self.manage_super_checkboxes()
-
 
     def toggle_all(self) -> None:
         """
@@ -614,6 +594,189 @@ class AgentToggleFrame(SideFrame):
             agent, self.toggleable_agent_vars[agent].get()
         )
         self.parent.save_manager.save_file()
+
+
+# endregion
+
+# region: Random Select Frame
+
+
+class RandomSelectFrame(SideFrame):
+    def __init__(self, parent: "GUI"):
+        super().__init__(parent)
+        self.parent = parent
+        self.theme = parent.theme
+
+        self.super_frame = ThemedFrame(self)
+        self.super_frame.pack(fill=ctk.X, pady=10)
+
+        self.exclusiselect_button = IndependentButton(
+            self.super_frame,
+            text="ExclusiSelect",
+            width=100,  # should be ~120 pixels but when set to 120 it becomes 150 (???)
+            variable=self.parent.instalocker.exclusiselect,
+            command=self.parent.instalocker.toggle_exclusiselect,
+        )
+        self.exclusiselect_button.pack(
+            side=ctk.LEFT,
+            padx=(20, 0),
+            pady=10,
+        )
+
+        self.super_checkboxes_frame = ThemedFrame(
+            self.super_frame, fg_color="transparent"
+        )
+        self.super_checkboxes_frame.pack(anchor=ctk.CENTER, fill=ctk.Y, expand=True)
+
+        self.super_checkboxes_frame.grid_rowconfigure(0, weight=1)
+
+        self.all_variable = ctk.BooleanVar(value=False)
+        self.all_checkbox = ThemedCheckbox(
+            self.super_checkboxes_frame,
+            text="All",
+            variable=self.all_variable,
+            command=lambda: self.super_toggle_all(True),
+        )
+        self.all_checkbox.grid(row=0, column=0)
+
+        self.none_variable = ctk.BooleanVar(value=False)
+        self.none_checkbox = ThemedCheckbox(
+            self.super_checkboxes_frame,
+            text="None",
+            variable=self.none_variable,
+            command=lambda: self.super_toggle_none(True),
+        )
+        self.none_checkbox.grid(row=0, column=1)
+
+        roles_dict = self.parent.file_manager.get_value(FILE.AGENT_CONFIG, "ALL_AGENTS")
+
+        self.super_role_checkboxes_frame = ThemedFrame(self)
+        self.super_role_checkboxes_frame.pack(fill=ctk.X, pady=(0, 10))
+
+        self.super_role_checkboxes = dict()
+        self.role_variables = {
+            role: ctk.BooleanVar(value=False) for role in roles_dict.keys()
+        }
+        for col, role in enumerate(roles_dict.keys()):
+            self.super_role_checkboxes_frame.grid_columnconfigure(col, weight=1)
+
+            role_color = self.theme[role.lower()[:-1]]
+
+            self.super_role_checkboxes[role] = ThemedCheckbox(
+                self.super_role_checkboxes_frame,
+                text=role.capitalize(),
+                text_color=BRIGHTEN_COLOR(role_color, 1.3),
+                fg_color=role_color,
+                hover_color=BRIGHTEN_COLOR(role_color, 1.1),
+                variable=self.role_variables[role],
+                command=lambda role=role.upper(): self.super_toggle_role(role, True),
+            )
+            self.super_role_checkboxes[role].grid(row=0, column=col, pady=10)
+
+        self.agents_frame = ThemedFrame(self, fg_color="transparent")
+        self.agents_frame.pack(fill=ctk.BOTH, expand=True, pady=(0, 10))
+
+        self.agent_checkboxes = {role: dict() for role in roles_dict.keys()}
+        for col, (role_name, agents) in enumerate(roles_dict.items()):
+            self.agents_frame.grid_columnconfigure(col, weight=1)
+
+            role_frame = ThemedFrame(self.agents_frame)
+            padx = 0 if col == 0 else (5, 0)
+            role_frame.grid(row=0, column=col, sticky=ctk.NSEW, padx=padx)
+            role_color = self.theme[role_name.lower()[:-1]]
+
+            for i, agent in enumerate(agents):
+                self.agent_checkboxes[role_name][agent] = DependentCheckbox(
+                    role_frame,
+                    text=agent,
+                    text_color=BRIGHTEN_COLOR(role_color, 1.3),
+                    fg_color=role_color,
+                    hover_color=BRIGHTEN_COLOR(role_color, 1.1),
+                    variable=self.parent.agent_random_status[agent],
+                    dependent_variable=self.parent.agent_unlock_status[agent],
+                    command=lambda agent=agent: self.toggle_agent(agent, True),
+                )
+
+                ypad = 5 if i == 0 else (0, 5)
+                self.agent_checkboxes[role_name][agent].pack(pady=ypad)
+
+    def on_raise(self):
+        self.update_super_checkboxes()
+
+    def super_toggle_all(self, update_super=False):
+        for role in self.role_variables:
+            self.role_variables[role].set(True)
+            self.super_toggle_role(role.upper())
+
+        if update_super:
+            self.update_super_checkboxes()
+            self.parent.save_manager.save_file()
+
+    def super_toggle_none(self, update_super=False):
+        for role in self.role_variables:
+            self.role_variables[role].set(False)
+            self.super_toggle_role(role.upper())
+
+        if update_super:
+            self.update_super_checkboxes()
+            self.parent.save_manager.save_file()
+
+    def super_toggle_role(self, role: str, update_super=False):
+        value = self.role_variables[role].get()
+
+        for agent in self.parent.file_manager.get_value(
+            FILE.AGENT_CONFIG, "ALL_AGENTS"
+        )[role]:
+            if self.agent_checkboxes[role][agent].cget("state") == ctk.NORMAL:
+                self.parent.agent_random_status[agent].set(value)
+                self.parent.save_manager.set_agent_status(agent, value, 1)
+
+        if update_super:
+            self.update_super_checkboxes()
+            self.parent.save_manager.save_file()
+
+    def toggle_agent(self, agent: str, update_super=False):
+        self.parent.save_manager.set_agent_status(
+            agent, self.parent.agent_random_status[agent].get(), 1
+        )
+
+        if update_super:
+            self.update_super_checkboxes()
+            self.parent.save_manager.save_file()
+
+    def update_super_checkboxes(self):
+        all_selected = all(
+            [self.role_variables[role].get() for role in self.role_variables]
+        )
+
+        none_selected = all(
+            [
+                not agent_var.get()
+                for agent_var in self.parent.agent_random_status.values()
+            ]
+        )
+
+        for role in self.role_variables:
+            if all(
+                self.parent.agent_random_status[agent].get()
+                for agent in self.parent.file_manager.get_value(
+                    FILE.AGENT_CONFIG, "ALL_AGENTS"
+                )[role]
+                if self.parent.agent_unlock_status[agent].get()
+            ):
+                self.role_variables[role].set(True)
+            else:
+                self.role_variables[role].set(False)
+
+        self.all_variable.set(all_selected)
+        self.none_variable.set(none_selected)
+
+        self.none_checkbox.enable()
+        self.all_checkbox.enable()
+        if all_selected:
+            self.all_checkbox.disable()
+        elif none_selected:
+            self.none_checkbox.disable()
 
 
 # endregion
