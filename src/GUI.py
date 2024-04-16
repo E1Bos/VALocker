@@ -10,19 +10,8 @@ from SaveManager import SaveManager
 from Updater import Updater
 from Instalocker import Instalocker
 from Tools import Tools
-from CustomElements import (
-    ThemedFrame,
-    SideFrame,
-    ThemedDropdown,
-    ThemedLabel,
-    DependentLabel,
-    ThemedButton,
-    IndependentButton,
-    DependentButton,
-    SplitButton,
-    ThemedCheckbox,
-)
-from GUIFrames import NavigationFrame, OverviewFrame, AgentToggleFrame
+from CustomElements import *
+from GUIFrames import *
 
 
 class GUI(ctk.CTk):
@@ -50,10 +39,9 @@ class GUI(ctk.CTk):
         )
 
         # Creates an instance of the Updater class
-        # TODO: Uncomment check_for_updates() method in prod
         self.logger.info("Initializing updater")
         self.updater = Updater(self.VERSION, self.file_manager)
-        # self.check_for_updates()
+        # TODO: Uncomment in prod: self.check_for_updates()
 
         # Loads theme
         self.logger.info("Loading theme")
@@ -82,6 +70,10 @@ class GUI(ctk.CTk):
         # Selected Agent
         self.selected_agent = ctk.StringVar()
         self.agent_unlock_status = {
+            agent: ctk.BooleanVar(value=False)
+            for agent in self.save_manager.get_agent_names()
+        }
+        self.agent_random_status = {
             agent: ctk.BooleanVar(value=False)
             for agent in self.save_manager.get_agent_names()
         }
@@ -225,6 +217,9 @@ class GUI(ctk.CTk):
         for agent, status in self.save_manager.get_agents_status().items():
             self.agent_unlock_status[agent].set(status)
 
+        for agent, status in self.save_manager.get_random_dict().items():
+            self.agent_random_status[agent].set(status)
+
         # TODO: Load map specific
 
     def initUI(self) -> None:
@@ -250,7 +245,7 @@ class GUI(ctk.CTk):
         self.frames = {
             "Overview": OverviewFrame(self),
             "Agent Toggle": AgentToggleFrame(self),
-            "Random Select": SettingsFrame(self),
+            "Random Select": RandomSelectFrame(self),
             "Map Specific": SettingsFrame(self),
             "Save Files": SettingsFrame(self),
             "Tools": SettingsFrame(self),
@@ -258,14 +253,25 @@ class GUI(ctk.CTk):
         }
 
         nav_width = 150
-        nav_frame = NavigationFrame(self, width=nav_width)
-        nav_frame.grid(row=0, column=0, sticky="nswe")
+        self.nav_frame = NavigationFrame(self, width=nav_width)
+        self.nav_frame.grid(row=0, column=0, sticky="nswe")
         self.grid_columnconfigure(0, minsize=nav_width)
 
         for frame in self.frames.values():
             frame.grid(row=0, column=1, sticky="nswe", padx=(10, 10))
 
-        self.frames["Agent Toggle"].tkraise()
+        self.select_frame("Overview")
+
+    def select_frame(self, frame_name: str) -> None:
+        """
+        Raises the frame with the given name and lowers all other frames.
+
+        Args:
+            frame_name (str): The name of the frame to raise.
+        """
+        self.nav_frame.highlight_button(frame_name)
+        self.frames[frame_name].tkraise()
+        self.frames[frame_name].on_raise()
 
 
 class SettingsFrame(SideFrame):
