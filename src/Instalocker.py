@@ -9,6 +9,7 @@ class Instalocker:
         self.locking = BooleanVar(value=True)
         self.hover = BooleanVar(value=False)
         self.random_select = BooleanVar(value=False)
+        self.exclusiselect = BooleanVar(value=False)
         self.map_specific = BooleanVar(value=False)
         # self.last_lock_time = str()
 
@@ -24,6 +25,9 @@ class Instalocker:
     def toggle_map_specific(self):
         self.map_specific.set(not self.map_specific.get())
 
+    def toggle_exclusiselect(self):
+        self.exclusiselect.set(not self.exclusiselect.get())
+
     def get_locking(self):
         return self.locking.get()
 
@@ -35,3 +39,6 @@ class Instalocker:
 
     def get_map_specific(self):
         return self.map_specific.get()
+
+    def get_exclusiselect(self):
+        return self.exclusiselect.get()
