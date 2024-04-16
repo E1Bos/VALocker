@@ -1,8 +1,12 @@
 import customtkinter as ctk
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from GUI import GUI
 
 from ProjectUtils import BRIGHTEN_COLOR
-
-from GUI.CustomElements import (
+from CustomElements import (
     ThemedFrame,
     ThemedLabel,
     ThemedButton,
@@ -14,8 +18,11 @@ from GUI.CustomElements import (
     SideFrame,
 )
 
+# region: Navigation Frame
+
+
 class NavigationFrame(ctk.CTkFrame):
-    def __init__(self, parent, width):
+    def __init__(self, parent: "GUI", width):
         super().__init__(
             parent, width=width, corner_radius=0, fg_color=parent.theme["foreground"]
         )
@@ -95,8 +102,14 @@ class NavigationFrame(ctk.CTkFrame):
     def quit_program(self):
         self.parent.exit()
 
+
+# endregion
+
+# region: Overview Frame
+
+
 class OverviewFrame(SideFrame):
-    def __init__(self, parent: ctk.CTk):
+    def __init__(self, parent: "GUI"):
         super().__init__(parent)
         self.parent = parent
         self.theme = parent.theme
@@ -304,6 +317,8 @@ class OverviewFrame(SideFrame):
         )
         self.times_used.grid(row=5, column=0, sticky="nsew", padx=10, pady=(0, 10))
 
+        # endregion
+
     def toggle_boolean(self, var: ctk.BooleanVar, value=None):
         if value is not None:
             var.set(value)
@@ -347,3 +362,15 @@ class OverviewFrame(SideFrame):
 
     def toggle_drop_spike(self, *_):
         self.parent.tools.toggle_drop_spike()
+
+
+# endregion
+
+# region: Agent Toggle Frame
+
+
+
+
+
+
+# endregion

@@ -316,9 +316,3 @@ class SideFrame(ctk.CTkFrame):
 
 
 # endregion
-
-# region: GUI Frames
-
-
-
-# endregion
