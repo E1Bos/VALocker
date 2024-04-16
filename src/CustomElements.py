@@ -74,7 +74,6 @@ class IndependentButton(ThemedButton):
 
         self.configure(
             text=self.text[0] if self.variable.get() else self.text[1],
-            font=self.theme["button"],
             fg_color=(
                 self.theme["button-enabled"]
                 if self.variable.get()
@@ -287,9 +286,15 @@ class ThemedDropdown(ctk.CTkOptionMenu):
             variable=variable,
         )
 
-    def set_values(self, values: list[str]):
+    def set_values(self, values: list[str]) -> None:
         self.configure(values=values)
 
+    def disable(self) -> None:
+        self.configure(state=ctk.DISABLED)
+        
+    
+    def enable(self) -> None:
+        self.configure(state=ctk.NORMAL)
 
 class ThemedCheckbox(ctk.CTkCheckBox):
     def __init__(self, parent: "GUI", text: str, variable: ctk.BooleanVar, command=callable, **kwargs):
@@ -330,6 +335,11 @@ class ThemedFrame(ctk.CTkFrame):
             **kwargs,
         )
         self.theme = parent.theme
+        
+        corner_radius = kwargs.get("corner_radius", 10)
+        
+        self.configure(
+            corner_radius=corner_radius)
 
 
 class SideFrame(ctk.CTkFrame):
