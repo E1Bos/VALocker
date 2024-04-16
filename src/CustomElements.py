@@ -1,5 +1,6 @@
 import customtkinter as ctk
 from typing import TYPE_CHECKING, Union
+from ProjectUtils import BRIGHTEN_COLOR
 
 if TYPE_CHECKING:
     from GUI import GUI
@@ -45,6 +46,7 @@ class ThemedButton(ctk.CTkButton):
             corner_radius=5,
             height=height,
             text_color=self.theme["text"],
+            text_color_disabled=BRIGHTEN_COLOR(self.theme["text"], 0.5),
             hover=True,
             font=self.theme["button"],
         )
@@ -289,12 +291,44 @@ class ThemedDropdown(ctk.CTkOptionMenu):
         self.configure(values=values)
 
 
+class ThemedCheckbox(ctk.CTkCheckBox):
+    def __init__(self, parent: "GUI", text: str, variable: ctk.BooleanVar, command=callable, **kwargs):
+        super().__init__(parent, text=text, variable=variable, command=command, **kwargs)
+        self.theme = parent.theme
+        self.text = text
+        
+        self.configure(
+            font=self.theme["button"],
+            text_color=self.theme["text"],
+            fg_color=self.theme["accent"],
+            hover_color=self.theme["accent-hover"],
+            corner_radius=5,
+            hover=True,
+        )
+    
+    def disable(self):
+        self.configure(state=ctk.DISABLED)
+    
+    def enable(self):
+        self.configure(state=ctk.NORMAL)
+        # can be tied to a function
+        # self.variable = variable
+        # variable.trace_add("write", self.check_box_clicked)
+    
+    # def check_box_clicked(self, *_):
+    #     print(f"{self.text} set to {self.variable.get()}")
+
+
 # region: Frames
 
 
 class ThemedFrame(ctk.CTkFrame):
-    def __init__(self, parent: "GUI", **kwargs):
-        super().__init__(parent, **kwargs)
+    def __init__(self, parent: "GUI", fg_color=None, **kwargs):
+        super().__init__(
+            parent,
+            fg_color=fg_color if fg_color else parent.theme["foreground"],
+            **kwargs,
+        )
         self.theme = parent.theme
 
 
