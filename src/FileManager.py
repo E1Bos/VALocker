@@ -19,8 +19,7 @@ class FileManager:
         update_file(constants.Files): Update a file by downloading the latest version from the repository.
         get_config(constants.Files): Returns the configuration dictionary for the specified file.
         set_config(constants.Files, dict): Sets the configuration dictionary for the specified file.
-        update_save_file(str, dict): Update a save file by saving the configuration to the specified file.
-    """
+        """
 
     # TODO: Replace "app_defaults/" with None when the app is ready for release
     def __init__(self) -> None:
@@ -319,19 +318,6 @@ class FileManager:
         """
         return self.configs[file.name].get(key, None)
 
-    def get_save_file(self, save_name: str) -> dict:
-        """
-        Returns the configuration dictionary for the specified save file.
-
-        Args:
-            save_name (str): The name of the save file.
-
-        Returns:
-            dict: The configuration dictionary for the specified save file.
-        """
-        save_path = os.path.join(self._absolute_file_path(FOLDER.SAVE_FILES.value, f"{save_name}.json"))
-        return json.load(open(save_path, "r"))
-
     # region:  Update files
 
     def update_file(self, file: FILE) -> None:
@@ -352,24 +338,6 @@ class FileManager:
 
         self._logger.info(f"Updated {file.value} to the latest version")
 
-
-# TODO: FINISH SAVEMANAGER AND REMOVE SAVE RELATED METHODS
-    def update_save_file(self, save_name: str, config: dict) -> None:
-        """
-        Update a save file by saving the latest configuration to the specified file.
-
-        Args:
-            save_name (str): The name of the save file.
-            config (dict): The configuration dictionary to save.
-        """
-        parent_dir = os.pardir(FILE.DEFAULT_SAVE.value)
-        save_path = os.path.join(self._absolute_file_path(parent_dir, save_name))
-
-        with open(save_path, "w") as f:
-            json.dump(config, f, indent=4)
-
-        self._logger.info(f"Updated save file {save_name}")
-
     # endregion
 
     def get_theme(self, theme_name: str) -> dict:
@@ -382,10 +350,10 @@ class FileManager:
         Returns:
             dict: The theme configuration dictionary.
         """
-        
+
         if theme_name.rfind("-theme.json") == -1:
             theme_name += "-theme.json"
-        
+
         theme_path = os.path.join(
             self._absolute_file_path(FOLDER.THEMES.value, theme_name)
         )
