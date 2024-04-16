@@ -2,18 +2,19 @@ import requests
 import time
 
 # Custom imports
-from Constants import URL, FOLDER, FILE
+from ProjectUtils import URL, FOLDER, FILE
 from CustomLogger import CustomLogger
 from FileManager import FileManager
 
 
 class Updater:
-    def __init__(self, release_version, check_frequency=3600):
+    def __init__(self, release_version, file_manager: FileManager, check_frequency=3600):
         """
         The Updater class is responsible for comparing versions and determining if an update is required.
 
         Args:
             release_version (str): The current release version of the agent.
+            file_manager (FileManager): The file manager instance to use for updating files.
             check_frequency (int): How often the agent should check for updates. Default is 1 hour.
 
         Attributes:
@@ -33,19 +34,17 @@ class Updater:
         self.check_frequency = check_frequency
         self.FILES_TO_CHECK = [FILE.AGENT_CONFIG, FILE.SETTINGS]
         self._logger = CustomLogger("Updater").get_logger()
+        self._file_manager = file_manager
 
-    def check_frequency_met(self, file_manager: FileManager) -> bool:
+    def check_frequency_met(self) -> bool:
         """
         Checks if the check frequency has been met for the agent.
-
-        Args:
-            file_manager (FileManager): The file manager instance to use for updating files.
 
         Returns:
             bool: True if the check frequency has been met, False otherwise.
         """
         last_checked_release = int(
-            file_manager.get_config(FILE.SETTINGS).get("LAST_CHECKED", 0)
+            self._file_manager.get_value(FILE.SETTINGS, "LAST_CHECKED")
         )
 
         time_since_last_check = int(time.time()) - last_checked_release
@@ -70,12 +69,9 @@ class Updater:
 
         return False
 
-    def check_for_config_updates(self, file_manager: FileManager):
+    def check_for_config_updates(self):
         """
         Checks for updates and updates the agent if necessary.
-
-        Args:
-            file_manager (FileManager): The file manager instance to use for updating files.
         """
 
         self._logger.info(
@@ -83,29 +79,28 @@ class Updater:
         )
 
         for file in self.FILES_TO_CHECK:
-            if self.compare_json_configs(file_manager, file):
+            if self.compare_json_configs(file):
                 self._logger.info(f"{file.name} configuration needs updating")
-                file_manager.update_file(file)
+                self._file_manager.update_file(file)
 
         self._logger.info("Config files checked.")
 
     # region: JSON Config Versions
 
     def compare_json_configs(
-        self, file_manager: FileManager, config_file: FILE
+        self, config_file: FILE
     ) -> bool:
         """
         Compares the version of the current agent configuration with the latest version available.
 
         Args:
-            file_manager (FileManager): The file manager instance to use for updating files.
             config_file (constant.Files): The Enum of the configuration file to check.
 
         Returns:
             bool: True if the current version is older than the latest version, False otherwise.
         """
         self._logger.info(f"Comparing JSON config versions for {config_file.name}")
-        current_version = file_manager.get_config(config_file).get("VERSION", None)
+        current_version = self._file_manager.get_config(config_file).get("VERSION", None)
 
         latest_version = self._get_latest_config_version(config_file.value)
 
@@ -223,23 +218,20 @@ class Updater:
 
         return False
 
-    def update_last_checked(self, file_manager: FileManager):
+    def update_last_checked(self):
         """
         Updates the last checked time in the settings file.
-
-        Args:
-            file_manager (FileManager): The file manager instance to use for updating files.
         """
-        settings = file_manager.get_config(FILE.SETTINGS)
+        settings = self._file_manager.get_config(FILE.SETTINGS)
         settings["LAST_CHECKED"] = int(time.time())
-        file_manager.set_config(FILE.SETTINGS, settings)
+        self._file_manager.set_config(FILE.SETTINGS, settings)
 
 
 if __name__ == "__main__":
     # Test Updater class
-    updater = Updater("v1.0.0")
     file_manager = FileManager()
     file_manager.setup()
-    updater.check_for_config_updates(file_manager)
+    updater = Updater("v1.0.0", file_manager)
+    updater.check_for_config_updates()
     updater.check_for_version_update()
-    updater.update_last_checked(file_manager)
+    updater.update_last_checked()
