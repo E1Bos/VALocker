@@ -11,3 +11,5 @@ __pycache__
 instalocker.py
 !src/Instalocker.py
 
+# Logs
+*.log
