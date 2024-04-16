@@ -23,7 +23,7 @@ class FileManager:
     """
 
     # TODO: Replace "app_defaults/" with None when the app is ready for release
-    def __init__(self, custom_folder="app_defaults/") -> None:
+    def __init__(self) -> None:
         self._REQUIRED_FOLDERS = {
             FOLDER.SAVE_FILES,
             FOLDER.DATA,
@@ -44,10 +44,10 @@ class FileManager:
         }
 
         # Main directory for the files
-        if custom_folder:
-            self._MAIN_DIR = custom_folder
+        if FOLDER.STORAGE_FOLDER.value:
+            self._MAIN_DIR = FOLDER.STORAGE_FOLDER.value
         else:
-            self._MAIN_DIR = os.path.join(os.environ["APPDATA"], "VALocker")
+            self._MAIN_DIR = os.path.join(os.environ["APPDATA"], FOLDER.PARENT_FOLDER.value)
 
         # URL to download the files from
         self._DOWNLOAD_URL = f"{URL.DOWNLOAD_URL.value}/{FOLDER.DEFAULTS.value}/"
@@ -57,7 +57,7 @@ class FileManager:
         self.configs = dict()
 
         # Set up logging
-        self._logger = CustomLogger("FileManager").get_logger()
+        self._logger = CustomLogger("File Manager").get_logger()
 
     # Start Function
     def setup(self) -> None:
@@ -360,6 +360,5 @@ class FileManager:
 
 if __name__ == "__main__":
     # Test FileManager class
-    # file_manager = FileManager(custom_folder="app_defaults/")
     file_manager = FileManager()
     file_manager.setup()
