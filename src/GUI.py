@@ -3,37 +3,26 @@ import customtkinter as ctk
 import pystray
 import sys
 
-import colorsys
-
 # Custom imports
 from CustomLogger import CustomLogger
-from Constants import FILE
+from ProjectUtils import FILE, BRIGHTEN_COLOR
 from FileManager import FileManager
+from SaveManager import SaveManager
 from Updater import Updater
 from Instalocker import Instalocker
-from CustomElements import ThemedFrame, ThemedLabel, IndependentButton, DependentButton, SideFrame
-
-
-def brighten_color(hex_color, increase_factor):
-    # Remove the '#' from the start of hex_color
-    hex_color = hex_color.lstrip("#")
-
-    # Convert hex color to RGB
-    rgb_color = tuple(int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
-
-    # Convert RGB to HLS
-    h, l, s = colorsys.rgb_to_hls(
-        rgb_color[0] / 255.0, rgb_color[1] / 255.0, rgb_color[2] / 255.0
-    )
-
-    # Increase the lightness
-    l = max(min(l * increase_factor, 1), 0)
-
-    # Convert back to RGB
-    r, g, b = colorsys.hls_to_rgb(h, l, s)
-
-    # Convert RGB back to hex and return with '#'
-    return "#{:02x}{:02x}{:02x}".format(int(r * 255), int(g * 255), int(b * 255))
+from Tools import Tools
+from GUI.CustomElements import (
+    ThemedFrame,
+    SideFrame,
+    ThemedDropdown,
+    ThemedLabel,
+    DependentLabel,
+    ThemedButton,
+    IndependentButton,
+    DependentButton,
+    SplitButton,
+)
+from GUI.GUIFrames import NavigationFrame, OverviewFrame
 
 
 class GUI(ctk.CTk):
@@ -51,27 +40,104 @@ class GUI(ctk.CTk):
         self.logger.info("Initializing file manager")
         self.file_manager = FileManager()
         self.file_manager.setup()
-        self.logger.info("File manager initialized")
+
+        # Creates an instance of the SaveManager class and initializes it
+        self.logger.info("Initializing save manager")
+        self.save_manager = SaveManager(self.file_manager)
+        self.save_manager.setup()
+        self.save_manager.set_active(
+            self.file_manager.get_value(FILE.USER_SETTINGS, "ACTIVE_SAVE_FILE")
+        )
+
+        # Creates an instance of the Updater class
+        # TODO: Uncomment check_for_updates() method in prod
+        self.logger.info("Initializing updater")
+        self.updater = Updater(self.VERSION, self.file_manager)
+        # self.check_for_updates()
 
         # Loads theme
         self.logger.info("Loading theme")
-        self.theme = self.file_manager.get_theme("default-theme.json")
+        theme_name = self.file_manager.get_value(FILE.SETTINGS, "THEME")
+        self.theme = self.file_manager.get_theme(theme_name)
+        self.setup_theme()
+        self.logger.info(f'Theme "{theme_name}" loaded')
+
+        # region: Default Vars
+
+        # If the Instalocker thread is running
+        self.is_thread_running = ctk.BooleanVar()
+
+        # If the Instalocker is Running (true) or Waiting (false)
+        self.instalocker_status = ctk.BooleanVar(value=True)
+
+        # Safe Mode Enabled
+        self.safe_mode_enabled = ctk.BooleanVar()
+
+        # Safe Mode Strength, 0=Low, 1=Medium, 2=High
+        self.safe_mode_strength = ctk.IntVar()
+
+        # Current Save
+        self.current_save_name = ctk.StringVar()
+
+        # Current Save Data
+        self.selected_agent = ctk.StringVar()
+
+        self.last_lock = ctk.StringVar()
+        self.average_lock = ctk.StringVar()
+        self.times_used = ctk.StringVar()
+
+        self.setup_vars()
+        # endregion
+
+        self.logger.info(f"Run on startup: {self.is_thread_running.get()}")
+
+        self.logger.info("Initializing Instalocker")
+        self.instalocker = Instalocker()
+
+        self.logger.info("Initializing Tools")
+        self.tools = Tools()
+
+        self.logger.info("Creating UI")
+        self.initUI()
+
+    def exit(self):
+        """
+        Stops the icon and destroys the GUI window, then exits the program.
+        """
+        try:
+            self.icon.stop()
+        except AttributeError:
+            pass
+
+        self.destroy()
+        sys.exit()
+
+    def setup_theme(self):
+        """
+        Sets up the theme for the GUI.
+        """
         # Brightens certain colors for hover effects
-        for element_to_brighten in ["accent", "button-enabled", "button-disabled"]:
-            self.theme[f"{element_to_brighten}-hover"] = brighten_color(
+        for element_to_brighten in [
+            "accent",
+            "button-enabled",
+            "button-disabled",
+            "foreground-highlight",
+        ]:
+            self.theme[f"{element_to_brighten}-hover"] = BRIGHTEN_COLOR(
                 self.theme[element_to_brighten], 1.1
             )
         self.theme["label"] = (self.theme["font"], 16)
         self.theme["button"] = (self.theme["font"], 14)
-        self.logger.info("Theme loaded")
 
-        # Creates an instance of the Updater class
-        self.logger.info("Initializing updater")
-        self.updater = Updater(self.VERSION)
-        self.logger.info("Updater initialized")
+    def check_for_updates(self) -> None:
+        """
+        Checks for updates and performs necessary actions if updates are available.
 
-        # Checks if the updater check frequency has been met
-        # TODO: Uncomment in prod
+        This method checks if the frequency for update checks is met. If it is, it proceeds to check for
+        config updates and version updates. If a version update is available, it logs the update and
+        provides a placeholder for implementing the update code.
+
+        If the frequency is not met, it logs a message indicating that update checks are skipped.
         """
         if self.updater.check_frequency_met(self.file_manager):
             # Checks for config updates
@@ -90,44 +156,57 @@ class GUI(ctk.CTk):
                 # TODO: Implement update code
         else:
             self.logger.info("Check frequency not met, skipping update checks")
-        """
 
-        #region: Default Vars
-
-        # If the Instalocker thread is running
-        self.is_thread_running = ctk.BooleanVar()
-
-        # If the Instalocker is Running (true) or Waiting (false)
-        self.instalocker_status = ctk.BooleanVar(value=True)
-
+    def setup_vars(self):
         self.is_thread_running.set(
-            True
-            if self.file_manager.get_value(FILE.SETTINGS, "ENABLE_ON_STARTUP")
-            else False
+            self.file_manager.get_value(FILE.SETTINGS, "ENABLE_ON_STARTUP")
         )
-        
-        #endregion
 
-        self.logger.info(f"Run on startup: {self.is_thread_running.get()}")
+        self.safe_mode_enabled.set(
+            self.file_manager.get_value(FILE.SETTINGS, "SAFE_MODE_ON_STARTUP")
+        )
 
-        self.logger.info("Initializing Instalocker")
-        self.instalocker = None
-        # TODO: Implement Instalocker
+        self.safe_mode_strength.set(
+            self.file_manager.get_value(FILE.SETTINGS, "SAFE_MODE_STRENGTH_ON_STARTUP")
+        )
 
-        self.logger.info("Creating UI")
-        self.initUI()
+        self.current_save_name.set(self.save_manager.get_current_save_name())
 
-    def exit(self):
+        self.selected_agent.set(self.save_manager.get_current_agent())
+
+        self.update_stats()
+
+    def update_stats(self) -> None:
         """
-        Stops the icon and destroys the GUI window, then exits the program.
+        Gets the current stats of the program.
         """
-        try:
-            self.icon.stop()
-        except AttributeError:
-            pass
+        stats = self.file_manager.get_config(FILE.STATS)
 
-        self.destroy()
-        sys.exit()
+        # Set times used
+        times_used = stats.get("TIMES_USED", 0)
+
+        if not self.safe_mode_enabled.get():
+            time_to_lock = stats.get("TTL", None)
+        else:
+            time_to_lock = stats.get("TTL_SAFE", None)
+
+            if time_to_lock is not None:
+                time_to_lock = time_to_lock[self.safe_mode_strength.get()]
+
+        if time_to_lock is None or len(time_to_lock) == 0:
+            self.times_used.set("N/A")
+            self.average_lock.set("N/A")
+            self.last_lock.set("N/A")
+            self.logger.error("Error retrieving stats")
+            return
+
+        if time_to_lock is not None:
+            average_lock = sum(time_to_lock) / len(time_to_lock)
+            last_lock = time_to_lock[-1]
+
+        self.times_used.set(f"{times_used} times")
+        self.average_lock.set(f"{average_lock:.2f} ms")
+        self.last_lock.set(f"{last_lock:.2f} ms")
 
     def initUI(self) -> None:
         """
@@ -147,8 +226,11 @@ class GUI(ctk.CTk):
         self.grid_columnconfigure(1, weight=1)
         self.grid_propagate(False)
 
+        self.frames = dict()
+
         self.frames = {
             "Overview": OverviewFrame(self),
+            "Save Files": SettingsFrame(self),
             "Settings": SettingsFrame(self),
         }
 
@@ -161,173 +243,6 @@ class GUI(ctk.CTk):
             frame.grid(row=0, column=1, sticky="nswe", padx=(10, 10))
 
         self.frames["Overview"].tkraise()
-
-        #endregion
-
-
-class NavigationFrame(ctk.CTkFrame):
-    def __init__(self, parent, width):
-        super().__init__(
-            parent, width=width, corner_radius=0, fg_color=parent.theme["foreground"]
-        )
-        self.parent = parent
-        self.theme = parent.theme
-
-        self.title_frame = ctk.CTkFrame(self, fg_color="transparent")
-        self.title_frame.pack(pady=10)
-
-        self.title_label_frame = ctk.CTkFrame(self.title_frame, fg_color="transparent")
-        self.title_label_frame.pack()
-
-        self.valocker_label_left = ctk.CTkLabel(
-            self.title_label_frame,
-            text="VAL",
-            fg_color="transparent",
-            text_color="#BD3944",
-            font=(self.parent.theme["font"], 20),
-        )
-        self.valocker_label_left.pack(side=tk.LEFT)
-
-        self.valocker_label_right = ctk.CTkLabel(
-            self.title_label_frame,
-            text="ocker",
-            fg_color="transparent",
-            text_color=self.theme["text"],
-            font=(self.parent.theme["font"], 20),
-        )
-        self.valocker_label_right.pack(side=tk.LEFT)
-
-        self.version_label = ctk.CTkLabel(
-            self.title_frame,
-            text=f"v{self.parent.VERSION}",
-            fg_color="transparent",
-            text_color=brighten_color(self.theme["text"], 0.5),
-            font=(self.parent.theme["font"], 12),
-        )
-        self.version_label.pack(pady=0)
-
-        buttons = [
-            "Overview",
-            "Settings",
-        ]
-
-        for button_text in buttons:
-            button = ctk.CTkButton(
-                self,
-                text=button_text,
-                height=40,
-                width=width,
-                corner_radius=0,
-                border_spacing=10,
-                anchor=tk.W,
-                fg_color="transparent",
-                text_color=self.theme["text"],
-                hover_color=brighten_color(self.theme["foreground"], 1.5),
-                font=self.parent.theme["button"],
-                command=lambda button=button_text: self.on_button_click(button),
-            )
-            button.pack(fill=ctk.X)
-
-        self.exit_button = ctk.CTkButton(
-            self,
-            text="Exit",
-            font=self.parent.theme["button"],
-            fg_color=self.parent.theme["accent"],
-            hover_color=self.parent.theme["accent-hover"],
-            corner_radius=5,
-            hover=True,
-            command=self.quit_program,
-        )
-        self.exit_button.pack(side=tk.BOTTOM, pady=10, padx=10, fill=tk.X)
-
-    def on_button_click(self, button):
-        self.parent.frames[button].tkraise()
-
-    def quit_program(self):
-        self.parent.exit()
-
-
-class OverviewFrame(SideFrame):
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.parent = parent
-        self.theme = parent.theme
-
-        # Make each frame take up equal space
-        for frame in range(3):
-            self.grid_columnconfigure(frame, weight=1)
-
-        # Make the frames take up the entire vertical space
-        self.grid_rowconfigure(0, weight=1)
-
-        # Segmented Frames
-        self.left_frame = ThemedFrame(self, corner_radius=10)
-        self.middle_frame = ThemedFrame(self, corner_radius=10)
-        self.right_frame = ThemedFrame(self, corner_radius=10)
-
-        # Grid the frames
-        for index, frame in enumerate(
-            [self.left_frame, self.middle_frame, self.right_frame]
-        ):
-            frame.configure(fg_color=self.theme["foreground"])
-            frame.grid(
-                row=0,
-                column=index,
-                sticky="nsew",
-                padx=10 if index == 1 else 0,
-                pady=10,
-            )
-            frame.grid_propagate(False)
-            frame.columnconfigure(0, weight=1)
-
-        # Left Frame
-        self.program_status_label = ThemedLabel(
-            self.left_frame,
-            text="Instalocker:",
-        )
-        self.program_status_label.grid(
-            row=0, column=0, sticky="nsew", padx=10, pady=(10, 0)
-        )
-
-        self.program_status_button = IndependentButton(
-            self.left_frame,
-            text=["Enabled", "Disabled"],
-            variable=self.parent.is_thread_running,
-            command=self.toggle_instalocker,
-        )
-
-        self.program_status_button.grid(
-            row=1, column=0, sticky="nsew", padx=10, pady=(0, 10)
-        )
-
-        self.instalocker_status_label = ThemedLabel(self.left_frame, "Status")
-        self.instalocker_status_label.grid(
-            row=2, column=0, sticky="nsew", padx=10, pady=(10, 0)
-        )
-
-        self.instalocker_status_button = DependentButton(
-            self.left_frame,
-            variable=self.parent.instalocker_status,
-            dependent_variable=self.parent.is_thread_running,
-            text=["Locking", "Waiting", "None"],
-            command=self.toggle_instalocker_state,
-        )
-
-        self.instalocker_status_button.grid(
-            row=3, column=0, sticky="nsew", padx=10, pady=(0, 10)
-        )
-
-    def toggle_instalocker(self, value=None):
-        if value is not None:
-            self.parent.is_thread_running.set(value)
-        else:
-            self.parent.is_thread_running.set(not self.parent.is_thread_running.get())
-
-    def toggle_instalocker_state(self, value=None):
-        if value is not None:
-            self.parent.instalocker_status.set(value)
-        else:
-            self.parent.instalocker_status.set(not self.parent.instalocker_status.get())
 
 
 class SettingsFrame(SideFrame):
@@ -344,8 +259,6 @@ class SettingsFrame(SideFrame):
             text_color=("gray10", "gray90"),
         )
         self.label.pack()
-
-
 
 
 if __name__ == "__main__":
