@@ -1,6 +1,6 @@
 import logging
 import os
-from Constants import FOLDER
+from ProjectUtils import FOLDER, GET_WORKING_DIR
 
 class CustomLogger:
     """
@@ -23,10 +23,8 @@ class CustomLogger:
             "%(asctime)s - %(name)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
         )
         
-        if FOLDER.STORAGE_FOLDER.value is None:
-            log_path = os.path.join(os.environ["APPDATA"], FOLDER.PARENT_FOLDER.value, FOLDER.LOGS.value, log_file)
-        else:
-            log_path = os.path.join(FOLDER.STORAGE_FOLDER.value, FOLDER.LOGS.value, log_file)
+        working_dir = GET_WORKING_DIR()
+        log_path = os.path.join(working_dir, FOLDER.LOGS.value, log_file)
         
         # Create the log directory if it doesn't exist
         os.makedirs(os.path.dirname(log_path), exist_ok=True)
