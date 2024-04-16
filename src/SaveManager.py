@@ -4,6 +4,7 @@ from FileManager import FileManager
 import os
 import json
 
+
 class SaveManager:
     def __init__(self, file_manager: FileManager) -> None:
         self.logger = CustomLogger("Save Manager").get_logger()
@@ -29,9 +30,11 @@ class SaveManager:
         for file in os.listdir(self.FOLDER_PATH):
             if file.endswith(".json"):
                 self.save_files.append(file)
-        
+
         number_of_save_files = len(self.save_files)
-        self.logger.info(f"Found {number_of_save_files} save file{'s' if number_of_save_files > 1 else ''}.")
+        self.logger.info(
+            f"Found {number_of_save_files} save file{'s' if number_of_save_files > 1 else ''}."
+        )
 
     def get_all_save_files(self) -> list:
         """
@@ -59,20 +62,14 @@ class SaveManager:
         if save_name not in self.save_files:
             error_file = save_name
             save_name = self.get_all_save_files()[0]
-            self.logger.error(f"Save file {error_file} not found. Defaulting to {save_name}.")
+            self.logger.error(
+                f"Save file {error_file} not found. Defaulting to {save_name}."
+            )
 
         self.current_save = save_name
         self.file_manager.set_value(FILE.USER_SETTINGS, "ACTIVE_SAVE_FILE", save_name)
         self.logger.info(f"Save file set to {self.get_current_save_name()}.")
-        self.load_save_file()
-
-    def load_save_file(self) -> None:
-        """
-        Loads the current save file.
-
-        Returns:
-            None
-        """
+        
         with open(f"{self.FOLDER_PATH}/{self.current_save}", "r") as file:
             self.save_data = json.load(file)
 
@@ -87,7 +84,6 @@ class SaveManager:
         """
         return self.current_save.removesuffix(".json")
 
-
     def get_current_agent(self) -> str:
         """
         Gets the name of the agent that is currently selected.
@@ -96,7 +92,7 @@ class SaveManager:
             str: The name of the agent that is currently selected.
         """
         return self.save_data.get("SELECTED_AGENT")
-    
+
     def set_current_agent(self, agent_name: str) -> None:
         """
         Sets the name of the agent that is currently selected.
@@ -109,14 +105,26 @@ class SaveManager:
         """
         self.save_data["SELECTED_AGENT"] = agent_name
 
-    def get_unlocked_dict(self) -> dict:
+    def get_agent_names(self) -> list:
         """
-        Gets a list of agents that have been unlocked.
+        Gets a list of agent names.
 
         Returns:
-            list: A list of agents that have been unlocked.
+            list: A list of agent names.
         """
-        return {agent: value[0] for agent, value in self.save_data.get("AGENTS").items() if value}
+        return list(self.save_data.get("AGENTS").keys())
+
+    def get_agents_status(self) -> dict:
+        """
+        Gets a dict of all agents and their status.
+
+        Returns:
+            dict: A dict of all agents and their unlock status.
+        """
+        return {
+            agent: value[0]
+            for agent, value in self.save_data.get("AGENTS").items()
+        }
 
     def get_random_dict(self) -> dict:
         """
@@ -125,7 +133,11 @@ class SaveManager:
         Returns:
             list: A list of agents that have been unlocked.
         """
-        return {agent: value[1] for agent, value in self.save_data.get("AGENTS").items() if value}
+        return {
+            agent: value[1]
+            for agent, value in self.save_data.get("AGENTS").items()
+            if value
+        }
 
     def get_map_dict(self) -> dict:
         """
@@ -146,7 +158,17 @@ class SaveManager:
         Returns:
             bool: True if the agent has been unlocked, False otherwise.
         """
-        return self.get_unlocked_dict().get(agent_name)
+        return self.get_agents_status().get(agent_name)
+
+    def set_agent_status(self, agent_name: str, status: bool) -> None:
+        """
+        Sets the unlock status of an agent.
+
+        Args:
+            agent_name (str): The name of the agent to set the status of.
+            status (BooleanVar): The status to set.
+        """
+        self.save_data["AGENTS"][agent_name][0] = status
 
     def get_unlocked_agents(self) -> list:
         """
@@ -155,7 +177,7 @@ class SaveManager:
         Returns:
             list: A list of agents that have been unlocked.
         """
-        return [agent for agent, value in self.get_unlocked_dict().items() if value]
+        return [agent for agent, value in self.get_agents_status().items() if value]
 
     def save_file(self) -> None:
         """
@@ -164,7 +186,7 @@ class SaveManager:
         Returns:
             None
         """
-        with open(f"{self.FOLDER_PATH}/{self.current_save}.json", "w") as file:
-            file.write(self.save_data)
+        with open(f"{self.FOLDER_PATH}/{self.current_save}", "w") as file:
+            json.dump(self.save_data, file, indent=4)
 
-        self.logger.info(f"Save file {self.current_save_name} saved.")
+        self.logger.info(f"Updated file {self.current_save}")
