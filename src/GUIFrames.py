@@ -74,8 +74,10 @@ class NavigationFrame(ctk.CTkFrame):
             "Settings",
         ]
 
+        self.nav_buttons = dict()
+
         for button_text in buttons:
-            button = ctk.CTkButton(
+            self.nav_buttons[button_text] = ctk.CTkButton(
                 self,
                 text=button_text,
                 height=40,
@@ -88,7 +90,7 @@ class NavigationFrame(ctk.CTkFrame):
                 font=self.parent.theme["button"],
                 command=lambda button=button_text: self.change_active_frame(button),
             )
-            button.pack(fill=ctk.X)
+            self.nav_buttons[button_text].pack(fill=ctk.X)
 
         self.exit_button = ctk.CTkButton(
             self,
@@ -110,6 +112,22 @@ class NavigationFrame(ctk.CTkFrame):
         - button: The name of the frame to be raised.
         """
         self.parent.frames[button].tkraise()
+        self.highlight_button(button)
+
+    def highlight_button(self, button) -> None:
+        """
+        Highlights the specified button.
+
+        Parameters:
+        - button: The name of the button to be highlighted.
+        """
+        for button_name in self.nav_buttons:
+            if button_name == button:
+                self.nav_buttons[button_name].configure(
+                    fg_color=BRIGHTEN_COLOR(self.theme["foreground"], 1.5)
+                )
+            else:
+                self.nav_buttons[button_name].configure(fg_color="transparent")
 
     def quit_program(self) -> None:
         """
@@ -140,9 +158,9 @@ class OverviewFrame(SideFrame):
         self.grid_rowconfigure(0, weight=1)
 
         # Segmented Frames
-        self.left_frame = ThemedFrame(self, corner_radius=10)
-        self.middle_frame = ThemedFrame(self, corner_radius=10)
-        self.right_frame = ThemedFrame(self, corner_radius=10)
+        self.left_frame = ThemedFrame(self)
+        self.middle_frame = ThemedFrame(self)
+        self.right_frame = ThemedFrame(self)
 
         # Grid the frames
         for index, frame in enumerate(
@@ -412,6 +430,11 @@ class OverviewFrame(SideFrame):
         """
         self.parent.instalocker.toggle_random_select()
 
+        if self.parent.instalocker.random_select.get():
+            self.agent_dropdown.disable()
+        else:
+            self.agent_dropdown.enable()
+
     def toggle_map_specific(self) -> None:
         """
         Toggles the map-specific functionality.
@@ -449,7 +472,7 @@ class AgentToggleFrame(SideFrame):
         self.parent = parent
         self.theme = parent.theme
 
-        self.top_frame = ThemedFrame(self, corner_radius=10)
+        self.top_frame = ThemedFrame(self)
         self.top_frame.pack(fill=ctk.X, pady=10)
         self.top_frame.grid_columnconfigure(0, weight=1)
         self.top_frame.grid_columnconfigure(1, weight=1)
@@ -473,8 +496,11 @@ class AgentToggleFrame(SideFrame):
         )
         self.none_checkbox.grid(row=0, column=1, padx=10, pady=10)
 
-        self.specific_agent_frame = ThemedFrame(self, corner_radius=10)
-        self.specific_agent_frame.pack(pady=10, padx=0)
+        self.outer_agent_frame = ThemedFrame(self)
+        self.outer_agent_frame.pack(expand=True, fill=ctk.BOTH, pady=(0, 10), padx=0)
+
+        self.specific_agent_frame = ThemedFrame(self.outer_agent_frame)
+        self.specific_agent_frame.pack(anchor=ctk.CENTER, pady=10, padx=0)
 
         self.toggleable_agent_vars = {
             agent: var
@@ -499,7 +525,7 @@ class AgentToggleFrame(SideFrame):
             )
 
             xpadding = (
-                (40, 10) if col == 0 else (10, 40) if col == NUMBER_OF_COLS - 1 else 10
+                (30, 10) if col == 0 else (10, 30) if col == NUMBER_OF_COLS - 1 else 10
             )
             ypadding = (
                 (20, 5)
@@ -511,11 +537,13 @@ class AgentToggleFrame(SideFrame):
                 )
             )
 
-            self.agent_buttons[agent_name].grid(
-                row=row, column=col, padx=xpadding, pady=ypadding, sticky="nsew"
-            )
+            self.specific_agent_frame.grid_rowconfigure(row, weight=1)
+            self.specific_agent_frame.grid_columnconfigure(col, weight=1)
+
+            self.agent_buttons[agent_name].grid(row=row, column=col, sticky="nsew", padx=xpadding, pady=ypadding)
 
         self.manage_super_checkboxes()
+
 
     def toggle_all(self) -> None:
         """
@@ -582,7 +610,9 @@ class AgentToggleFrame(SideFrame):
         Toggles the state of a single agent.
         """
         self.manage_super_checkboxes()
-        self.parent.save_manager.set_agent_status(agent, self.toggleable_agent_vars[agent].get())
+        self.parent.save_manager.set_agent_status(
+            agent, self.toggleable_agent_vars[agent].get()
+        )
         self.parent.save_manager.save_file()
 
 
