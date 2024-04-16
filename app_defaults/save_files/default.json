@@ -1,28 +1,102 @@
 {
     "SELECTED_AGENT": "Brimstone",
-    "AGENTS":{
-        "Astra": [false, false],
-        "Breach": [false, false],
-        "Brimstone": [true, false],
-        "Chamber": [false, false],
-        "Cypher": [false, false],
-        "Deadlock": [false, false],
-        "Fade": [false, false],
-        "Gekko": [false, false],
-        "Harbor": [false, false],
-        "Jett": [true, false],
-        "Kayo": [false, false],
-        "Killjoy": [false, false],
-        "Neon": [false, false],
-        "Omen": [false, false],
-        "Phoenix": [true, false],
-        "Raze": [false, false],
-        "Reyna": [false, false],
-        "Sage": [true, false],
-        "Skye": [false, false],
-        "Sova": [true, false],
-        "Viper": [false, false],
-        "Yoru": [false, false]
+    "AGENTS": {
+        "Astra": [
+            false,
+            false
+        ],
+        "Breach": [
+            false,
+            false
+        ],
+        "Brimstone": [
+            true,
+            false
+        ],
+        "Chamber": [
+            false,
+            false
+        ],
+        "Clove": [
+            false,
+            false
+        ],
+        "Cypher": [
+            false,
+            false
+        ],
+        "Deadlock": [
+            false,
+            false
+        ],
+        "Fade": [
+            false,
+            false
+        ],
+        "Gekko": [
+            false,
+            false
+        ],
+        "Harbor": [
+            false,
+            false
+        ],
+        "Iso": [
+            false,
+            false
+        ],
+        "Jett": [
+            true,
+            false
+        ],
+        "Kayo": [
+            false,
+            false
+        ],
+        "Killjoy": [
+            false,
+            false
+        ],
+        "Neon": [
+            false,
+            false
+        ],
+        "Omen": [
+            false,
+            false
+        ],
+        "Phoenix": [
+            false,
+            false
+        ],
+        "Raze": [
+            false,
+            false
+        ],
+        "Reyna": [
+            false,
+            false
+        ],
+        "Sage": [
+            false,
+            false
+        ],
+        "Skye": [
+            false,
+            false
+        ],
+        "Sova": [
+            false,
+            false
+        ],
+        "Viper": [
+            false,
+            false
+        ],
+        "Yoru": [
+            false,
+            false
+        ]
     },
     "MAP_SPECIFIC_AGENTS": {
         "Ascent": null,
