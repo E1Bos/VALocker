@@ -1,5 +1,6 @@
 import logging
 import os
+from Constants import FOLDER
 
 class CustomLogger:
     """
@@ -22,10 +23,13 @@ class CustomLogger:
             "%(asctime)s - %(name)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
         )
         
-        log_path = os.path.join(os.environ["APPDATA"], "VALocker", "logs", log_file)
+        if FOLDER.STORAGE_FOLDER.value is None:
+            log_path = os.path.join(os.environ["APPDATA"], FOLDER.PARENT_FOLDER.value, FOLDER.LOGS.value, log_file)
+        else:
+            log_path = os.path.join(FOLDER.STORAGE_FOLDER.value, FOLDER.LOGS.value, log_file)
         
-        if not os.path.exists(os.path.dirname(log_path)):
-            os.makedirs(os.path.dirname(log_path))
+        # Create the log directory if it doesn't exist
+        os.makedirs(os.path.dirname(log_path), exist_ok=True)
         
         # File handler
         file_handler = logging.FileHandler(
