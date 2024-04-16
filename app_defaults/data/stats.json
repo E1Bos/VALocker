@@ -1,7 +1,7 @@
 {
     "TIMES_USED": 0,
-    "TIME_TO_LOCK": [
-        [],
+    "TTL": [],
+    "TTL_SAFE": [
         [],
         [],
         []
