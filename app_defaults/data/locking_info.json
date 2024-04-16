@@ -1,20 +1,20 @@
 {
-    "BOX_INFO": {
+    "AGENT_ICONS": {
         "SIZE": 72,
-        "LOCK_SIZE": [
-            234,
-            59
-        ],
         "COLUMNS": 9,
         "XDIST": 12,
         "YDIST": 12,
-        "LOCK_COORDS": [
-            842,
-            701
-        ],
         "TOPLEFT": [
             588,
             805
         ]
+    },
+    "LOCK_BUTTON": [842, 701],
+    "AGENT_START": [588, 805],
+    "LOCK_LOCATIONS": {
+        "947, 782, 952, 783": "234, 238, 178"
+    },
+    "UNLOCK_LOCATIONS": {
+        "815, 243, 820, 244": "246, 244, 240"
     }
 }
