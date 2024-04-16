@@ -228,6 +228,13 @@ class SaveManager:
             for agent in agent_list:
                 if agent not in save_data.get("AGENTS"):
                     save_data["AGENTS"][agent] = [False, False]
+                if agent in self.file_manager.get_value(FILE.AGENT_CONFIG, "DEFAULT_AGENTS"):
+                    save_data["AGENTS"][agent][0] = True
+
+            # Remove any agents that are not in the agent list
+            save_data["AGENTS"] = {
+                agent: value for agent, value in save_data.get("AGENTS").items() if agent in agent_list
+            }
 
             # Sorts the agents by name
             save_data["AGENTS"] = {
@@ -238,6 +245,13 @@ class SaveManager:
             for map_name in map_list:
                 if map_name not in save_data.get("MAP_SPECIFIC_AGENTS"):
                     save_data["MAP_SPECIFIC_AGENTS"][map_name] = None
+
+            # Remove any maps that are not in the map list
+            save_data["MAP_SPECIFIC_AGENTS"] = {
+                map_name: value
+                for map_name, value in save_data.get("MAP_SPECIFIC_AGENTS").items()
+                if map_name in map_list
+            }
 
             # Sorts the map specific agents by map name
             save_data["MAP_SPECIFIC_AGENTS"] = {
