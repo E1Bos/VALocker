@@ -1,4 +1,3 @@
-import tkinter as tk
 import customtkinter as ctk
 import pystray
 import sys
@@ -11,7 +10,7 @@ from SaveManager import SaveManager
 from Updater import Updater
 from Instalocker import Instalocker
 from Tools import Tools
-from GUI.CustomElements import (
+from CustomElements import (
     ThemedFrame,
     SideFrame,
     ThemedDropdown,
@@ -21,8 +20,9 @@ from GUI.CustomElements import (
     IndependentButton,
     DependentButton,
     SplitButton,
+    ThemedCheckbox,
 )
-from GUI.GUIFrames import NavigationFrame, OverviewFrame
+from GUIFrames import NavigationFrame, OverviewFrame, AgentToggleFrame
 
 
 class GUI(ctk.CTk):
@@ -79,9 +79,14 @@ class GUI(ctk.CTk):
         # Current Save
         self.current_save_name = ctk.StringVar()
 
-        # Current Save Data
+        # Selected Agent
         self.selected_agent = ctk.StringVar()
+        self.agent_unlock_status = {
+            agent: ctk.BooleanVar(value=False)
+            for agent in self.save_manager.get_agent_names()
+        }
 
+        # Stats
         self.last_lock = ctk.StringVar()
         self.average_lock = ctk.StringVar()
         self.times_used = ctk.StringVar()
@@ -96,6 +101,8 @@ class GUI(ctk.CTk):
 
         self.logger.info("Initializing Tools")
         self.tools = Tools()
+
+        self.load_save()
 
         self.logger.info("Creating UI")
         self.initUI()
@@ -170,11 +177,8 @@ class GUI(ctk.CTk):
             self.file_manager.get_value(FILE.SETTINGS, "SAFE_MODE_STRENGTH_ON_STARTUP")
         )
 
-        self.current_save_name.set(self.save_manager.get_current_save_name())
-
-        self.selected_agent.set(self.save_manager.get_current_agent())
-
         self.update_stats()
+        self.load_save()
 
     def update_stats(self) -> None:
         """
@@ -197,7 +201,10 @@ class GUI(ctk.CTk):
             self.times_used.set("N/A")
             self.average_lock.set("N/A")
             self.last_lock.set("N/A")
-            self.logger.error("Error retrieving stats")
+
+            self.logger.warning(
+                f"Could not retrieve stats for SM:{self.safe_mode_enabled.get()} and SMS:{self.safe_mode_strength.get()}. (They might be unset)"
+            )
             return
 
         if time_to_lock is not None:
@@ -207,6 +214,18 @@ class GUI(ctk.CTk):
         self.times_used.set(f"{times_used} times")
         self.average_lock.set(f"{average_lock:.2f} ms")
         self.last_lock.set(f"{last_lock:.2f} ms")
+
+    def load_save(self) -> None:
+        """
+        Updates the current save file.
+        """
+        self.current_save_name.set(self.save_manager.get_current_save_name())
+        self.selected_agent.set(self.save_manager.get_current_agent())
+
+        for agent, status in self.save_manager.get_agents_status().items():
+            self.agent_unlock_status[agent].set(status)
+
+        # TODO: Load map specific
 
     def initUI(self) -> None:
         """
@@ -230,7 +249,11 @@ class GUI(ctk.CTk):
 
         self.frames = {
             "Overview": OverviewFrame(self),
+            "Agent Toggle": AgentToggleFrame(self),
+            "Random Select": SettingsFrame(self),
+            "Map Specific": SettingsFrame(self),
             "Save Files": SettingsFrame(self),
+            "Tools": SettingsFrame(self),
             "Settings": SettingsFrame(self),
         }
 
@@ -242,11 +265,11 @@ class GUI(ctk.CTk):
         for frame in self.frames.values():
             frame.grid(row=0, column=1, sticky="nswe", padx=(10, 10))
 
-        self.frames["Overview"].tkraise()
+        self.frames["Agent Toggle"].tkraise()
 
 
 class SettingsFrame(SideFrame):
-    def __init__(self, parent):
+    def __init__(self, parent: "GUI"):
         super().__init__(parent)
         self.parent = parent
         self.theme = parent.theme
