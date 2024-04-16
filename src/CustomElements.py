@@ -1,6 +1,7 @@
 import customtkinter as ctk
 from typing import TYPE_CHECKING, Union
 from ProjectUtils import BRIGHTEN_COLOR
+from abc import abstractmethod
 
 if TYPE_CHECKING:
     from GUI import GUI
@@ -278,7 +279,6 @@ class ThemedDropdown(ctk.CTkOptionMenu):
         super().__init__(parent, values=values, command=command, height=40, **kwargs)
         self.theme = parent.theme
         self.configure(
-            # dynamic_resizing=False,
             font=self.theme["button"],
             corner_radius=5,
             text_color=self.theme["text"],
@@ -291,38 +291,73 @@ class ThemedDropdown(ctk.CTkOptionMenu):
 
     def disable(self) -> None:
         self.configure(state=ctk.DISABLED)
-        
-    
+
     def enable(self) -> None:
         self.configure(state=ctk.NORMAL)
 
+# region: Checkboxes
+
 class ThemedCheckbox(ctk.CTkCheckBox):
-    def __init__(self, parent: "GUI", text: str, variable: ctk.BooleanVar, command=callable, **kwargs):
-        super().__init__(parent, text=text, variable=variable, command=command, **kwargs)
+    def __init__(
+        self,
+        parent: "GUI",
+        text: str,
+        variable: ctk.BooleanVar,
+        **kwargs,
+    ):
+        super().__init__(
+            parent, text=text, variable=variable, **kwargs
+        )
         self.theme = parent.theme
         self.text = text
+        self.variable = variable
         
+        text_color = kwargs.get("text_color", self.theme["text"])
+        fg_color = kwargs.get("fg_color", self.theme["accent"])
+        hover_color = kwargs.get("hover_color", self.theme["accent-hover"])
+        command= kwargs.get("command", None)
+
         self.configure(
             font=self.theme["button"],
-            text_color=self.theme["text"],
-            fg_color=self.theme["accent"],
-            hover_color=self.theme["accent-hover"],
+            text_color=text_color,
+            fg_color=fg_color,
+            hover_color=hover_color,
             corner_radius=5,
             hover=True,
+            command=command,
         )
-    
+
     def disable(self):
         self.configure(state=ctk.DISABLED)
-    
+
     def enable(self):
         self.configure(state=ctk.NORMAL)
-        # can be tied to a function
-        # self.variable = variable
-        # variable.trace_add("write", self.check_box_clicked)
-    
-    # def check_box_clicked(self, *_):
-    #     print(f"{self.text} set to {self.variable.get()}")
 
+
+class DependentCheckbox(ThemedCheckbox):
+    def __init__(
+        self,
+        parent: "GUI",
+        text: str,
+        variable: ctk.BooleanVar,
+        dependent_variable: ctk.BooleanVar,
+        **kwargs,
+    ):
+        super().__init__(
+            parent, text=text, variable=variable, **kwargs
+        )
+        self.dependent_variable = dependent_variable
+        self.dependent_variable.trace_add("write", self.dependent_variable_update)
+        self.dependent_variable_update()
+
+    def dependent_variable_update(self, *_):
+        if self.dependent_variable.get():
+            self.configure(state=ctk.NORMAL)
+        else:
+            self.configure(state=ctk.DISABLED)
+            self.variable.set(False)
+
+# endregion
 
 # region: Frames
 
@@ -335,11 +370,10 @@ class ThemedFrame(ctk.CTkFrame):
             **kwargs,
         )
         self.theme = parent.theme
-        
+
         corner_radius = kwargs.get("corner_radius", 10)
-        
-        self.configure(
-            corner_radius=corner_radius)
+
+        self.configure(corner_radius=corner_radius)
 
 
 class SideFrame(ctk.CTkFrame):
@@ -357,6 +391,14 @@ class SideFrame(ctk.CTkFrame):
 
     def get_button_text(self, var: ctk.BooleanVar, text: list[str]) -> str:
         return text[0] if var.get() else text[1]
+    
+    @abstractmethod
+    def on_raise(self) -> None:
+        """
+        This method is called when the element is raised.
+        It performs some actions related to the raising behavior.
+        """
+        pass
 
 
 # endregion
