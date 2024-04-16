@@ -16,7 +16,16 @@ class FOLDER(Enum):
     Enum for Folders used in the project
     """
 
+    # Specific folder to use (None for AppData/roaming)
+    STORAGE_FOLDER = "app_defaults/"
+
+    # Where default files are stored
     DEFAULTS = "app_defaults"
+
+    # Name of parent folder
+    PARENT_FOLDER = "VALocker"
+
+    # Folders in parent folder
     SAVE_FILES = "save_files"
     DATA = "data"
     LOGS = "logs"
