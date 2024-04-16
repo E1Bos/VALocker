@@ -8,7 +8,9 @@ from FileManager import FileManager
 
 
 class Updater:
-    def __init__(self, release_version, file_manager: FileManager, check_frequency=3600):
+    def __init__(
+        self, release_version, file_manager: FileManager, check_frequency=3600
+    ):
         """
         The Updater class is responsible for comparing versions and determining if an update is required.
 
@@ -87,9 +89,7 @@ class Updater:
 
     # region: JSON Config Versions
 
-    def compare_json_configs(
-        self, config_file: FILE
-    ) -> bool:
+    def compare_json_configs(self, config_file: FILE) -> bool:
         """
         Compares the version of the current agent configuration with the latest version available.
 
@@ -100,7 +100,9 @@ class Updater:
             bool: True if the current version is older than the latest version, False otherwise.
         """
         self._logger.info(f"Comparing JSON config versions for {config_file.name}")
-        current_version = self._file_manager.get_config(config_file).get("VERSION", None)
+        current_version = self._file_manager.get_config(config_file).get(
+            "VERSION", None
+        )
 
         latest_version = self._get_latest_config_version(config_file.value)
 
