@@ -474,7 +474,7 @@ class AgentToggleFrame(SideFrame):
         self.none_checkbox.grid(row=0, column=1, padx=10, pady=10)
 
         self.specific_agent_frame = ThemedFrame(self, corner_radius=10)
-        self.specific_agent_frame.pack(pady=10, padx=0, fill=ctk.X)
+        self.specific_agent_frame.pack(pady=10, padx=0)
 
         self.toggleable_agent_vars = {
             agent: var
