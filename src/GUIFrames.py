@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from GUI import GUI
 
-from ProjectUtils import BRIGHTEN_COLOR
+from ProjectUtils import BRIGHTEN_COLOR, FILE
 from CustomElements import (
     ThemedFrame,
     ThemedLabel,
@@ -16,6 +16,7 @@ from CustomElements import (
     SplitButton,
     DependentLabel,
     SideFrame,
+    ThemedCheckbox,
 )
 
 # region: Navigation Frame
@@ -62,9 +63,14 @@ class NavigationFrame(ctk.CTkFrame):
         )
         self.version_label.pack(pady=0)
 
+        # TODO: Uncomment map specific when better solution is implemented
         buttons = [
             "Overview",
+            "Agent Toggle",
+            "Random Select",
+            # "Map Specific",
             "Save Files",
+            "Tools",
             "Settings",
         ]
 
@@ -96,10 +102,22 @@ class NavigationFrame(ctk.CTkFrame):
         )
         self.exit_button.pack(side=ctk.BOTTOM, pady=10, padx=10, fill=ctk.X)
 
-    def change_active_frame(self, button):
+    def change_active_frame(self, button) -> None:
+        """
+        Raises the specified frame to the top of the stack of frames.
+
+        Parameters:
+        - button: The name of the frame to be raised.
+        """
         self.parent.frames[button].tkraise()
 
-    def quit_program(self):
+    def quit_program(self) -> None:
+        """
+        Quit the program.
+
+        This method is responsible for exiting the program gracefully.
+        It calls the `exit` method of the parent object to terminate the application.
+        """
         self.parent.exit()
 
 
@@ -130,7 +148,6 @@ class OverviewFrame(SideFrame):
         for index, frame in enumerate(
             [self.left_frame, self.middle_frame, self.right_frame]
         ):
-            frame.configure(fg_color=self.theme["foreground"])
             frame.grid(
                 row=0,
                 column=index,
@@ -319,48 +336,105 @@ class OverviewFrame(SideFrame):
 
         # endregion
 
-    def toggle_boolean(self, var: ctk.BooleanVar, value=None):
+    def toggle_boolean(self, var: ctk.BooleanVar, value=None) -> None:
+        """
+        Toggles the value of a boolean variable.
+
+        Args:
+            var (ctk.BooleanVar): The boolean variable to toggle.
+            value (bool, optional): The value to set the variable to. If not provided, the variable will be toggled.
+        """
         if value is not None:
             var.set(value)
         else:
             var.set(not var.get())
 
-    def toggle_safe_mode(self):
+    def toggle_safe_mode(self) -> None:
+        """
+        Toggles the safe mode enabled state and updates the statistics.
+        """
         self.toggle_boolean(self.parent.safe_mode_enabled)
         self.parent.update_stats()
 
-    def increment_save_mode_strength(self):
+    def increment_save_mode_strength(self) -> None:
+        """
+        Increments the save mode strength by 1 and updates the stats.
+
+        The save mode strength is incremented by 1 and wraps around to 0 when it reaches 3.
+        After incrementing the save mode strength, the stats are updated.
+        """
         self.parent.safe_mode_strength.set(
             (self.parent.safe_mode_strength.get() + 1) % 3
         )
         self.parent.update_stats()
 
-    def redirect_save_files_frame(self):
+    def redirect_save_files_frame(self) -> None:
+        """
+        Redirects the user to the "Save Files" frame.
+
+        This method raises the "Save Files" frame to the top, making it visible to the user.
+        """
         self.parent.frames["Save Files"].tkraise()
 
-    def redirect_tools_frame(self):
+    def redirect_tools_frame(self) -> None:
+        """
+        Redirects the user to the 'Tools' frame.
+
+        This method raises the 'Tools' frame to the top, making it visible to the user.
+        """
         self.parent.frames["Tools"].tkraise()
 
-    def update_current_save_button(self, *_):
+    def update_current_save_button(self) -> None:
+        """
+        Updates the text of the save button with the value from the current_save_name variable.
+        """
         self.save_button.configure(text=self.parent.current_save_name.get())
 
-    def select_agent(self, *_):
+    def select_agent(self, *_) -> None:
+        """
+        Selects an agent based on the value of `selected_agent` attribute in the parent object.
+        """
         # TODO: Implement this method
         print(self.parent.selected_agent.get())
 
-    def toggle_hover(self, *_):
+    def toggle_hover(self) -> None:
+        """
+        Toggles the hover state of the parent's instalocker.
+        """
         self.parent.instalocker.toggle_hover()
 
-    def toggle_random_select(self, *_):
+    def toggle_random_select(self) -> None:
+        """
+        Toggles the random select feature.
+
+        This method calls the `toggle_random_select` method of the `instalocker` object
+        belonging to the parent of this GUI frame.
+        """
         self.parent.instalocker.toggle_random_select()
 
-    def toggle_map_specific(self, *_):
+    def toggle_map_specific(self) -> None:
+        """
+        Toggles the map-specific functionality.
+
+        This method calls the `toggle_map_specific` method of the `instalocker` object
+        belonging to the parent object.
+        """
         self.parent.instalocker.toggle_map_specific()
 
-    def toggle_anti_afk(self, *_):
+    def toggle_anti_afk(self) -> None:
+        """
+        Toggles the anti-AFK feature.
+
+        This method calls the `toggle_anti_afk` method of the parent `tools` object.
+        """
         self.parent.tools.toggle_anti_afk()
 
-    def toggle_drop_spike(self, *_):
+    def toggle_drop_spike(self) -> None:
+        """
+        Toggles the drop spike functionality.
+
+        This method calls the `toggle_drop_spike` method of the parent's `tools` object.
+        """
         self.parent.tools.toggle_drop_spike()
 
 
@@ -369,8 +443,147 @@ class OverviewFrame(SideFrame):
 # region: Agent Toggle Frame
 
 
+class AgentToggleFrame(SideFrame):
+    def __init__(self, parent: "GUI"):
+        super().__init__(parent)
+        self.parent = parent
+        self.theme = parent.theme
 
+        self.top_frame = ThemedFrame(self, corner_radius=10)
+        self.top_frame.pack(fill=ctk.X, pady=10)
+        self.top_frame.grid_columnconfigure(0, weight=1)
+        self.top_frame.grid_columnconfigure(1, weight=1)
 
+        self.all_variable = ctk.BooleanVar(value=False)
+        self.none_variable = ctk.BooleanVar(value=False)
+
+        self.all_checkbox = ThemedCheckbox(
+            self.top_frame,
+            text="All",
+            variable=self.all_variable,
+            command=self.toggle_all,
+        )
+        self.all_checkbox.grid(row=0, column=0, padx=10, pady=10)
+
+        self.none_checkbox = ThemedCheckbox(
+            self.top_frame,
+            text="None",
+            variable=self.none_variable,
+            command=self.toggle_none,
+        )
+        self.none_checkbox.grid(row=0, column=1, padx=10, pady=10)
+
+        self.specific_agent_frame = ThemedFrame(self, corner_radius=10)
+        self.specific_agent_frame.pack(pady=10, padx=0, fill=ctk.X)
+
+        self.toggleable_agent_vars = {
+            agent: var
+            for agent, var in self.parent.agent_unlock_status.items()
+            if agent
+            not in self.parent.file_manager.get_value(
+                FILE.AGENT_CONFIG, "DEFAULT_AGENTS"
+            )
+        }
+
+        NUMBER_OF_COLS = 4
+
+        self.agent_buttons = dict()
+        for i, (agent_name, variable) in enumerate(self.toggleable_agent_vars.items()):
+            row = i // NUMBER_OF_COLS
+            col = i % NUMBER_OF_COLS
+            self.agent_buttons[agent_name] = ThemedCheckbox(
+                self.specific_agent_frame,
+                text=agent_name,
+                variable=variable,
+                command=lambda agent=agent_name: self.toggle_single_agent(agent),
+            )
+
+            xpadding = (
+                (40, 10) if col == 0 else (10, 40) if col == NUMBER_OF_COLS - 1 else 10
+            )
+            ypadding = (
+                (20, 5)
+                if row == 0
+                else (
+                    (5, 20)
+                    if row == len(self.toggleable_agent_vars) // NUMBER_OF_COLS
+                    else 5
+                )
+            )
+
+            self.agent_buttons[agent_name].grid(
+                row=row, column=col, padx=xpadding, pady=ypadding, sticky="nsew"
+            )
+
+        self.manage_super_checkboxes()
+
+    def toggle_all(self) -> None:
+        """
+        Toggles all the agent variables to True if the 'all_variable' is True.
+        """
+        if not self.all_variable.get():
+            return
+
+        for agent in self.toggleable_agent_vars:
+            self.toggleable_agent_vars[agent].set(True)
+            self.parent.save_manager.set_agent_status(agent, True)
+
+        self.manage_super_checkboxes()
+        self.parent.save_manager.save_file()
+
+    def toggle_none(self) -> None:
+        """
+        Toggles the 'none' variable and sets all toggleable agent variables to False.
+        """
+        if not self.none_variable.get():
+            return
+
+        for agent in self.toggleable_agent_vars:
+            self.toggleable_agent_vars[agent].set(False)
+            self.parent.save_manager.set_agent_status(agent, False)
+
+        self.manage_super_checkboxes()
+        self.parent.save_manager.save_file()
+
+    def manage_super_checkboxes(self) -> None:
+        """
+        Manages the state of the super checkboxes.
+
+        This method checks if all the toggleable agent variables are checked or unchecked,
+        and sets the state of the super checkboxes accordingly. It also enables or disables
+        the checkboxes based on the state of the toggleable agent variables.
+        """
+        # Check if all are checked
+        all_checked = all(
+            self.toggleable_agent_vars[agent].get()
+            for agent in self.toggleable_agent_vars
+        )
+
+        # Check if all are unchecked
+        none_checked = all(
+            not self.toggleable_agent_vars[agent].get()
+            for agent in self.toggleable_agent_vars
+        )
+
+        # Set super checkboxes
+        self.all_variable.set(all_checked)
+        self.none_variable.set(none_checked)
+
+        # Disable and enable checkboxes
+        self.none_checkbox.enable()
+        self.all_checkbox.enable()
+        if all_checked:
+            self.all_checkbox.disable()
+        elif none_checked:
+            self.none_checkbox.disable()
+
+    def toggle_single_agent(self, agent: str) -> None:
+        """
+        Toggles the state of a single agent.
+        """
+        self.manage_super_checkboxes()
+        self.parent.save_manager.set_agent_status(agent, self.toggleable_agent_vars[agent].get())
+        self.parent.save_manager.save_file()
 
 
 # endregion
