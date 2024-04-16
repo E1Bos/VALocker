@@ -7,12 +7,8 @@
     "button-enabled": "#2e8b57",
     "button-disabled": "#b52d3b",
     "text": "#FFFFFF",
-    "controller": "#8CB369",
-    "controller-disabled": "#A63446",
-    "duelist": "#8CB369",
-    "duelist-disabled": "#A63446",
-    "initiator": "#8CB369",
-    "initiator-disabled": "#A63446",
-    "sentinel": "#8CB369",
-    "sentinel-disabled": "#A63446"
+    "controller": "#d68909",
+    "duelist": "#bf124d",
+    "initiator": "#0a7ad3",
+    "sentinel": "#3c8c40"
 }
