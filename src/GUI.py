@@ -1,10 +1,11 @@
 import customtkinter as ctk
-import pystray
+
+# import pystray
 import sys
 
 # Custom imports
 from CustomLogger import CustomLogger
-from ProjectUtils import FILE, BRIGHTEN_COLOR
+from ProjectUtils import FILE, BRIGHTEN_COLOR, FRAME
 from FileManager import FileManager
 from SaveManager import SaveManager
 from Updater import Updater
@@ -50,6 +51,12 @@ class GUI(ctk.CTk):
         self.setup_theme()
         self.logger.info(f'Theme "{theme_name}" loaded')
 
+        self.logger.info("Creating Instalocker")
+        self.instalocker = Instalocker()
+
+        self.logger.info("Creating Tools")
+        self.tools = Tools()
+
         # region: Default Vars
 
         # If the Instalocker thread is running
@@ -71,11 +78,11 @@ class GUI(ctk.CTk):
         self.selected_agent = ctk.StringVar()
         self.agent_unlock_status = {
             agent: ctk.BooleanVar(value=False)
-            for agent in self.save_manager.get_agent_names()
+            for agent in self.save_manager.get_all_agent_names()
         }
         self.agent_random_status = {
             agent: ctk.BooleanVar(value=False)
-            for agent in self.save_manager.get_agent_names()
+            for agent in self.save_manager.get_all_agent_names()
         }
 
         # Stats
@@ -86,18 +93,17 @@ class GUI(ctk.CTk):
         self.setup_vars()
         # endregion
 
-        self.logger.info(f"Run on startup: {self.is_thread_running.get()}")
-
-        self.logger.info("Initializing Instalocker")
-        self.instalocker = Instalocker()
-
-        self.logger.info("Initializing Tools")
-        self.tools = Tools()
-
-        self.load_save()
-
         self.logger.info("Creating UI")
         self.initUI()
+
+        self.logger.info("Managing Instalocker thread")
+        self.manage_instalocker_thread()
+        self.is_thread_running.trace_add(
+            "write", lambda *args: self.manage_instalocker_thread()
+        )
+
+        # self.logger.info("Managing Tools thread")
+        # TODO: Tools thread logic
 
     def exit(self):
         """
@@ -214,13 +220,24 @@ class GUI(ctk.CTk):
         self.current_save_name.set(self.save_manager.get_current_save_name())
         self.selected_agent.set(self.save_manager.get_current_agent())
 
-        for agent, status in self.save_manager.get_agents_status().items():
+        for agent, status in self.save_manager.get_agents_unlock_status().items():
             self.agent_unlock_status[agent].set(status)
 
         for agent, status in self.save_manager.get_random_dict().items():
             self.agent_random_status[agent].set(status)
 
+        self.set_instalocker_index()
+
         # TODO: Load map specific
+
+    def manage_instalocker_thread(self) -> None:
+        """
+        Manages the Instalocker thread, tied to the `is_thread_running` variable.
+        """
+        if self.is_thread_running.get():
+            self.instalocker.start()
+        else:
+            self.instalocker.stop()
 
     def initUI(self) -> None:
         """
@@ -243,13 +260,13 @@ class GUI(ctk.CTk):
         self.frames = dict()
 
         self.frames = {
-            "Overview": OverviewFrame(self),
-            "Agent Toggle": AgentToggleFrame(self),
-            "Random Select": RandomSelectFrame(self),
-            "Map Specific": SettingsFrame(self),
-            "Save Files": SettingsFrame(self),
-            "Tools": SettingsFrame(self),
-            "Settings": SettingsFrame(self),
+            FRAME.OVERVIEW: OverviewFrame(self),
+            FRAME.AGENT_TOGGLE: AgentToggleFrame(self),
+            FRAME.RANDOM_SELECT: RandomSelectFrame(self),
+            FRAME.MAP_TOGGLE: SettingsFrame(self),
+            FRAME.SAVE_FILES: SaveFilesFrame(self),
+            FRAME.TOOLS: SettingsFrame(self),
+            FRAME.SETTINGS: SettingsFrame(self),
         }
 
         nav_width = 150
@@ -260,18 +277,75 @@ class GUI(ctk.CTk):
         for frame in self.frames.values():
             frame.grid(row=0, column=1, sticky="nswe", padx=(10, 10))
 
-        self.select_frame("Overview")
+        self.logger.info("Drawing window")
+        self.select_frame(FRAME.SAVE_FILES)
+        self.update()
 
-    def select_frame(self, frame_name: str) -> None:
+    def set_agent(self, agent: str = None) -> None:
         """
-        Raises the frame with the given name and lowers all other frames.
+        Sets the selected agent to the given agent,
+        changes the selected agent in the save manager,
+        and saves the file. Also updates the instalocker index.
 
         Args:
-            frame_name (str): The name of the frame to raise.
+            agent (str): The agent to set as selected.
         """
-        self.nav_frame.highlight_button(frame_name)
-        self.frames[frame_name].tkraise()
-        self.frames[frame_name].on_raise()
+        if agent is None:
+            agent = self.selected_agent.get()
+
+        self.selected_agent.set(agent)
+        self.save_manager.set_current_agent(agent)
+        self.set_instalocker_index()
+        self.save_manager.save_file()
+        self.logger.info(f"Selected agent: {agent}")
+
+    def agent_status_changed(self) -> None:
+        """
+        Updates the agent status and related GUI elements.
+
+        This method is called when the agent status changes. It updates the selected agent,
+        sets the instalocker index, and updates the dropdown options in the overview frame.
+        """
+        self.selected_agent.set(self.save_manager.get_current_agent())
+        self.set_instalocker_index()
+        self.frames[FRAME.OVERVIEW].update_dropdown_options()
+
+    def set_instalocker_index(self) -> None:
+        """
+        Sets the index of the selected agent in the instalocker.
+
+        Retrieves the list of unlocked agents from the save manager and finds the index of the selected agent.
+        Calls the `set_agent_index` method of the instalocker.
+        """
+        unlocked_agents = self.save_manager.get_unlocked_agents()
+        index = unlocked_agents.index(self.selected_agent.get())
+        self.instalocker.set_agent_index(index)
+
+    def select_frame(self, frame: FRAME) -> None:
+        """
+        Raises the frame of the given enum and calls the on_raise method of the frame.
+
+        Args:
+            frame (FRAME): The frame to raise.
+        """
+        self.nav_frame.highlight_button(frame)
+        self.frames[frame].tkraise()
+        self.frames[frame].on_raise()
+
+
+class SaveFilesFrame(SideFrame):
+    def __init__(self, parent: "GUI"):
+        super().__init__(parent)
+        self.parent = parent
+        self.theme = parent.theme
+
+        self.scrollable_frame = ThemedScrollableFrame(
+            self, label_text=FRAME.SAVE_FILES.value
+        )
+        self.scrollable_frame.pack(fill=ctk.BOTH, expand=True, pady=(10, 0))
+
+        self.bottom_frame = ThemedFrame(self, fg_color="red")
+        self.bottom_frame.pack(fill=ctk.X, pady=10, anchor=ctk.S)
 
 
 class SettingsFrame(SideFrame):
