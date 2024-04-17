@@ -70,7 +70,7 @@ class SaveManager:
         """
         return self.save_data.get("SELECTED_AGENT")
 
-    def get_agent_names(self) -> list:
+    def get_all_agent_names(self) -> list:
         """
         Gets a list of agent names.
 
@@ -79,29 +79,37 @@ class SaveManager:
         """
         return list(self.save_data.get("AGENTS").keys())
 
-    def get_agents_status(self) -> dict:
+    def _get_agents_status(self, save_data=None, index: int = 0) -> bool:
+        """
+        Gets the unlock status of an agent.
+
+        Args:
+            agent_name (str): The name of the agent to get the status of.
+            index (int): The index of the agent to get the status of (0=Unlocked, 1=Random). 0 is the default.
+
+        Returns:
+            bool: The unlock status of the agent.
+        """
+        if save_data is None: save_data = self.save_data
+        return {agent: value[index] for agent, value in save_data.get("AGENTS").items()}
+
+    def get_agents_unlock_status(self, save_data=None) -> dict:
         """
         Gets a dict of all agents and their status.
 
         Returns:
             dict: A dict of all agents and their unlock status.
         """
-        return {
-            agent: value[0] for agent, value in self.save_data.get("AGENTS").items()
-        }
+        return self._get_agents_status(save_data, 0)
 
-    def get_random_dict(self) -> dict:
+    def get_random_dict(self, save_data=None) -> dict:
         """
         Gets a list of agents that have been unlocked.
 
         Returns:
             list: A list of agents that have been unlocked.
         """
-        return {
-            agent: value[1]
-            for agent, value in self.save_data.get("AGENTS").items()
-            if value
-        }
+        return self._get_agents_status(save_data, 1)
 
     def get_map_dict(self) -> dict:
         """
@@ -112,26 +120,34 @@ class SaveManager:
         """
         return self.save_data.get("MAP_SPECIFIC_AGENTS")
 
-    def get_unlocked_agents(self) -> list:
+    def get_unlocked_agents(self, save_data=None) -> list:
         """
         Gets a list of agents that have been unlocked.
 
         Returns:
             list: A list of agents that have been unlocked.
         """
-        return [agent for agent, value in self.get_agents_status().items() if value]
+        if save_data is None:
+            save_data = self.save_data
 
-    def is_unlocked(self, agent_name: str) -> bool:
+        return [
+            agent
+            for agent, value in self.get_agents_unlock_status(save_data).items()
+            if value
+        ]
+
+    def is_enabled(self, agent_name: str, index=0) -> bool:
         """
-        Checks if an agent has been unlocked.
+        Checks if an agent has a true value, meaning it is enabled.
 
         Args:
             agent_name (str): The name of the agent to check.
+            index (int): The index of the agent to check (0=Unlocked, 1=Random). 0 is the default.
 
         Returns:
             bool: True if the agent has been unlocked, False otherwise.
         """
-        return self.get_agents_status().get(agent_name)
+        return self._get_agents_status(index=index).get(agent_name)
 
     # endregion
 
@@ -159,6 +175,14 @@ class SaveManager:
             index (int): The index of the agent to set the status of (0=Unlocked, 1=Random). 0 is the default.
         """
         self.save_data["AGENTS"][agent_name][index] = status
+        
+        if self.is_enabled(agent_name, 1) and index == 0:
+            self.save_data["AGENTS"][agent_name][1] = False
+            
+        
+        if self.get_current_agent() == agent_name and not status:
+            self.set_current_agent(self.get_unlocked_agents()[0])
+            
 
     def set_active(self, save_name: str) -> None:
         """
@@ -228,12 +252,16 @@ class SaveManager:
             for agent in agent_list:
                 if agent not in save_data.get("AGENTS"):
                     save_data["AGENTS"][agent] = [False, False]
-                if agent in self.file_manager.get_value(FILE.AGENT_CONFIG, "DEFAULT_AGENTS"):
+                if agent in self.file_manager.get_value(
+                    FILE.AGENT_CONFIG, "DEFAULT_AGENTS"
+                ):
                     save_data["AGENTS"][agent][0] = True
 
             # Remove any agents that are not in the agent list
             save_data["AGENTS"] = {
-                agent: value for agent, value in save_data.get("AGENTS").items() if agent in agent_list
+                agent: value
+                for agent, value in save_data.get("AGENTS").items()
+                if agent in agent_list
             }
 
             # Sorts the agents by name
@@ -260,6 +288,15 @@ class SaveManager:
                     save_data.get("MAP_SPECIFIC_AGENTS").items()
                 )
             }
+
+            selected_agent = save_data.get("SELECTED_AGENT")
+            available_agents = self.get_unlocked_agents(save_data)
+
+            save_data["SELECTED_AGENT"] = (
+                selected_agent
+                if selected_agent in available_agents
+                else available_agents[0]
+            )
 
             # Saves the updated save file
             with open(f"{self.FOLDER_PATH}/{save_file}", "w") as file:
