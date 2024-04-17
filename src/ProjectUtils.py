@@ -50,6 +50,20 @@ class FILE(Enum):
     DEFAULT_THEME = f"{FOLDER.THEMES.value}/default-theme.json"
 
 
+class FRAME(Enum):
+    """
+    Emum for frame names used in the project
+    """
+
+    OVERVIEW = "Overview"
+    AGENT_TOGGLE = "Agent Toggle"
+    RANDOM_SELECT = "Random Select"
+    MAP_TOGGLE = "Map Toggle"
+    SAVE_FILES = "Save Files"
+    TOOLS = "Tools"
+    SETTINGS = "Settings"
+
+
 def GET_WORKING_DIR():
     """
     Returns the working directory of the project
