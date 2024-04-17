@@ -295,7 +295,9 @@ class ThemedDropdown(ctk.CTkOptionMenu):
     def enable(self) -> None:
         self.configure(state=ctk.NORMAL)
 
+
 # region: Checkboxes
+
 
 class ThemedCheckbox(ctk.CTkCheckBox):
     def __init__(
@@ -305,17 +307,15 @@ class ThemedCheckbox(ctk.CTkCheckBox):
         variable: ctk.BooleanVar,
         **kwargs,
     ):
-        super().__init__(
-            parent, text=text, variable=variable, **kwargs
-        )
+        super().__init__(parent, text=text, variable=variable, **kwargs)
         self.theme = parent.theme
         self.text = text
         self.variable = variable
-        
+
         text_color = kwargs.get("text_color", self.theme["text"])
         fg_color = kwargs.get("fg_color", self.theme["accent"])
         hover_color = kwargs.get("hover_color", self.theme["accent-hover"])
-        command= kwargs.get("command", None)
+        command = kwargs.get("command", None)
 
         self.configure(
             font=self.theme["button"],
@@ -343,9 +343,7 @@ class DependentCheckbox(ThemedCheckbox):
         dependent_variable: ctk.BooleanVar,
         **kwargs,
     ):
-        super().__init__(
-            parent, text=text, variable=variable, **kwargs
-        )
+        super().__init__(parent, text=text, variable=variable, **kwargs)
         self.dependent_variable = dependent_variable
         self.dependent_variable.trace_add("write", self.dependent_variable_update)
         self.dependent_variable_update()
@@ -356,6 +354,7 @@ class DependentCheckbox(ThemedCheckbox):
         else:
             self.configure(state=ctk.DISABLED)
             self.variable.set(False)
+
 
 # endregion
 
@@ -391,7 +390,7 @@ class SideFrame(ctk.CTkFrame):
 
     def get_button_text(self, var: ctk.BooleanVar, text: list[str]) -> str:
         return text[0] if var.get() else text[1]
-    
+
     @abstractmethod
     def on_raise(self) -> None:
         """
@@ -399,6 +398,23 @@ class SideFrame(ctk.CTkFrame):
         It performs some actions related to the raising behavior.
         """
         pass
+
+
+class ThemedScrollableFrame(ctk.CTkScrollableFrame):
+    def __init__(self, parent, *args, **kwargs) -> None:
+        super().__init__(parent, *args, **kwargs)
+        self.parent = parent
+        self.theme = parent.theme
+        self.configure(
+            fg_color=self.theme["foreground"],
+            label_fg_color=self.theme["foreground-highlight"],
+            scrollbar_button_color=self.theme["accent"],
+            scrollbar_button_hover_color=self.theme["accent-hover"],
+            corner_radius=10,
+            label_font=self.theme["label"],
+            label_text_color=self.theme["text"],
+            label_anchor=ctk.CENTER,
+        )
 
 
 # endregion
