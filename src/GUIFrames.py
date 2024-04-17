@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from GUI import GUI
 
-from ProjectUtils import BRIGHTEN_COLOR, FILE
+from ProjectUtils import BRIGHTEN_COLOR, FILE, FRAME
 from CustomElements import *
 
 # region: Navigation Frame
@@ -54,21 +54,15 @@ class NavigationFrame(ctk.CTkFrame):
 
         # TODO: Uncomment map specific when better solution is implemented
         buttons = [
-            "Overview",
-            "Agent Toggle",
-            "Random Select",
-            # "Map Specific",
-            "Save Files",
-            "Tools",
-            "Settings",
+            frame_enum for frame_enum in FRAME if frame_enum.value != "Map Toggle"
         ]
 
         self.nav_buttons = dict()
 
-        for button_text in buttons:
-            self.nav_buttons[button_text] = ctk.CTkButton(
+        for frame_enum in buttons:
+            self.nav_buttons[frame_enum] = ctk.CTkButton(
                 self,
-                text=button_text,
+                text=frame_enum.value,
                 height=40,
                 corner_radius=0,
                 border_spacing=10,
@@ -77,9 +71,9 @@ class NavigationFrame(ctk.CTkFrame):
                 text_color=self.theme["text"],
                 hover_color=BRIGHTEN_COLOR(self.theme["foreground"], 1.5),
                 font=self.parent.theme["button"],
-                command=lambda button=button_text: self.parent.select_frame(button),
+                command=lambda frame=frame_enum: self.parent.select_frame(frame),
             )
-            self.nav_buttons[button_text].pack(fill=ctk.X)
+            self.nav_buttons[frame_enum].pack(fill=ctk.X)
 
         self.exit_button = ctk.CTkButton(
             self,
@@ -93,20 +87,20 @@ class NavigationFrame(ctk.CTkFrame):
         )
         self.exit_button.pack(side=ctk.BOTTOM, pady=10, padx=10, fill=ctk.X)
 
-    def highlight_button(self, button) -> None:
+    def highlight_button(self, frame: FRAME) -> None:
         """
         Highlights the specified button.
 
         Parameters:
-        - button: The name of the button to be highlighted.
+        - frame (FRAME): The enum of the button to be highlighted.
         """
-        for button_name in self.nav_buttons:
-            if button_name == button:
-                self.nav_buttons[button_name].configure(
+        for button in self.nav_buttons:
+            if frame == button:
+                self.nav_buttons[frame].configure(
                     fg_color=BRIGHTEN_COLOR(self.theme["foreground"], 1.5)
                 )
             else:
-                self.nav_buttons[button_name].configure(fg_color="transparent")
+                self.nav_buttons[button].configure(fg_color="transparent")
 
     def quit_program(self) -> None:
         """
@@ -184,7 +178,7 @@ class OverviewFrame(SideFrame):
 
         self.instalocker_status_button = DependentButton(
             self.left_frame,
-            variable=self.parent.instalocker.locking,
+            variable=self.parent.instalocker.in_locking_state,
             dependent_variable=self.parent.is_thread_running,
             text=["Locking", "Waiting", "None"],
             command=self.parent.instalocker.toggle_locking,
@@ -371,7 +365,7 @@ class OverviewFrame(SideFrame):
 
         This method raises the "Save Files" frame to the top, making it visible to the user.
         """
-        self.parent.select_frame("Save Files")
+        self.parent.select_frame(FRAME.SAVE_FILES)
 
     def redirect_tools_frame(self) -> None:
         """
@@ -379,7 +373,15 @@ class OverviewFrame(SideFrame):
 
         This method raises the 'Tools' frame to the top, making it visible to the user.
         """
-        self.parent.select_frame("Tools")
+        self.parent.select_frame(FRAME.TOOLS)
+
+    def update_dropdown_options(self) -> None:
+        """
+        Updates the options in the agent dropdown based on the unlocked agents.
+        """
+        self.agent_dropdown.configure(
+            values=self.parent.save_manager.get_unlocked_agents()
+        )
 
     def update_current_save_button(self) -> None:
         """
@@ -391,8 +393,7 @@ class OverviewFrame(SideFrame):
         """
         Selects an agent based on the value of `selected_agent` attribute in the parent object.
         """
-        # TODO: Implement this method
-        print(self.parent.selected_agent.get())
+        self.parent.set_agent()
 
     def toggle_hover(self) -> None:
         """
@@ -430,14 +431,6 @@ class OverviewFrame(SideFrame):
         This method calls the `toggle_anti_afk` method of the parent `tools` object.
         """
         self.parent.tools.toggle_anti_afk()
-
-    def toggle_drop_spike(self) -> None:
-        """
-        Toggles the drop spike functionality.
-
-        This method calls the `toggle_drop_spike` method of the parent's `tools` object.
-        """
-        self.parent.tools.toggle_drop_spike()
 
 
 # endregion
@@ -538,6 +531,7 @@ class AgentToggleFrame(SideFrame):
 
         self.manage_super_checkboxes()
         self.parent.save_manager.save_file()
+        self.parent.agent_status_changed()
 
     def toggle_none(self) -> None:
         """
@@ -552,6 +546,7 @@ class AgentToggleFrame(SideFrame):
 
         self.manage_super_checkboxes()
         self.parent.save_manager.save_file()
+        self.parent.agent_status_changed()
 
     def manage_super_checkboxes(self) -> None:
         """
@@ -594,6 +589,7 @@ class AgentToggleFrame(SideFrame):
             agent, self.toggleable_agent_vars[agent].get()
         )
         self.parent.save_manager.save_file()
+        self.parent.agent_status_changed()
 
 
 # endregion
