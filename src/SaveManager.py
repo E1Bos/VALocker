@@ -206,7 +206,7 @@ class SaveManager:
             )
 
         self.current_save = save_name
-        self.file_manager.set_value(FILE.USER_SETTINGS, "ACTIVE_SAVE_FILE", save_name)
+        self.file_manager.set_value(FILE.SETTINGS, "ACTIVE_SAVE_FILE", save_name)
         self.logger.info(f"Save file set to {self.get_current_save_name()}.")
 
         with open(f"{self.FOLDER_PATH}/{self.current_save}", "r") as file:
