@@ -1,6 +1,5 @@
 from enum import Enum
 import os
-import colorsys
 
 
 class URL(Enum):
