@@ -1,12 +1,19 @@
 import json
 import colorsys
 
+from ProjectUtils import FOLDER, GET_WORKING_DIR
+
 
 class ThemeManager:
+    """
+    Manages the theme for the application and provides methods to set and retrieve the theme.
+    """
+
     def __init__(self) -> None:
         self.theme = None
+        self.working_dir = GET_WORKING_DIR()
 
-        with open("style.qss", "r") as style_file:
+        with open(f"src/{FOLDER.UI_FOLDER.value}/style.qss", "r") as style_file:
             self.style_sheet = style_file.read()
 
     def setTheme(self, theme_name: str) -> None:
@@ -16,7 +23,9 @@ class ThemeManager:
         Args:
             theme_name (str): The name of the theme to set.
         """
-        with open(f"themes/{theme_name}-theme.json", "r") as theme_file:
+        with open(
+            f"{self.working_dir}/{FOLDER.THEMES.value}/{theme_name}-theme.json", "r"
+        ) as theme_file:
             self.theme = json.load(theme_file)
 
         for element_to_brighten in [
@@ -31,8 +40,6 @@ class ThemeManager:
 
         for key, value in self.theme.items():
             self.style_sheet = self.style_sheet.replace(f"{key};", f"{value};")
-
-        
 
     def brightenColor(self, hex_color: str, amount: int):
         """
@@ -63,6 +70,12 @@ class ThemeManager:
         return "#{:02x}{:02x}{:02x}".format(int(r * 255), int(g * 255), int(b * 255))
 
     def getTheme(self):
+        """
+        Retrieves the current theme's style sheet.
+
+        Returns:
+            str: The style sheet of the current theme.
+        """
         if self.theme:
             return self.style_sheet
 
