@@ -1,47 +1,48 @@
-from customtkinter import BooleanVar, IntVar
-from CustomLogger import CustomLogger
 import time
 import threading
 
+# Custom Imports
+from CustomLogger import CustomLogger
 
-class Instalocker:
+
+class Instalocker():
     def __init__(self) -> None:
         self.logger = CustomLogger("Instalocker").get_logger()
 
         self.stop_flag = False
 
-        self.in_locking_state = BooleanVar(value=True)
-        self.hover = BooleanVar(value=False)
-        self.random_select = BooleanVar(value=False)
-        self.exclusiselect = BooleanVar(value=False)
-        self.map_specific = BooleanVar(value=False)
-        self.agent_index = IntVar(value=0)
+        self.in_locking_state = True
+        self.hover = False
+        self.random_select = False
+        self.exclusiselect = False
+        self.map_specific = False
+        self.agent_index = 0
 
         self.box_coords = list()
 
     # region: Toggles
 
     def toggle_locking(self):
-        self.in_locking_state.set(not self.in_locking_state.get())
+        self.in_locking_state = not self.in_locking_state
 
     def toggle_hover(self):
-        self.hover.set(not self.hover.get())
+        self.hover = not self.hover
 
     def toggle_random_select(self):
-        self.random_select.set(not self.random_select.get())
+        self.random_select = not self.random_select
 
     def toggle_map_specific(self):
-        self.map_specific.set(not self.map_specific.get())
+        self.map_specific = not self.map_specific
 
     def toggle_exclusiselect(self):
-        self.exclusiselect.set(not self.exclusiselect.get())
+        self.exclusiselect = not self.exclusiselect
 
     # endregion
 
     # region: Setters
 
     def set_agent_index(self, index: int):
-        self.agent_index.set(index)
+        self.agent_index = index
         self.logger.info(f"Agent index set to {index}")
 
     def set_box_coords(self, coords: list):
@@ -52,19 +53,19 @@ class Instalocker:
     # region: Getters
 
     def get_locking(self):
-        return self.in_locking_state.get()
+        return self.in_locking_state
 
     def get_hover(self):
-        return self.hover.get()
+        return self.hover
 
     def get_random_select(self):
-        return self.random_select.get()
+        return self.random_select
 
     def get_map_specific(self):
-        return self.map_specific.get()
+        return self.map_specific
 
     def get_exclusiselect(self):
-        return self.exclusiselect.get()
+        return self.exclusiselect
 
     # endregion
 

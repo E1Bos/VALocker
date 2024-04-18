@@ -1,14 +1,13 @@
 import os
 import requests
 import json
-import shutil
 
 # Custom imports
 from CustomLogger import CustomLogger
-from ProjectUtils import URL, FOLDER, FILE, GET_WORKING_DIR
+from Constants import URL, FOLDER, FILE, GET_WORKING_DIR
 
 
-class FileManager:
+class FileManager():
     """
     The FileManager class is responsible for managing the required files and directories for the VALocker application.
     It provides methods to ensure that the required files exist, download missing files, migrate old files to a new directory structure,
@@ -21,7 +20,6 @@ class FileManager:
         set_config(FILE, dict): Sets the configuration dictionary for the specified file.
     """
 
-    # TODO: Replace "app_defaults/" with None when the app is ready for release
     def __init__(self) -> None:
         self._REQUIRED_FOLDERS = {
             FOLDER.SAVE_FILES,

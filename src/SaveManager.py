@@ -1,11 +1,13 @@
-from CustomLogger import CustomLogger
-from ProjectUtils import FOLDER, FILE, GET_WORKING_DIR
-from FileManager import FileManager
 import os
 import json
 
+# Custom Imports
+from CustomLogger import CustomLogger
+from Constants import FOLDER, FILE, GET_WORKING_DIR
+from FileManager import FileManager
 
-class SaveManager:
+
+class SaveManager():
     def __init__(self, file_manager: FileManager) -> None:
         self.logger = CustomLogger("Save Manager").get_logger()
 

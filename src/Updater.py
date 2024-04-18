@@ -2,12 +2,12 @@ import requests
 import time
 
 # Custom imports
-from ProjectUtils import URL, FOLDER, FILE
+from Constants import URL, FOLDER, FILE
 from CustomLogger import CustomLogger
 from FileManager import FileManager
 
 
-class Updater:
+class Updater():
     def __init__(
         self, release_version, file_manager: FileManager, check_frequency=3600
     ):

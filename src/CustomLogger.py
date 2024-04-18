@@ -1,9 +1,9 @@
 import logging
 import os
-from ProjectUtils import FOLDER, GET_WORKING_DIR
+from Constants import FOLDER, GET_WORKING_DIR
 
 
-class CustomLogger:
+class CustomLogger():
     """
     A custom logger class for logging messages to a file.
 
