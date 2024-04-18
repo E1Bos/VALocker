@@ -19,8 +19,9 @@ class FOLDER(Enum):
     """
 
     # Specific folder to use (None for AppData/roaming)
-    STORAGE_FOLDER = "app_defaults/"
+    STORAGE_FOLDER = "app_defaults"
     # STORAGE_FOLDER = None
+    UI_FOLDER = "ui_files"
 
     # Where default files are stored
     DEFAULTS = "app_defaults"
@@ -72,25 +73,3 @@ def GET_WORKING_DIR():
         return FOLDER.STORAGE_FOLDER.value
     else:
         return os.path.join(os.environ["APPDATA"], FOLDER.PARENT_FOLDER.value)
-
-
-def BRIGHTEN_COLOR(hex_color, increase_factor):
-    # Remove the '#' from the start of hex_color
-    hex_color = hex_color.lstrip("#")
-
-    # Convert hex color to RGB
-    rgb_color = tuple(int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
-
-    # Convert RGB to HLS
-    h, l, s = colorsys.rgb_to_hls(
-        rgb_color[0] / 255.0, rgb_color[1] / 255.0, rgb_color[2] / 255.0
-    )
-
-    # Increase the lightness
-    l = max(min(l * increase_factor, 1), 0)
-
-    # Convert back to RGB
-    r, g, b = colorsys.hls_to_rgb(h, l, s)
-
-    # Convert RGB back to hex and return with '#'
-    return "#{:02x}{:02x}{:02x}".format(int(r * 255), int(g * 255), int(b * 255))
