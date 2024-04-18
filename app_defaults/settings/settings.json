@@ -2,7 +2,9 @@
     "VERSION": "1.0.0",
     "LAST_CHECKED": "0",
     "THEME": "default",
-    "ENABLE_ON_STARTUP": false,
+    "ACTIVE_SAVE_FILE": "default.json",
+    "FAVORITED_SAVE_FILES": [],
+    "ENABLE_ON_STARTUP": true,
     "MINIMIZE_TO_TRAY": false,
     "START_MINIMIZED": false,
     "SAFE_MODE_ON_STARTUP": false,
@@ -20,5 +22,6 @@
     "ANTI_AFK_MODE": "forward",
     "ANTIAFK_TOGGLES_AUTODROPSPIKE": false,
     "DETECT_OPEN_CHAT_THROUGH_KEYBOARD": false,
-    "START_TOOLS_THREAD_AUTOMATICALLY": true
+    "START_TOOLS_THREAD_AUTOMATICALLY": true,
+    "ALREADY_MIGRATED": true
 }
