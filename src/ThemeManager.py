@@ -3,7 +3,7 @@ import colorsys
 import re
 
 from Constants import FOLDER, GET_WORKING_DIR
-
+from CustomLogger import CustomLogger
 
 class ThemeManager():
     """
@@ -11,11 +11,14 @@ class ThemeManager():
     """
 
     def __init__(self) -> None:
+        self.logger = CustomLogger("Theme Manager").get_logger()
+        
         self.theme = None
         self.working_dir = GET_WORKING_DIR()
 
         with open(f"src/{FOLDER.UI_FOLDER.value}/style.qss", "r") as style_file:
             self.style_sheet = style_file.read()
+            self.logger.info("Loaded Default Style Sheet")
 
     def set_theme(self, theme_name: str) -> None:
         """
@@ -41,6 +44,8 @@ class ThemeManager():
 
         for key, value in self.theme.items():
             self.style_sheet = re.sub(f"{key}(?!-);", f"{value};", self.style_sheet)
+    
+        self.logger.info(f'Loaded Theme "{theme_name}"')
     
     def brighten_color(self, hex_color: str, amount: int):
         """
