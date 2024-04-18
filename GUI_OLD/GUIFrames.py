@@ -8,6 +8,7 @@ if TYPE_CHECKING:
 from ProjectUtils import BRIGHTEN_COLOR, FILE, FRAME
 from CustomElements import *
 
+
 # region: Navigation Frame
 
 

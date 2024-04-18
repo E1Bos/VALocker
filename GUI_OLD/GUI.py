@@ -11,6 +11,8 @@ from SaveManager import SaveManager
 from Updater import Updater
 from Instalocker import Instalocker
 from Tools import Tools
+
+'''
 from CustomElements import *
 from GUIFrames import *
 
@@ -270,7 +272,7 @@ class GUI(ctk.CTk):
         }
 
         nav_width = 150
-        self.nav_frame = NavigationFrame(self, width=nav_width)
+        self.nav_frame = NavigationFrame(self, width=150)
         self.nav_frame.grid(row=0, column=0, sticky="nswe")
         self.grid_columnconfigure(0, minsize=nav_width)
 
@@ -367,3 +369,5 @@ class SettingsFrame(SideFrame):
 if __name__ == "__main__":
     root = GUI()
     root.mainloop()
+
+'''
