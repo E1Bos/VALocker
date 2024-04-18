@@ -1,14 +1,36 @@
-/* Main Window */
+/* General Settings */
 
     * {
         font-family: "@font";
-        font-weight: "Normal";
+        font-weight: "Regular";
     }
 
     #MainWindow {
         background-color: @background;
     }
 
+    QLabel {
+        font-size: 12pt;
+    }
+
+    QPushButton {
+        font-size: 10pt;
+        padding: 10px 15px 10px 15px;
+        border-radius: 5px;
+        background-color: @button-disabled;
+    }
+
+    QPushButton:hover {
+        background-color: @button-disabled-hover;
+    }
+
+    QPushButton:checked {
+        background-color: @button-enabled;
+    }
+
+    QPushButton:checked:hover {
+        background-color: @button-enabled-hover;
+    }
 
 /* Navigation Bar */
 
@@ -19,43 +41,101 @@
 
     /* VALocker Label */
     #navigation_bar #title_label {
-        /* color: red; */
+        color: red;
     }
 
     /* Version Label */
     #navigation_bar #version_label {
         color: gray;
+        font-size: 8pt;
     }
 
     /* Buttons */
     #navigation_bar QPushButton {
         border: none;
         border-radius: none;
-        text-align: center;
-        padding: 8px 0px 8px 0px;
-        /* color: red; */
+        text-align: left;
+        padding: 12px 12px 12px 12px;
+        background-color: @foreground;
     }
 
     /* Buttons On Hover */
     #navigation_bar QPushButton:hover {
-        background-color: rgba(86, 101, 115, 0.5);
+        background-color: @foreground-highlight;
     }
 
     /* Buttons On Checked */
     #navigation_bar QPushButton:checked {
-        /* color: red; */
-        background-color: rgba(86, 101, 115, 0.5);
+        background-color: @foreground-highlight;
     }
 
     /* Exit Button */
     #navigation_bar #exit_button {
-        /* color: blue; */
+        border-radius: 5px;
+        background-color: @accent;
+        text-align: center;
+        padding: 5px 0px 5px 0px;
     }
 
+    /* Exit Button On Hover */
+    #navigation_bar #exit_button:hover {
+        background-color: @accent-hover;
+    }
 
+    #settings_button {
+        border-radius: 5px;
+        background-color: @accent;
+        text-align: center;
+        padding: 5px 0px 5px 0px;
+    
+    }
 
+/* Overview Frame */
 
+    #Overview QFrame {
+        background-color: @foreground;
+        border-radius: 5px;
+    }
 
-/* #header_widget {
-    background-color: #f9fafd;
-} */
+    /* Left Frame */
+
+    #action_button {
+        background-color: @accent;
+    }
+
+    #action_button:hover {
+        background-color: @accent-hover;
+    }
+
+    #save_redirect_button, #tools_redirect_button {
+        border-radius: 5px;
+        background-color: @foreground-highlight;
+        text-align: center;
+        padding: 5px 0px 5px 0px;
+    }
+
+    #save_redirect_button:hover, #tools_redirect_button:hover {
+        background-color: @foreground-highlight-hover;
+    }
+
+    #safe_mode_strength_button {
+        background-color: @accent;
+    }
+
+    #safe_mode_strength_button:hover {
+        background-color: @accent-hover;
+    }
+
+    /* Middle Frame */
+
+    #selected_agent_dropdown {
+        font-size: 12pt;
+        text-align: center;
+    }
+
+    /* Right Frame */
+
+    #last_lock_stat, #average_lock_stat, #times_used_stat, #agent_lock_stat {
+        font-size: 11pt;
+    
+    }
