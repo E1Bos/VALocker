@@ -1,0 +1,61 @@
+/* Main Window */
+
+    * {
+        font-family: "@font";
+        font-weight: "Normal";
+    }
+
+    #MainWindow {
+        background-color: @background;
+    }
+
+
+/* Navigation Bar */
+
+    /* Main Bar */
+    #navigation_bar {
+        background-color: @foreground;
+    }
+
+    /* VALocker Label */
+    #navigation_bar #title_label {
+        /* color: red; */
+    }
+
+    /* Version Label */
+    #navigation_bar #version_label {
+        color: gray;
+    }
+
+    /* Buttons */
+    #navigation_bar QPushButton {
+        border: none;
+        border-radius: none;
+        text-align: center;
+        padding: 8px 0px 8px 0px;
+        /* color: red; */
+    }
+
+    /* Buttons On Hover */
+    #navigation_bar QPushButton:hover {
+        background-color: rgba(86, 101, 115, 0.5);
+    }
+
+    /* Buttons On Checked */
+    #navigation_bar QPushButton:checked {
+        /* color: red; */
+        background-color: rgba(86, 101, 115, 0.5);
+    }
+
+    /* Exit Button */
+    #navigation_bar #exit_button {
+        /* color: blue; */
+    }
+
+
+
+
+
+/* #header_widget {
+    background-color: #f9fafd;
+} */
