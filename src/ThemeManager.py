@@ -1,10 +1,11 @@
 import json
 import colorsys
+import re
 
-from ProjectUtils import FOLDER, GET_WORKING_DIR
+from Constants import FOLDER, GET_WORKING_DIR
 
 
-class ThemeManager:
+class ThemeManager():
     """
     Manages the theme for the application and provides methods to set and retrieve the theme.
     """
@@ -16,7 +17,7 @@ class ThemeManager:
         with open(f"src/{FOLDER.UI_FOLDER.value}/style.qss", "r") as style_file:
             self.style_sheet = style_file.read()
 
-    def setTheme(self, theme_name: str) -> None:
+    def set_theme(self, theme_name: str) -> None:
         """
         Sets the theme for the application, and brightens the colors for hover effects.
 
@@ -34,14 +35,14 @@ class ThemeManager:
             "@button-disabled",
             "@foreground-highlight",
         ]:
-            self.theme[f"@{element_to_brighten}-hover"] = self.brightenColor(
+            self.theme[f"{element_to_brighten}-hover"] = self.brighten_color(
                 self.theme[element_to_brighten], 1.1
             )
 
         for key, value in self.theme.items():
-            self.style_sheet = self.style_sheet.replace(f"{key};", f"{value};")
-
-    def brightenColor(self, hex_color: str, amount: int):
+            self.style_sheet = re.sub(f"{key}(?!-);", f"{value};", self.style_sheet)
+    
+    def brighten_color(self, hex_color: str, amount: int):
         """
         Brightens a given hex color by increasing its lightness.
 
@@ -69,7 +70,7 @@ class ThemeManager:
         # Convert RGB back to hex
         return "#{:02x}{:02x}{:02x}".format(int(r * 255), int(g * 255), int(b * 255))
 
-    def getTheme(self):
+    def get_theme(self):
         """
         Retrieves the current theme's style sheet.
 
@@ -82,4 +83,4 @@ class ThemeManager:
 
 if __name__ == "__main__":
     theme_manager = ThemeManager()
-    theme_manager.setTheme("default")
+    theme_manager.set_theme("default")
