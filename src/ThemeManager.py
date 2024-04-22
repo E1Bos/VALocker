@@ -1,24 +1,17 @@
 import json
-import colorsys
-import re
 
-from Constants import FOLDER, GET_WORKING_DIR
+from Constants import FOLDER, GET_WORKING_DIR, BRIGHTEN_COLOR
 from CustomLogger import CustomLogger
 
-class ThemeManager():
+
+class ThemeManager:
+    logger = CustomLogger("Theme Manager").get_logger()
+    working_dir = GET_WORKING_DIR()
+    theme = None
+
     """
     Manages the theme for the application and provides methods to set and retrieve the theme.
     """
-
-    def __init__(self) -> None:
-        self.logger = CustomLogger("Theme Manager").get_logger()
-        
-        self.theme = None
-        self.working_dir = GET_WORKING_DIR()
-
-        with open(f"src/{FOLDER.UI_FOLDER.value}/style.qss", "r") as style_file:
-            self.style_sheet = style_file.read()
-            self.logger.info("Loaded Default Style Sheet")
 
     def set_theme(self, theme_name: str) -> None:
         """
@@ -33,47 +26,19 @@ class ThemeManager():
             self.theme = json.load(theme_file)
 
         for element_to_brighten in [
-            "@accent",
-            "@button-enabled",
-            "@button-disabled",
-            "@foreground-highlight",
+            "accent",
+            "button-enabled",
+            "button-disabled",
+            "foreground-highlight",
         ]:
-            self.theme[f"{element_to_brighten}-hover"] = self.brighten_color(
+            self.theme[f"{element_to_brighten}-hover"] = BRIGHTEN_COLOR(
                 self.theme[element_to_brighten], 1.1
             )
 
-        for key, value in self.theme.items():
-            self.style_sheet = re.sub(f"{key}(?!-);", f"{value};", self.style_sheet)
-    
+        self.theme["label"] = (self.theme["font"], 16)
+        self.theme["button"] = (self.theme["font"], 14)
+
         self.logger.info(f'Loaded Theme "{theme_name}"')
-    
-    def brighten_color(self, hex_color: str, amount: int):
-        """
-        Brightens a given hex color by increasing its lightness.
-
-        Args:
-            hex_color (str): The hex color code to be brightened.
-            amount (int): The amount by which to increase the lightness of the color.
-
-        Returns:
-            str: The brightened hex color code.
-
-        """
-        hex_color = hex_color.lstrip("#")
-
-        rgb_color = tuple(int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
-
-        h, l, s = colorsys.rgb_to_hls(
-            rgb_color[0] / 255.0, rgb_color[1] / 255.0, rgb_color[2] / 255.0
-        )
-
-        # Increase the lightness
-        l = max(min(l * amount, 1), 0)
-
-        r, g, b = colorsys.hls_to_rgb(h, l, s)
-
-        # Convert RGB back to hex
-        return "#{:02x}{:02x}{:02x}".format(int(r * 255), int(g * 255), int(b * 255))
 
     def get_theme(self):
         """
@@ -83,7 +48,7 @@ class ThemeManager():
             str: The style sheet of the current theme.
         """
         if self.theme:
-            return self.style_sheet
+            return self.theme
 
 
 if __name__ == "__main__":
