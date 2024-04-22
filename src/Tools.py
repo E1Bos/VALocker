@@ -1,22 +1,44 @@
+import time
+import threading
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from VALocker import VALocker
+
+from customtkinter import BooleanVar, IntVar
+
 # Custom Imports
 from CustomLogger import CustomLogger
 
 
 class Tools():
-    def __init__(self):
-        self.logger = CustomLogger("Tools").get_logger()
+    logger = CustomLogger("Tools").get_logger()
+    
+    stop_flag = False
+    
+    anti_afk: BooleanVar
+    drop_spike = BooleanVar
+    
+    def __init__(self, parent:"VALocker"):
+        self.anti_afk = parent.anti_afk
+        self.drop_spike = parent.drop_spike
+    
+    # region: Threading
 
-        self.anti_afk = False
-        self.drop_spike = False
+    def main(self):
+        while not self.stop_flag:
+            time.sleep(1)
+            # TODO: Implement logic
 
-    def toggle_anti_afk(self):
-        self.anti_afk = not self.anti_afk
+    def start(self):
+        self.stop_flag = False
+        self.logger.info("Thread started")
+        self.thread = threading.Thread(target=self.main, daemon=True)
+        self.thread.start()
 
-    def toggle_drop_spike(self):
-        self.drop_spike = not self.drop_spike
+    def stop(self):
+        self.stop_flag = True
+        self.logger.info("Thread stopped")
 
-    def get_anti_afk(self):
-        return self.anti_afk
-
-    def get_drop_spike(self):
-        return self.drop_spike
+    # endregion
