@@ -1,73 +1,37 @@
 import time
 import threading
+from typing import TYPE_CHECKING
+
+from customtkinter import BooleanVar, IntVar
+
+if TYPE_CHECKING:
+    from VALocker import VALocker
 
 # Custom Imports
 from CustomLogger import CustomLogger
 
 
-class Instalocker():
-    def __init__(self) -> None:
-        self.logger = CustomLogger("Instalocker").get_logger()
+class Instalocker:
+    logger = CustomLogger("Instalocker").get_logger()
 
-        self.stop_flag = False
+    stop_flag = False
 
-        self.in_locking_state = True
-        self.hover = False
-        self.random_select = False
-        self.exclusiselect = False
-        self.map_specific = False
-        self.agent_index = 0
+    state: BooleanVar
+    hover: BooleanVar
+    random_select: BooleanVar
+    exclusiselect: BooleanVar
+    map_specific: BooleanVar
+    agent_index: IntVar
+    box_coords: list
 
-        self.box_coords = list()
-
-    # region: Toggles
-
-    def toggle_locking(self):
-        self.in_locking_state = not self.in_locking_state
-
-    def toggle_hover(self):
-        self.hover = not self.hover
-
-    def toggle_random_select(self):
-        self.random_select = not self.random_select
-
-    def toggle_map_specific(self):
-        self.map_specific = not self.map_specific
-
-    def toggle_exclusiselect(self):
-        self.exclusiselect = not self.exclusiselect
-
-    # endregion
-
-    # region: Setters
-
-    def set_agent_index(self, index: int):
-        self.agent_index = index
-        self.logger.info(f"Agent index set to {index}")
-
-    def set_box_coords(self, coords: list):
-        self.box_coords = coords
-
-    # endregion
-
-    # region: Getters
-
-    def get_locking(self):
-        return self.in_locking_state
-
-    def get_hover(self):
-        return self.hover
-
-    def get_random_select(self):
-        return self.random_select
-
-    def get_map_specific(self):
-        return self.map_specific
-
-    def get_exclusiselect(self):
-        return self.exclusiselect
-
-    # endregion
+    def __init__(self, parent: "VALocker") -> None:
+        self.state = parent.instalocker_status
+        self.hover = parent.hover
+        self.random_select = parent.random_select
+        self.exclusiselect = parent.exclusiselect
+        self.map_specific = parent.map_specific
+        self.agent_index = parent.agent_index
+        self.box_coords = parent.box_coords
 
     # region: Threading
 
