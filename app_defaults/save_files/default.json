@@ -1,113 +1,113 @@
 {
-    "SELECTED_AGENT": "Brimstone",
-    "AGENTS": {
-        "Astra": [
+    "selectedAgent": "brimstone",
+    "agents": {
+        "astra": [
             false,
             false
         ],
-        "Breach": [
+        "breach": [
             false,
             false
         ],
-        "Brimstone": [
+        "brimstone": [
             true,
             false
         ],
-        "Chamber": [
+        "chamber": [
             false,
             false
         ],
-        "Clove": [
+        "clove": [
             false,
             false
         ],
-        "Cypher": [
+        "cypher": [
             false,
             false
         ],
-        "Deadlock": [
+        "deadlock": [
             false,
             false
         ],
-        "Fade": [
+        "fade": [
             false,
             false
         ],
-        "Gekko": [
+        "gekko": [
             false,
             false
         ],
-        "Harbor": [
+        "harbor": [
             false,
             false
         ],
-        "Iso": [
+        "iso": [
             false,
             false
         ],
-        "Jett": [
+        "jett": [
             true,
             false
         ],
-        "Kayo": [
+        "kayo": [
             false,
             false
         ],
-        "Killjoy": [
+        "killjoy": [
             false,
             false
         ],
-        "Neon": [
+        "neon": [
             false,
             false
         ],
-        "Omen": [
+        "omen": [
             false,
             false
         ],
-        "Phoenix": [
+        "phoenix": [
             true,
             false
         ],
-        "Raze": [
+        "raze": [
             false,
             false
         ],
-        "Reyna": [
+        "reyna": [
             false,
             false
         ],
-        "Sage": [
+        "sage": [
             true,
             false
         ],
-        "Skye": [
+        "skye": [
             false,
             false
         ],
-        "Sova": [
+        "sova": [
             true,
             false
         ],
-        "Viper": [
+        "viper": [
             false,
             false
         ],
-        "Yoru": [
+        "yoru": [
             false,
             false
         ]
     },
-    "MAP_SPECIFIC_AGENTS": {
-        "Ascent": null,
-        "Bind": null,
-        "Breeze": null,
-        "Fracture": null,
-        "Haven": null,
-        "Icebox": null,
-        "Lotus": null,
-        "Pearl": null,
-        "Split": null,
-        "Sunset": null
+    "mapSpecificAgents": {
+        "ascent": null,
+        "bind": null,
+        "breeze": null,
+        "fracture": null,
+        "haven": null,
+        "icebox": null,
+        "lotus": null,
+        "pearl": null,
+        "split": null,
+        "sunset": null
     }
 }

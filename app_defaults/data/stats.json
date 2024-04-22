@@ -1,9 +1,5 @@
 {
-    "TIMES_USED": 0,
-    "TTL": [],
-    "TTL_SAFE": [
-        [],
-        [],
-        []
-    ]
+	"timesUsed": 0,
+	"timeToLock": [],
+	"timeToLockSafe": [[], [], []]
 }

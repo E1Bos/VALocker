@@ -1,57 +1,30 @@
 {
-    "VERSION": "1.0.0",
-    "DEFAULT_AGENTS": [
-        "Brimstone",
-        "Jett",
-        "Phoenix",
-        "Sage",
-        "Sova"
-    ],
-    
-    "ALL_AGENTS": {
-        "CONTROLLERS": [
-            "Astra",
-            "Brimstone",
-            "Clove",
-            "Harbor",
-            "Omen",
-            "Viper"
-        ],
-        "DUELISTS": [
-            "Iso",
-            "Jett",
-            "Neon",
-            "Phoenix",
-            "Raze",
-            "Reyna",
-            "Yoru"
-        ],
-        "INITIATORS": [
-            "Breach",
-            "Deadlock",
-            "Fade",
-            "Gekko",
-            "Kayo",
-            "Skye",
-            "Sova"
-        ],
-        "SENTINELS": [
-            "Chamber",
-            "Cypher",
-            "Killjoy",
-            "Sage"
-        ]
-    },
-    "MAPS": [
-        "Ascent",
-        "Bind",
-        "Breeze",
-        "Fracture",
-        "Haven",
-        "Icebox",
-        "Lotus",
-        "Pearl",
-        "Split",
-        "Sunset"
-    ]
+	"version": "1.0.0",
+	"defaultAgents": ["brimstone", "jett", "phoenix", "sage", "sova"],
+	"allAgents": {
+		"controllers": ["astra", "brimstone", "clove", "harbor", "omen", "viper"],
+		"duelists": ["iso", "jett", "neon", "phoenix", "raze", "reyna", "yoru"],
+		"initiators": [
+			"breach",
+			"deadlock",
+			"fade",
+			"gekko",
+			"kayo",
+			"skye",
+			"sova"
+		],
+		"sentinels": ["chamber", "cypher", "killjoy", "sage"]
+	},
+	"maps": [
+		"ascent",
+		"bind",
+		"breeze",
+		"fracture",
+		"haven",
+		"icebox",
+		"lotus",
+		"pearl",
+		"split",
+		"sunset"
+	]
 }
