@@ -7,7 +7,7 @@ from CustomLogger import CustomLogger
 from Constants import URL, FOLDER, FILE, GET_WORKING_DIR
 
 
-class FileManager():
+class FileManager:
     """
     The FileManager class is responsible for managing the required files and directories for the VALocker application.
     It provides methods to ensure that the required files exist, download missing files, migrate old files to a new directory structure,
@@ -20,37 +20,30 @@ class FileManager():
         set_config(FILE, dict): Sets the configuration dictionary for the specified file.
     """
 
-    def __init__(self) -> None:
-        self._REQUIRED_FOLDERS = {
-            FOLDER.SAVE_FILES,
-            FOLDER.DATA,
-            FOLDER.LOGS,
-            FOLDER.SETTINGS,
-            FOLDER.THEMES,
-        }
+    _REQUIRED_FOLDERS: dict = {
+        FOLDER.SAVE_FILES,
+        FOLDER.DATA,
+        FOLDER.LOGS,
+        FOLDER.SETTINGS,
+        FOLDER.THEMES,
+    }
 
-        # Stores the required file enums
-        self._REQUIRED_FILES = {
-            FILE.STATS,
-            FILE.LOCKING_INFO,
-            FILE.AGENT_CONFIG,
-            FILE.SETTINGS,
-            FILE.DEFAULT_SAVE,
-            FILE.DEFAULT_THEME,
-        }
+    _REQUIRED_FILES: dict = {
+        FILE.STATS,
+        FILE.LOCKING_INFO,
+        FILE.AGENT_CONFIG,
+        FILE.SETTINGS,
+        FILE.DEFAULT_SAVE,
+        FILE.DEFAULT_THEME,
+    }
 
-        # Main directory for the files
-        self._WORKING_DIR = GET_WORKING_DIR()
+    _WORKING_DIR: str = GET_WORKING_DIR()
 
-        # URL to download the files from
-        self._DOWNLOAD_URL = f"{URL.DOWNLOAD_URL.value}/{FOLDER.DEFAULTS.value}/"
+    _DOWNLOAD_URL: str = f"{URL.DOWNLOAD_URL.value}/{FOLDER.DEFAULTS.value}/"
 
-        # Dictionary to store the data from the files in the form
-        # {file_enum: config_dict}
-        self.configs = dict()
+    configs: dict = dict()
 
-        # Set up logging
-        self._logger = CustomLogger("File Manager").get_logger()
+    _logger: CustomLogger = CustomLogger("File Manager").get_logger()
 
     # Start Function
     def setup(self) -> None:
@@ -87,11 +80,11 @@ class FileManager():
                     json.dump(file_data, f, indent=4)
 
         settings_rel_path = FILE.SETTINGS.value
-        self._settings = json.load(
+        self._settings: dict = json.load(
             open(self._absolute_file_path(settings_rel_path), "r")
         )
 
-        if self._settings.get("ALREADY_MIGRATED", False) == False:
+        if self._settings.get("alreadyMigrated", False) == False:
             self._logger.info("Files may need to be migrated, checking for old files")
             self._migrate_old_files()
 
@@ -154,17 +147,27 @@ class FileManager():
         if os.path.exists(stats_file):
             self._logger.info("Found old stats.json file, migrating to new directory")
 
-            stats_data = json.load(open(stats_file, "r"))
+            stats_data: dict = json.load(open(stats_file, "r"))
 
-            # Replace old keys with new names
-            stats_data["TTL"] = stats_data.get("TIME_TO_LOCK")[-1]
-            stats_data["TTL_SAFE"] = [
-                stats_data["TIME_TO_LOCK"][safe_strength] for safe_strength in range(3)
-            ]
+            new_stats = {
+                "timesUsed": stats_data.get("TIMES_USED"),
+                "timeToLock": stats_data.get("TIME_TO_LOCK")[-1],
+                "timeToLockSafe": [
+                    stats_data["TIME_TO_LOCK"][safe_strength]
+                    for safe_strength in range(3)
+                ],
+            }
+
+            new_settings = {
+                "favoritedSaveFiles": stats_data.get("FAVORITED_SAVE_FILES"),
+            }
+
+            print(new_stats)
+            print(new_settings)
 
             # Migrate the old stats data to the new file structure
-            self._migrate_json_data(stats_data, FILE.STATS)
-            self._migrate_json_data(stats_data, FILE.SETTINGS)
+            self._migrate_json_data(new_stats, FILE.STATS)
+            self._migrate_json_data(new_settings, FILE.SETTINGS)
 
             os.remove(stats_file)
             self._logger.info(f"Deleted {stats_file}")
@@ -175,15 +178,49 @@ class FileManager():
             self._logger.info(
                 "Found old user_settings.json file, migrating to new directory"
             )
-            user_settings_data = json.load(open(user_settings_file, "r"))
 
-            user_settings_data["ACTIVE_SAVE_FILE"] = (
-                f'{user_settings_data["ACTIVE_SAVE_FILE"]}.json'
+            user_settings_data: dict[str, any] = json.load(
+                open(user_settings_file, "r")
             )
-            self._migrate_json_data(user_settings_data, FILE.SETTINGS)
+
+            new_settings = {
+                "activeSaveFile": f"{user_settings_data.get('ACTIVE_SAVE_FILE')}.json",
+                "enableOnStartup": user_settings_data.get("ENABLE_ON_STARTUP"),
+                "minimizeToTray": user_settings_data.get("MINIMIZE_TO_TRAY"),
+                "startMinimized": user_settings_data.get("START_MINIMIZED"),
+                "safeModeOnStartup": user_settings_data.get("SAFE_MODE_ON_STARTUP"),
+                "safeModeStrengthOnStartup": user_settings_data.get(
+                    "SAFE_MODE_STRENGTH_ON_STARTUP"
+                ),
+                "lockingConfirmations": user_settings_data.get("LOCKING_CONFIRMATIONS"),
+                "menuConfirmations": user_settings_data.get("MENU_CONFIRMATIONS"),
+                "fastModeTimings": user_settings_data.get("FAST_MODE_TIMINGS"),
+                "grabKeybinds": user_settings_data.get("GRAB_KEYBINDS"),
+                "persistentRandomAgents": user_settings_data.get(
+                    "PERSISTENT_RANDOM_AGENTS"
+                ),
+                "hideDefaultSave": user_settings_data.get("HIDE_DEFAULT_SAVE_FILE"),
+                "antiAfkMode": user_settings_data.get("ANTI_AFK_MODE"),
+                "antiAfkTogglesDropSpike": user_settings_data.get(
+                    "ANTIAFK_TOGGLES_AUTODROPSPIKE"
+                ),
+                "detectOpenChat": user_settings_data.get(
+                    "DETECT_OPEN_CHAT_THROUGH_KEYBOARD"
+                ),
+                "startToolsThreadAutomatically": user_settings_data.get(
+                    "START_TOOLS_THREAD_AUTOMATICALLY"
+                ),
+            }
+
+            self._migrate_json_data(new_settings, FILE.SETTINGS)
 
             os.remove(user_settings_file)
             self._logger.info(f"Deleted {user_settings_file}")
+
+        # Check if config file exists
+        config_file = os.path.join(old_dir, "config.json")
+        if os.path.exists(config_file):
+            os.remove(config_file)
 
         # Check for save_files directory
         save_files_dir = os.path.join(old_dir, "save_files")
@@ -203,7 +240,7 @@ class FileManager():
             self._logger.info(f"Deleted {save_files_dir}")
 
         self._logger.info("Migration complete")
-        self._set_migrated_flag(True)
+        # self._set_migrated_flag(True)
 
     def _migrate_json_data(
         self, data_to_migrate: dict, file_to_migrate_to: FILE
@@ -237,22 +274,26 @@ class FileManager():
         self, old_save_file_path: str, old_save_name: str
     ) -> None:
 
-        save_data = json.load(open(old_save_file_path, "r"))
+        save_data: dict = json.load(open(old_save_file_path, "r"))
 
-        current_active_agent = save_data.get("SELECTED_AGENT")
+        current_active_agent = save_data.get("SELECTED_AGENT").lower()
 
         agent_status_list = save_data.get("UNLOCKED_AGENTS")
         agent_random_list = save_data.get("RANDOM_AGENTS")
 
-        agents = dict()
-
-        for agent in agent_status_list.keys():
-            agents[agent] = [agent_status_list[agent], agent_random_list[agent]]
+        agents = {
+            agent.lower(): [agent_status_list[agent], agent_random_list[agent]]
+            for agent in agent_status_list
+        }
+        maps = {
+            map_name.lower(): (value.lower() if value is not None else None)
+            for map_name, value in save_data.get("MAP_SPECIFIC_AGENTS").items()
+        }
 
         new_save_data = {
-            "SELECTED_AGENT": current_active_agent,
-            "AGENTS": agents,
-            "MAP_SPECIFIC_AGENTS": save_data.get("MAP_SPECIFIC_AGENTS"),
+            "selectedAgent": current_active_agent,
+            "agents": agents,
+            "mapSpecificAgents": maps,
         }
 
         new_save_file_location = os.path.join(
@@ -274,7 +315,7 @@ class FileManager():
             value (bool): The value to set for the 'ALREADY_MIGRATED' flag.
 
         """
-        self._settings["ALREADY_MIGRATED"] = value
+        self._settings["alreadyMigrated"] = value
         self.set_config(FILE.SETTINGS, self._settings)
 
     # endregion
@@ -369,7 +410,9 @@ class FileManager():
         save_path = os.path.join(self._absolute_file_path(file.value))
 
         # Download the latest version of the file
-        self._download_file(file.value, save_path)
+        data = self._download_file(file.value, save_path)
+
+        self._migrate_json_data(data, file)
 
         self._logger.info(f"Updated {file.value} to the latest version")
 
