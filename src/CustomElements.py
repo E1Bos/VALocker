@@ -422,12 +422,10 @@ class SaveButton:
         self.side_frame.favorite_button(self)
 
     def rename(self):
-        # TODO: IMPLEMENT
-        print(f"{self.save_file} renaming")
+        raise NotImplementedError("Save Rename functionality not implemented")
 
     def delete(self):
-        # TODO: IMPLEMENT
-        print(f"{self.save_file} deleted")
+        raise NotImplementedError("Save Delete functionality not implemented")
 
     # endregion
 
