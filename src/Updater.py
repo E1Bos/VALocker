@@ -8,6 +8,12 @@ from FileManager import FileManager
 
 
 class Updater():
+    _logger: CustomLogger = CustomLogger("Updater").get_logger()
+    _file_manager: FileManager
+    release_version: str
+    check_frequency: int
+    FILES_TO_CHECK: list[FILE]
+
     def __init__(
         self, release_version, file_manager: FileManager, check_frequency=3600
     ):
@@ -35,7 +41,6 @@ class Updater():
         self.release_version = release_version
         self.check_frequency = check_frequency
         self.FILES_TO_CHECK = [FILE.AGENT_CONFIG, FILE.SETTINGS]
-        self._logger = CustomLogger("Updater").get_logger()
         self._file_manager = file_manager
 
     def check_frequency_met(self) -> bool:
@@ -46,7 +51,7 @@ class Updater():
             bool: True if the check frequency has been met, False otherwise.
         """
         last_checked_release = int(
-            self._file_manager.get_value(FILE.SETTINGS, "LAST_CHECKED")
+            self._file_manager.get_value(FILE.SETTINGS, "lastChecked")
         )
 
         time_since_last_check = int(time.time()) - last_checked_release
@@ -56,6 +61,7 @@ class Updater():
                 f"Check frequency not met, checked {round(time_since_last_check / 60, 1)} minutes ago"
             )
             return False
+
         return True
 
     def check_for_version_update(self) -> bool:
@@ -100,11 +106,11 @@ class Updater():
             bool: True if the current version is older than the latest version, False otherwise.
         """
         self._logger.info(f"Comparing JSON config versions for {config_file.name}")
-        current_version = self._file_manager.get_config(config_file).get(
-            "VERSION", None
+        current_version: str = self._file_manager.get_config(config_file).get(
+            "version", None
         )
 
-        latest_version = self._get_latest_config_version(config_file.value)
+        latest_version: str = self._get_latest_config_version(config_file.value)
 
         self._logger.info(
             f"{config_file.name} : Current version: {current_version} | Latest version: {latest_version}"
@@ -128,14 +134,14 @@ class Updater():
         config_url = f"{URL.DOWNLOAD_URL.value}/{FOLDER.DEFAULTS.value}/{download_path}"
 
         try:
-            config_file = requests.get(config_url, timeout=timeout).json()
+            config_file: dict = requests.get(config_url, timeout=timeout).json()
 
         except requests.exceptions.RequestException as e:
             self._logger.error(
                 f"Failed to retrieve configuration file from {config_url}, {e}"
             )
             return None
-        return config_file.get("VERSION", None)
+        return config_file.get("version", None)
 
     # region: Release Versions
 
@@ -165,11 +171,11 @@ class Updater():
             str: The latest release version as a string, or None if an error occurred during the request.
         """
         try:
-            release_info = requests.get(URL.API_RELEASE_URL.value, timeout=timeout)
+            release_info: requests.Response = requests.get(URL.API_RELEASE_URL.value, timeout=timeout)
             release_info.raise_for_status()
 
-            release_json = release_info.json()
-            release_number = release_json.get("tag_name", None)
+            release_json: dict = release_info.json()
+            release_number: str = release_json.get("tag_name", None)
 
             if release_number is None:
                 self._logger.error(
@@ -220,12 +226,12 @@ class Updater():
 
         return False
 
-    def update_last_checked(self):
+    def update_last_checked(self) -> None:
         """
         Updates the last checked time in the settings file.
         """
         settings = self._file_manager.get_config(FILE.SETTINGS)
-        settings["LAST_CHECKED"] = int(time.time())
+        settings["lastChecked"] = int(time.time())
         self._file_manager.set_config(FILE.SETTINGS, settings)
 
 
