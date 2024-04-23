@@ -658,13 +658,6 @@ class RandomSelectFrame(SideFrame):
             self.update_super_checkboxes()
 
     def update_super_checkboxes(self):
-        all_selected = all(
-            [self.role_variables[role].get() for role in self.role_variables]
-        )
-
-        none_selected = all(
-            [not agent_var[1].get() for agent_var in self.parent.agent_status.values()]
-        )
 
         for role in self.role_variables:
             if all(
@@ -680,6 +673,14 @@ class RandomSelectFrame(SideFrame):
             else:
                 self.role_variables[role].set(False)
 
+        all_selected = all(
+            [self.role_variables[role].get() for role in self.role_variables]
+        )
+
+        none_selected = all(
+            [not agent_var[1].get() for agent_var in self.parent.agent_status.values()]
+        )
+
         self.all_variable.set(all_selected)
         self.none_variable.set(none_selected)
 
@@ -689,7 +690,6 @@ class RandomSelectFrame(SideFrame):
             self.all_checkbox.disable()
         elif none_selected:
             self.none_checkbox.disable()
-
 
 # endregion
 
@@ -729,7 +729,7 @@ class SaveFilesFrame(SideFrame):
         self.reorder_buttons()
 
     def new_save(self) -> None:
-        print("New Save")
+        raise NotImplementedError("New Save functionality not implemented")
 
     def change_save(self, save_name: str) -> None:
         self.parent.load_save(f"{save_name}.json", save_current_config=True)
