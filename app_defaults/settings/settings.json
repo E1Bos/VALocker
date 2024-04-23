@@ -19,5 +19,5 @@
 	"antiAfkTogglesDropSpike": false,
 	"detectOpenChat": false,
 	"startToolsThreadAutomatically": true,
-	"alreadyMigrated": true
+	"alreadyMigrated": false
 }
