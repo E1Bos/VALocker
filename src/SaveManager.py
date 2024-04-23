@@ -1,23 +1,24 @@
 import os
 import json
 
+from typing import Optional
+
 # Custom Imports
 from CustomLogger import CustomLogger
 from Constants import FOLDER, FILE, GET_WORKING_DIR
 from FileManager import FileManager
 
 
-class SaveManager():
+class SaveManager:
+    logger: CustomLogger = CustomLogger("Save Manager").get_logger()
+    FOLDER_PATH: str = os.path.join(GET_WORKING_DIR(), FOLDER.SAVE_FILES.value)
+    file_manager: FileManager
+    current_save_file: str = str()
+    save_data: dict[str, dict[str, list[bool] | str | None]]
+    save_files: list[str] = list()
+
     def __init__(self, file_manager: FileManager) -> None:
-        self.logger = CustomLogger("Save Manager").get_logger()
-
-        working_dir = GET_WORKING_DIR()
-        self.FOLDER_PATH = os.path.join(working_dir, FOLDER.SAVE_FILES.value)
         self.file_manager = file_manager
-
-        self.current_save = str()
-        self.save_data = dict()
-        self.save_files = list()
 
     def setup(self) -> None:
         """
@@ -37,7 +38,7 @@ class SaveManager():
         # Logs Info
         number_of_save_files = len(self.save_files)
         self.logger.info(
-            f"Found {number_of_save_files} save file{'s' if number_of_save_files > 1 else ''}."
+            f"Found {number_of_save_files} save file{'s' if number_of_save_files > 1 else ''}"
         )
 
         # Ensures all save files have the correct agent data
@@ -45,7 +46,7 @@ class SaveManager():
 
     # region: Getters
 
-    def get_all_save_files(self) -> list:
+    def get_all_save_files(self) -> list[str]:
         """
         Gets a list of all save files.
 
@@ -61,7 +62,18 @@ class SaveManager():
         Returns:
             str: The name of the current save file.
         """
-        return self.current_save.removesuffix(".json")
+        return self.current_save_file.removesuffix(".json")
+
+    def get_save_data(
+        self,
+    ) -> dict[str, str | dict[str, list[bool] | str | None]] | None:
+        """
+        Gets the save data.
+
+        Returns:
+            dict: The save data.
+        """
+        return self.save_data
 
     def get_current_agent(self) -> str:
         """
@@ -70,9 +82,9 @@ class SaveManager():
         Returns:
             str: The name of the agent that is currently selected.
         """
-        return self.save_data.get("SELECTED_AGENT")
+        return self.save_data.get("selectedAgent")
 
-    def get_all_agent_names(self) -> list:
+    def get_all_agent_names(self) -> list[str]:
         """
         Gets a list of agent names.
 
@@ -80,229 +92,119 @@ class SaveManager():
             list: A list of agent names.
         """
         return list(self.save_data.get("AGENTS").keys())
+        
 
-    def _get_agents_status(self, save_data=None, index: int = 0) -> bool:
-        """
-        Gets the unlock status of an agent.
-
-        Args:
-            agent_name (str): The name of the agent to get the status of.
-            index (int): The index of the agent to get the status of (0=Unlocked, 1=Random). 0 is the default.
-
-        Returns:
-            bool: The unlock status of the agent.
-        """
-        if save_data is None: save_data = self.save_data
-        return {agent: value[index] for agent, value in save_data.get("AGENTS").items()}
-
-    def get_agents_unlock_status(self, save_data=None) -> dict:
-        """
-        Gets a dict of all agents and their status.
-
-        Returns:
-            dict: A dict of all agents and their unlock status.
-        """
-        return self._get_agents_status(save_data, 0)
-
-    def get_random_dict(self, save_data=None) -> dict:
-        """
-        Gets a list of agents that have been unlocked.
-
-        Returns:
-            list: A list of agents that have been unlocked.
-        """
-        return self._get_agents_status(save_data, 1)
-
-    def get_map_dict(self) -> dict:
+    def get_map_dict(self) -> dict[str, list[bool] | str | None] | None:
         """
         Gets a list of maps and their associated agents.
 
         Returns:
-            list: A list of maps and their agent.
+            dict: A dictionary of maps and their associated agents.
         """
-        return self.save_data.get("MAP_SPECIFIC_AGENTS")
+        return self.save_data.get("mapSpecificAgents")
 
-    def get_unlocked_agents(self, save_data=None) -> list:
+    def get_agent_status(self) -> dict[str, list[bool]]:
         """
-        Gets a list of agents that have been unlocked.
+        Gets the status of all agents.
 
         Returns:
-            list: A list of agents that have been unlocked.
+            dict: A dictionary containing the status of all agents.
         """
-        if save_data is None:
-            save_data = self.save_data
-
-        return [
-            agent
-            for agent, value in self.get_agents_unlock_status(save_data).items()
-            if value
-        ]
-
-    def is_enabled(self, agent_name: str, index=0) -> bool:
-        """
-        Checks if an agent has a true value, meaning it is enabled.
-
-        Args:
-            agent_name (str): The name of the agent to check.
-            index (int): The index of the agent to check (0=Unlocked, 1=Random). 0 is the default.
-
-        Returns:
-            bool: True if the agent has been unlocked, False otherwise.
-        """
-        return self._get_agents_status(index=index).get(agent_name)
+        return self.save_data.get("agents")
 
     # endregion
 
-    # region: Setters
+    def load_save(self, file_name: str) -> None:
 
-    def set_current_agent(self, agent_name: str) -> None:
-        """
-        Sets the name of the agent that is currently selected.
-
-        Args:
-            agent_name (str): The name of the agent that is currently selected.
-
-        Returns:
-            None
-        """
-        self.save_data["SELECTED_AGENT"] = agent_name
-
-    def set_agent_status(self, agent_name: str, status: bool, index: int = 0) -> None:
-        """
-        Sets the unlock status of an agent.
-
-        Args:
-            agent_name (str): The name of the agent to set the status of.
-            status (bool): The status to set.
-            index (int): The index of the agent to set the status of (0=Unlocked, 1=Random). 0 is the default.
-        """
-        self.save_data["AGENTS"][agent_name][index] = status
-        
-        if self.is_enabled(agent_name, 1) and index == 0:
-            self.save_data["AGENTS"][agent_name][1] = False
-            
-        
-        if self.get_current_agent() == agent_name and not status:
-            self.set_current_agent(self.get_unlocked_agents()[0])
-            
-
-    def set_active(self, save_name: str) -> None:
-        """
-        Sets the active save file.
-
-        Args:
-            save_name (str): The name of the save file to set as active.
-
-        Returns:
-            None
-        """
-
-        if save_name.rfind(".json") == -1:
-            save_name += ".json"
-
-        if save_name not in self.save_files:
-            error_file = save_name
-            save_name = self.get_all_save_files()[0]
-            self.logger.error(
-                f"Save file {error_file} not found. Defaulting to {save_name}."
-            )
-
-        self.current_save = save_name
-        self.file_manager.set_value(FILE.SETTINGS, "ACTIVE_SAVE_FILE", save_name)
-        self.logger.info(f"Save file set to {self.get_current_save_name()}.")
-
-        with open(f"{self.FOLDER_PATH}/{self.current_save}", "r") as file:
+        with open(f"{self.FOLDER_PATH}/{file_name}", "r") as file:
             self.save_data = json.load(file)
 
-        self.logger.info(f"Save file {self.current_save} loaded.")
+        self.current_save_file = file_name
 
-    # endregion
+        self.logger.info(f'Loaded file "{file_name}"')
 
-    def save_file(self) -> None:
+    def save_file(self, save_data: Optional[dict] = None) -> None:
         """
         Saves the current save file to disk.
 
         Returns:
             None
         """
-        with open(f"{self.FOLDER_PATH}/{self.current_save}", "w") as file:
-            json.dump(self.save_data, file, indent=4)
+        if save_data is None:
+            save_data = self.save_data
 
-        self.logger.info(f"Updated file {self.current_save}")
+        with open(f"{self.FOLDER_PATH}/{self.current_save_file}", "w") as file:
+            json.dump(save_data, file, indent=4)
+
+        self.logger.info(f'Saved file "{self.current_save_file}"')
 
     def update_save_files(self) -> None:
         # List of all agent names
-        agent_list = [
+        agent_names: list = [
             agent
             for role in self.file_manager.get_value(
-                FILE.AGENT_CONFIG, "ALL_AGENTS"
+                FILE.AGENT_CONFIG, "allAgents"
             ).values()
             for agent in role
         ]
 
         # List of all map names
-        map_list = [
+        map_names = [
             map_name
-            for map_name in self.file_manager.get_value(FILE.AGENT_CONFIG, "MAPS")
+            for map_name in self.file_manager.get_value(FILE.AGENT_CONFIG, "maps")
         ]
 
+        # Iterates over all save files and update the agents and maps
         for save_file in self.save_files:
             with open(f"{self.FOLDER_PATH}/{save_file}", "r") as file:
-                save_data = json.load(file)
+                save_data: dict[str, dict] = json.load(file)
 
-            # Ensures all save files have the correct agent data
-            for agent in agent_list:
-                if agent not in save_data.get("AGENTS"):
-                    save_data["AGENTS"][agent] = [False, False]
-                if agent in self.file_manager.get_value(
-                    FILE.AGENT_CONFIG, "DEFAULT_AGENTS"
-                ):
-                    save_data["AGENTS"][agent][0] = True
+            # Remove any agents that are not in the list of agents
+            agents_to_remove = [
+                agent for agent in save_data.get("agents") if agent not in agent_names
+            ]
+            for agent in agents_to_remove:
+                save_data.get("agents").pop(agent)
 
-            # Remove any agents that are not in the agent list
-            save_data["AGENTS"] = {
-                agent: value
-                for agent, value in save_data.get("AGENTS").items()
-                if agent in agent_list
-            }
+            # Add any agents that are not in the list of agents
+            for agent in agent_names:
+                if agent not in save_data.get("agents"):
+                    save_data.get("agents")[agent] = (False, False)
 
-            # Sorts the agents by name
-            save_data["AGENTS"] = {
-                agent: value for agent, value in sorted(save_data.get("AGENTS").items())
-            }
+            save_data["agents"] = dict(sorted(save_data["agents"].items()))
 
-            # Ensures all save files have the correct map specific agent data
-            for map_name in map_list:
-                if map_name not in save_data.get("MAP_SPECIFIC_AGENTS"):
-                    save_data["MAP_SPECIFIC_AGENTS"][map_name] = None
+            # Remove any maps that are not in the list of maps
+            maps_to_remove = [
+                map_name
+                for map_name in save_data.get("mapSpecificAgents")
+                if map_name not in map_names
+            ]
+            for map_name in maps_to_remove:
+                save_data.get("mapSpecificAgents").pop(map_name)
 
-            # Remove any maps that are not in the map list
-            save_data["MAP_SPECIFIC_AGENTS"] = {
-                map_name: value
-                for map_name, value in save_data.get("MAP_SPECIFIC_AGENTS").items()
-                if map_name in map_list
-            }
+            # Add any maps that are not in the list of maps
+            for map_name in map_names:
+                if map_name not in save_data.get("mapSpecificAgents"):
+                    save_data.get("mapSpecificAgents")[map_name] = None
 
-            # Sorts the map specific agents by map name
-            save_data["MAP_SPECIFIC_AGENTS"] = {
-                map_name: value
-                for map_name, value in sorted(
-                    save_data.get("MAP_SPECIFIC_AGENTS").items()
-                )
-            }
-
-            selected_agent = save_data.get("SELECTED_AGENT")
-            available_agents = self.get_unlocked_agents(save_data)
-
-            save_data["SELECTED_AGENT"] = (
-                selected_agent
-                if selected_agent in available_agents
-                else available_agents[0]
+            save_data["mapSpecificAgents"] = dict(
+                sorted(save_data.get("mapSpecificAgents").items())
             )
+
+            # Replace the selected agent if it is not in the list of agents
+            if save_data.get("selectedAgent") not in agent_names:
+                available_agents = [
+                    agent
+                    for agent in save_data.get("agents")
+                    if save_data["agents"][agent][0]
+                ]
+                save_data["selectedAgent"] = available_agents[0]
 
             # Saves the updated save file
             with open(f"{self.FOLDER_PATH}/{save_file}", "w") as file:
                 json.dump(save_data, file, indent=4)
+
+        self.logger.info(f"Updated all save files")
 
 
 if __name__ == "__main__":
@@ -310,5 +212,4 @@ if __name__ == "__main__":
     file_manager.setup()
     save_manager = SaveManager(file_manager)
     save_manager.setup()
-    save_manager.set_active("default.json")
-    save_manager.update_save_files()
+    save_manager.load_save("default.json")
