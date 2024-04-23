@@ -6,6 +6,11 @@ from cProfile import Profile
 from pstats import Stats
 from functools import wraps
 
+def RESOURCE_PATH(relative_path: str) -> str:
+    return os.path.join(
+        os.environ.get("_MEIPASS2", os.path.abspath(".")), relative_path
+    )
+
 
 class URL(Enum):
     """
@@ -69,12 +74,12 @@ class FRAME(Enum):
 class ICON(Enum):
     ICON_PATH: str = "images/icons"
     
-    NEW_FILE: str = f"{ICON_PATH}/new_file.png"
+    NEW_FILE: str = RESOURCE_PATH(f"{ICON_PATH}/new_file.png")
     
-    DELETE: str = f"{ICON_PATH}/delete.png"
-    FAVORITE_ON: str = f"{ICON_PATH}/favorite_on.png"
-    FAVORITE_OFF: str = f"{ICON_PATH}/favorite_off.png"
-    RENAME: str = f"{ICON_PATH}/rename.png"
+    DELETE: str = RESOURCE_PATH(f"{ICON_PATH}/delete.png")
+    FAVORITE_ON: str = RESOURCE_PATH(f"{ICON_PATH}/favorite_on.png")
+    FAVORITE_OFF: str = RESOURCE_PATH(f"{ICON_PATH}/favorite_off.png")
+    RENAME: str = RESOURCE_PATH(f"{ICON_PATH}/rename.png")
 
 def GET_WORKING_DIR() -> str:
     """
@@ -100,10 +105,6 @@ def BRIGHTEN_COLOR(color: str, factor: float) -> str:
     return f"#{r:02x}{g:02x}{b:02x}"
 
 
-def RESOURCE_PATH(relative_path: str) -> str:
-    return os.path.join(
-        os.environ.get("_MEIPASS2", os.path.abspath(".")), relative_path
-    )
 
 
 # region: Profiler
