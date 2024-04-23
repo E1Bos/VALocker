@@ -51,7 +51,7 @@ class FILE(Enum):
     """
 
     AGENT_CONFIG: str = f"{FOLDER.DATA.value}/agent_config.json"
-    LOCKING_INFO: str = f"{FOLDER.DATA.value}/locking_info.json"
+    LOCKING_INFO: str = f"{FOLDER.DATA.value}/locking_config.json"
     STATS: str = f"{FOLDER.DATA.value}/stats.json"
     SETTINGS: str = f"{FOLDER.SETTINGS.value}/settings.json"
     DEFAULT_SAVE: str = f"{FOLDER.SAVE_FILES.value}/default.json"
@@ -74,8 +74,11 @@ class FRAME(Enum):
 class ICON(Enum):
     ICON_PATH: str = "images/icons"
     
-    NEW_FILE: str = RESOURCE_PATH(f"{ICON_PATH}/new_file.png")
+    DISABLED: str = RESOURCE_PATH(f"{ICON_PATH}/valocker-disabled.ico")
+    LOCKING: str = RESOURCE_PATH(f"{ICON_PATH}/valocker-locking.ico")
+    WAITING: str = RESOURCE_PATH(f"{ICON_PATH}/valocker-waiting.ico")
     
+    NEW_FILE: str = RESOURCE_PATH(f"{ICON_PATH}/new_file.png")
     DELETE: str = RESOURCE_PATH(f"{ICON_PATH}/delete.png")
     FAVORITE_ON: str = RESOURCE_PATH(f"{ICON_PATH}/favorite_on.png")
     FAVORITE_OFF: str = RESOURCE_PATH(f"{ICON_PATH}/favorite_off.png")
