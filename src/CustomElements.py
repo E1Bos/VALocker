@@ -1,10 +1,12 @@
 import customtkinter as ctk
+from PIL import Image
+import os
 from typing import TYPE_CHECKING, Callable, List, Union, Dict, Any
-from Constants import BRIGHTEN_COLOR
+from Constants import BRIGHTEN_COLOR, RESOURCE_PATH, ICON, FILE
 from abc import abstractmethod
 
 if TYPE_CHECKING:
-    from VALocker import VALocker
+    from VALocker import VALocker, SaveFilesFrame
 
 
 # region: Labels
@@ -19,9 +21,9 @@ class ThemedLabel(ctk.CTkLabel):
 
     def __init__(
         self,
-        parent: "VALocker",
-        text: str = None,
-        variable: ctk.StringVar = None,
+        parent: "SideFrame",
+        text: str = "",
+        variable: Union[ctk.StringVar, None] = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(parent, **kwargs)
@@ -78,7 +80,7 @@ class IndependentButton(ThemedButton):
 
     def __init__(
         self,
-        parent: "ctk.CTkFrame",
+        parent: "SideFrame",
         text: Union[str, list[str]],
         variable: ctk.BooleanVar,
         command: Callable,
@@ -125,11 +127,11 @@ class DependentButton(ThemedButton):
 
     def __init__(
         self,
-        parent: "ctk.CTkFrame",
+        parent: "SideFrame",
         text: list[str],
         variable: ctk.BooleanVar,
         dependent_variable: ctk.BooleanVar,
-        command: callable,
+        command: Callable[..., None],
         **kwargs,
     ):
         super().__init__(parent, command=command, **kwargs)
@@ -174,7 +176,7 @@ class SplitButton:
 
     def __init__(
         self,
-        parent: "ctk.CTkFrame",
+        parent: "ThemedFrame",
         text_left: list[str],
         text_right: list[str],
         variable_left: ctk.BooleanVar,
@@ -250,6 +252,217 @@ class SplitButton:
         self.right_button.configure(
             text=self.text_right[self.variable_right.get()],
         )
+
+    def pack(self, **kwargs):
+        self.frame.pack(**kwargs)
+
+    def grid(self, **kwargs):
+        self.frame.grid(**kwargs)
+
+
+class SaveButton:
+    icon_config = {
+        "text_color": "text",
+        "fg_color": "transparent",
+        "hover_color": "foreground-highlight-hover",
+        "corner_radius": 10,
+        "text": "",
+        "width": 40,
+    }
+
+    frame_config = {
+        "fg_color": "foreground-highlight",
+        "corner_radius": 10,
+    }
+
+    frame_colors = {"selected": "green", "unselected": "red"}
+
+    icon_size = (20, 20)
+    favorite_on_img = ctk.CTkImage(Image.open(ICON.FAVORITE_ON.value), size=icon_size)
+    favorite_off_img = ctk.CTkImage(Image.open(ICON.FAVORITE_OFF.value), size=icon_size)
+    rename_img = ctk.CTkImage(Image.open(ICON.RENAME.value), size=icon_size)
+    delete_img = ctk.CTkImage(Image.open(ICON.DELETE.value), size=icon_size)
+
+    parent: "ThemedScrollableFrame"
+    side_frame: "SaveFilesFrame"
+    theme: Dict[str, str]
+    save_file: str
+
+    selected: bool
+    favorited: bool
+
+    def __init__(
+        self,
+        parent: "ThemedScrollableFrame",
+        save_file: str,
+        **kwargs,
+    ) -> None:
+        self.parent = parent
+        self.side_frame = parent.parent
+        self.theme = parent.theme
+
+        # Selected
+        self.selected = False
+
+        # File Name
+        self.save_file = save_file
+        self.save_name = save_file.removesuffix(".json")
+
+        # If is favorited
+        self.favorited = False
+
+        frame_config = {
+            key: kwargs.get(key, self.theme.get(value, value))
+            for key, value in self.frame_config.items()
+        }
+
+        icon_config = {
+            key: kwargs.get(key, self.theme.get(value, value))
+            for key, value in self.icon_config.items()
+        }
+
+        self.frame = ThemedFrame(parent, **frame_config)
+
+        self.save_label = ThemedLabel(
+            self.frame, text=self.save_name, corner_radius=0, fg_color="transparent"
+        )
+        self.save_label.grid(row=0, column=0, sticky=ctk.W, pady=5, padx=10)
+
+        self.frame.columnconfigure(0, weight=1)
+
+        for element in [self.save_label, self.frame]:
+            element.bind("<Button-1>", self.select_save)
+            element.bind("<Enter>", self.on_hover)
+            element.bind("<Leave>", self.on_exit_hover)
+
+        self.favorite_icon = ThemedButton(
+            self.frame,
+            image=self.favorite_off_img,
+            command=self.toggle_favorite,
+            **icon_config,
+        )
+
+        self.rename_icon = ThemedButton(
+            self.frame,
+            image=self.rename_img,
+            command=self.rename,
+            **icon_config,
+        )
+
+        self.delete_icon = ThemedButton(
+            self.frame,
+            image=self.delete_img,
+            command=self.delete,
+            **icon_config,
+        )
+
+        self.icons = [self.favorite_icon]
+
+        is_default = self.save_file != os.path.basename(FILE.DEFAULT_SAVE.value)
+
+        if is_default:
+            self.icons.extend([self.rename_icon, self.delete_icon])
+
+        for col, icon in enumerate(self.icons):
+            padx = (0, 5) if col == len(self.icons) - 1 else 0
+            icon.grid(row=0, column=col + 1, sticky=ctk.E, pady=5, padx=padx)
+
+    def select_save(self, *_):
+        """
+        Selects the save and updates the side frame accordingly.
+        This only runs when a button is clicked.
+
+        If the save is already selected, the method does nothing.
+
+        Parameters:
+        *_: Variable number of arguments (unused).
+
+        Returns:
+        None
+        """
+        if self.selected:
+            return
+
+        self.side_frame.change_save(self.save_name)
+        self.set_selected(True)
+
+    def set_selected(self, value: bool):
+        """
+        Sets the selected state of the element.
+        This method is also run when the element is selected and when the button is first loaded.
+
+        Args:
+            value (bool): The value to set the selected state to.
+
+        Returns:
+            None
+        """
+        self.selected = value
+        self.configure_icons()
+        self.on_exit_hover()
+
+    # region: Icon Commands
+
+    def toggle_favorite(self):
+        """
+        Toggles the favorite status of the element.
+
+        This method updates the `favorited` attribute of the element and
+        changes the image of the favorite icon accordingly. It also calls
+        the `favorite_button` method of the `side_frame` object, passing
+        itself as an argument.
+
+        """
+        self.favorited = not self.favorited
+
+        self.favorite_icon.configure(
+            image=self.favorite_on_img if self.favorited else self.favorite_off_img
+        )
+
+        self.side_frame.favorite_button(self)
+
+    def rename(self):
+        # TODO: IMPLEMENT
+        print(f"{self.save_file} renaming")
+
+    def delete(self):
+        # TODO: IMPLEMENT
+        print(f"{self.save_file} deleted")
+
+    # endregion
+
+    def configure_icons(self):
+        config = {
+            "hover_color": self.theme["foreground-highlight-hover"],
+        }
+
+        if self.selected:
+            config["hover_color"] = self.theme["accent-hover"]
+
+        for icon in self.icons:
+            icon.configure(**config)
+
+    # region: Hover Effects
+
+    def on_hover(self, *_):
+        if not self.selected:
+            self.frame.configure(fg_color=self.theme["foreground-highlight-hover"])
+        else:
+            self.frame.configure(fg_color=self.theme["accent-hover"])
+
+    def on_exit_hover(self, *_):
+        if not self.selected:
+            self.frame.configure(fg_color=self.theme["foreground-highlight"])
+        else:
+            self.frame.configure(fg_color=self.theme["accent"])
+
+    # endregion
+
+    def grid(self, **kwargs):
+        self.frame.grid(**kwargs)
+
+    def grid_forget(self):
+        self.frame.grid_forget()
 
 
 # endregion
