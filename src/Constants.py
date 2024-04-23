@@ -1,6 +1,11 @@
 from enum import Enum
 import os
 
+# Profile Imports
+from cProfile import Profile
+from pstats import Stats
+from functools import wraps
+
 
 class URL(Enum):
     """
@@ -61,6 +66,15 @@ class FRAME(Enum):
     TOOLS: str = "Tools"
     SETTINGS: str = "Settings"
 
+class ICON(Enum):
+    ICON_PATH: str = "images/icons"
+    
+    NEW_FILE: str = f"{ICON_PATH}/new_file.png"
+    
+    DELETE: str = f"{ICON_PATH}/delete.png"
+    FAVORITE_ON: str = f"{ICON_PATH}/favorite_on.png"
+    FAVORITE_OFF: str = f"{ICON_PATH}/favorite_off.png"
+    RENAME: str = f"{ICON_PATH}/rename.png"
 
 def GET_WORKING_DIR() -> str:
     """
@@ -84,3 +98,33 @@ def BRIGHTEN_COLOR(color: str, factor: float) -> str:
     g = min(int(g * factor), 255)
     b = min(int(b * factor), 255)
     return f"#{r:02x}{g:02x}{b:02x}"
+
+
+def RESOURCE_PATH(relative_path: str) -> str:
+    return os.path.join(
+        os.environ.get("_MEIPASS2", os.path.abspath(".")), relative_path
+    )
+
+
+# region: Profiler
+
+
+def profile(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        profiler = Profile()
+        profiler.enable()
+        result = func(*args, **kwargs)
+        profiler.disable()
+
+        print(f"\n\nStats for {func.__name__}:")
+        stats = Stats(profiler)
+        stats.strip_dirs()
+        stats.sort_stats("cumulative")
+        stats.print_stats()
+        return result
+
+    return wrapper
+
+
+# endregion
