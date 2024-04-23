@@ -7,13 +7,13 @@ from CustomLogger import CustomLogger
 class ThemeManager:
     logger = CustomLogger("Theme Manager").get_logger()
     working_dir = GET_WORKING_DIR()
-    theme = None
+    theme: dict[str, str]
 
     """
     Manages the theme for the application and provides methods to set and retrieve the theme.
     """
 
-    def set_theme(self, theme_name: str) -> None:
+    def get_theme(self, theme_name: str) -> dict[str, str]:
         """
         Sets the theme for the application, and brightens the colors for hover effects.
 
@@ -29,6 +29,7 @@ class ThemeManager:
             "accent",
             "button-enabled",
             "button-disabled",
+            "foreground",
             "foreground-highlight",
         ]:
             self.theme[f"{element_to_brighten}-hover"] = BRIGHTEN_COLOR(
@@ -40,15 +41,7 @@ class ThemeManager:
 
         self.logger.info(f'Loaded Theme "{theme_name}"')
 
-    def get_theme(self):
-        """
-        Retrieves the current theme's style sheet.
-
-        Returns:
-            str: The style sheet of the current theme.
-        """
-        if self.theme:
-            return self.theme
+        return self.theme
 
 
 if __name__ == "__main__":
