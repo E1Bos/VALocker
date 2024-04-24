@@ -30,7 +30,7 @@ class FileManager:
 
     _REQUIRED_FILES: dict = {
         FILE.STATS,
-        FILE.LOCKING_INFO,
+        FILE.LOCKING_CONFIG,
         FILE.AGENT_CONFIG,
         FILE.SETTINGS,
         FILE.DEFAULT_SAVE,

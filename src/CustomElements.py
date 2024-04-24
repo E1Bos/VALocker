@@ -484,7 +484,6 @@ class ThemedDropdown(ctk.CTkOptionMenu):
         parent: "VALocker",
         variable: ctk.StringVar,
         values: List[str],
-        command: Callable,
         **kwargs: Union[str, int, bool],
     ) -> None:
         self.parent = parent
@@ -492,7 +491,6 @@ class ThemedDropdown(ctk.CTkOptionMenu):
             parent,
             variable=variable,
             values=values,
-            command=command,
             **self._configure_dropdown(parent.theme, kwargs),
         )
 

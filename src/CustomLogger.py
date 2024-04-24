@@ -20,7 +20,7 @@ class CustomLogger(Logger):
     def __init__(self, name: str, log_file: str = "VALocker.log"):
         super().__init__(name)
         self.logger: Logger = getLogger(name)
-        
+
         self.setLevel(INFO)
         formatter = Formatter(
             "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -28,7 +28,6 @@ class CustomLogger(Logger):
         )
 
         log_path: str = os.path.join(GET_WORKING_DIR(), FOLDER.LOGS.value, log_file)
-        
 
         # Create the log directory if it doesn't exist
         os.makedirs(os.path.dirname(log_path), exist_ok=True)

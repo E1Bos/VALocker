@@ -6,6 +6,7 @@ from cProfile import Profile
 from pstats import Stats
 from functools import wraps
 
+
 def RESOURCE_PATH(relative_path: str) -> str:
     return os.path.join(
         os.environ.get("_MEIPASS2", os.path.abspath(".")), relative_path
@@ -51,7 +52,7 @@ class FILE(Enum):
     """
 
     AGENT_CONFIG: str = f"{FOLDER.DATA.value}/agent_config.json"
-    LOCKING_INFO: str = f"{FOLDER.DATA.value}/locking_config.json"
+    LOCKING_CONFIG: str = f"{FOLDER.DATA.value}/locking_config.json"
     STATS: str = f"{FOLDER.DATA.value}/stats.json"
     SETTINGS: str = f"{FOLDER.SETTINGS.value}/settings.json"
     DEFAULT_SAVE: str = f"{FOLDER.SAVE_FILES.value}/default.json"
@@ -71,18 +72,20 @@ class FRAME(Enum):
     TOOLS: str = "Tools"
     SETTINGS: str = "Settings"
 
+
 class ICON(Enum):
     ICON_PATH: str = "images/icons"
-    
+
     DISABLED: str = RESOURCE_PATH(f"{ICON_PATH}/valocker-disabled.ico")
     LOCKING: str = RESOURCE_PATH(f"{ICON_PATH}/valocker-locking.ico")
     WAITING: str = RESOURCE_PATH(f"{ICON_PATH}/valocker-waiting.ico")
-    
+
     NEW_FILE: str = RESOURCE_PATH(f"{ICON_PATH}/new_file.png")
     DELETE: str = RESOURCE_PATH(f"{ICON_PATH}/delete.png")
     FAVORITE_ON: str = RESOURCE_PATH(f"{ICON_PATH}/favorite_on.png")
     FAVORITE_OFF: str = RESOURCE_PATH(f"{ICON_PATH}/favorite_off.png")
     RENAME: str = RESOURCE_PATH(f"{ICON_PATH}/rename.png")
+
 
 def GET_WORKING_DIR() -> str:
     """
@@ -106,8 +109,6 @@ def BRIGHTEN_COLOR(color: str, factor: float) -> str:
     g = min(int(g * factor), 255)
     b = min(int(b * factor), 255)
     return f"#{r:02x}{g:02x}{b:02x}"
-
-
 
 
 # region: Profiler
