@@ -236,7 +236,6 @@ class OverviewFrame(SideFrame):
             middle_frame,
             values=[],
             variable=self.parent.selected_agent,
-            command=lambda agent: self.parent.selected_agent.set(agent),
         )
         self.agent_dropdown.grid(row=1, column=0, sticky="nsew", padx=10, pady=(0, 10))
 
@@ -732,8 +731,8 @@ class SaveFilesFrame(SideFrame):
         raise NotImplementedError("New Save functionality not implemented")
 
     def change_save(self, save_name: str) -> None:
-        self.parent.load_save(f"{save_name}.json", save_current_config=True)
         self.change_selected(save_name)
+        self.parent.load_save(f"{save_name}.json", save_current_config=True)
 
     def change_selected(self, save_name: str) -> None:
         for button in self.buttons:
