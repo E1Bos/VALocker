@@ -1,20 +1,28 @@
 {
-    "AGENT_ICONS": {
-        "SIZE": 72,
-        "COLUMNS": 9,
-        "XDIST": 12,
-        "YDIST": 12,
-        "TOPLEFT": [
+    "agentButtons": {
+        "size": 72,
+        "columns": 9,
+        "xDistance": 12,
+        "yDistance": 12,
+        "start": [
             588,
             805
         ]
     },
-    "LOCK_BUTTON": [842, 701],
-    "AGENT_START": [588, 805],
-    "LOCK_LOCATIONS": {
-        "947, 782, 952, 783": "234, 238, 178"
+    "lockButton":{
+        "size": [
+            234,
+            59
+        ],
+        "location": [
+            842,
+            701
+        ]
     },
-    "UNLOCK_LOCATIONS": {
-        "815, 243, 820, 244": "246, 244, 240"
-    }
+    "lockLocation": [
+        [950, 782, 951, 783], [234, 238, 178]
+    ],
+    "waitingLocations": [
+        [[815, 243, 820, 244], [246, 244, 240]]
+    ]
 }
