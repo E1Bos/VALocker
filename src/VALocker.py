@@ -1,12 +1,13 @@
 import customtkinter as ctk
-from typing import Union, Optional
+from typing import Optional
 import sys
 import time
 import os
+from PIL import Image
 
 # Custom imports
 from CustomLogger import CustomLogger
-from Constants import FILE, FRAME, BRIGHTEN_COLOR
+from Constants import FILE, FRAME, ICON, BRIGHTEN_COLOR
 from FileManager import FileManager
 from SaveManager import SaveManager
 from Updater import Updater
@@ -48,15 +49,13 @@ class VALocker(ctk.CTk):
     agent_times_locked: ctk.StringVar
 
     # Instalocker Variables
-
+    locking_config: dict
+    total_agents: int
     hover: ctk.BooleanVar
     random_select: ctk.BooleanVar
     exclusiselect: ctk.BooleanVar
     map_specific: ctk.BooleanVar
     agent_index: ctk.IntVar
-    box_coords: list
-
-    agent_status: dict[str, tuple[ctk.BooleanVar, ctk.BooleanVar]]
 
     # Tools Variables
     tools_thread_running: ctk.BooleanVar
@@ -64,15 +63,9 @@ class VALocker(ctk.CTk):
     drop_spike: ctk.BooleanVar
 
     # UI
+    agent_status: dict[str, tuple[ctk.BooleanVar, ctk.BooleanVar]]
     frames: Dict[
-        FRAME,
-        Union[
-            OverviewFrame,
-            AgentToggleFrame,
-            RandomSelectFrame,
-            SaveFilesFrame,
-            
-        ],
+        FRAME, OverviewFrame | AgentToggleFrame | RandomSelectFrame | SaveFilesFrame
     ] = dict()
 
     def __init__(self):
@@ -105,8 +98,9 @@ class VALocker(ctk.CTk):
         self.instalocker_thread_running = ctk.BooleanVar(
             value=self.file_manager.get_value(FILE.SETTINGS, "enableOnStartup")
         )
-
+        
         self.instalocker_status = ctk.BooleanVar(value=True)
+        
 
         self.safe_mode_enabled = ctk.BooleanVar(
             value=self.file_manager.get_value(FILE.SETTINGS, "safeModeOnStartup")
@@ -118,15 +112,19 @@ class VALocker(ctk.CTk):
             )
         )
 
-        self.agent_status = {
-            agent: (ctk.BooleanVar(value=False), ctk.BooleanVar(value=False))
+        self.all_agents = [
+            agent
             for role in self.file_manager.get_value(
                 FILE.AGENT_CONFIG, "allAgents"
-            ).items()
-            for agent in role[1]
-        }
+            ).values()
+            for agent in role
+        ]
+        self.all_agents = list(sorted(self.all_agents))
 
-        self.agent_status = dict(sorted(self.agent_status.items()))
+        self.agent_status = {
+            agent: (ctk.BooleanVar(value=False), ctk.BooleanVar(value=False))
+            for agent in self.all_agents
+        }
 
         self.current_save_name = ctk.StringVar()
         self.selected_agent = ctk.StringVar()
@@ -138,12 +136,14 @@ class VALocker(ctk.CTk):
         self.update_stats()
 
         # Instalocker Vars
+        self.locking_config = self.file_manager.get_config(FILE.LOCKING_CONFIG)
+        self.total_agents = len(self.all_agents)
+
         self.hover = ctk.BooleanVar(value=False)
         self.random_select = ctk.BooleanVar(value=False)
         self.exclusiselect = ctk.BooleanVar(value=False)
         self.map_specific = ctk.BooleanVar(value=False)
         self.agent_index = ctk.IntVar(value=0)
-        self.box_coords = []
 
         # Tools Vars
         self.tools_thread_running = ctk.BooleanVar(value=False)
@@ -159,18 +159,20 @@ class VALocker(ctk.CTk):
         self.logger.info("Creating UI")
         self.initUI()
 
+        self.agent_unlock_status_changed()
+
         # region: Traces
 
-        # Run the agent_unlock_status_changed method when the status of an agent is changed
-        # This method is called every time the status of an agent is changed,
-        # Even when all of them are changed in a for loop, I might want to revisit
-        # This to make it only run once after all of them are changed
-        # for variable in self.agent_status.values():
-        #     variable[0].trace_add("write", self.agent_unlock_status_changed)
-
+        # Update icon
+        self.instalocker_thread_running.trace_add("write", self.update_title_and_icon)
+        self.instalocker_status.trace_add("write", self.update_title_and_icon)
+        
         # Update stats when the safe mode is enabled or the safe mode strength is changed
         self.safe_mode_enabled.trace_add("write", self.update_stats)
         self.safe_mode_strength.trace_add("write", self.update_stats)
+
+        # Change agent index when the agent is changed
+        self.selected_agent.trace_add("write", self.set_locking_agent)
 
         # endregion
 
@@ -319,7 +321,7 @@ class VALocker(ctk.CTk):
         self.geometry("700x400")
         self.minsize(700, 400)
         # self.resizable(False, False)
-        self.title("VALocker")
+        self.update_title_and_icon()
         self.configure(fg_color=self.theme["background"])
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
@@ -328,11 +330,11 @@ class VALocker(ctk.CTk):
         self.frames = {
             FRAME.OVERVIEW: OverviewFrame(self),
             FRAME.AGENT_TOGGLE: AgentToggleFrame(self),
-            # FRAME.RANDOM_SELECT: RandomSelectFrame(self),
+            FRAME.RANDOM_SELECT: RandomSelectFrame(self),
             # FRAME.MAP_TOGGLE: SettingsFrame(self),
             FRAME.SAVE_FILES: SaveFilesFrame(self),
-            # FRAME.TOOLS: SettingsFrame(self),
-            # FRAME.SETTINGS: SettingsFrame(self),
+            FRAME.TOOLS: SettingsFrame(self),
+            FRAME.SETTINGS: SettingsFrame(self),
         }
 
         nav_width = 150
@@ -343,7 +345,7 @@ class VALocker(ctk.CTk):
         for frame in self.frames.values():
             frame.grid(row=0, column=1, sticky="nswe", padx=(10, 10))
 
-        self.select_frame(FRAME.SAVE_FILES)
+        self.select_frame(FRAME.OVERVIEW)
 
     def select_frame(self, frame: FRAME) -> None:
         """
@@ -381,11 +383,28 @@ class VALocker(ctk.CTk):
             except KeyError:
                 pass
 
+    def update_title_and_icon(self, *_) -> None:
+        """
+        Manages the program icon and the window title.
+        """
+
+        if not self.instalocker_thread_running.get():
+            self.iconbitmap(ICON.DISABLED.value)
+            self.title("VALocker")
+        elif self.instalocker_status.get():
+            self.iconbitmap(ICON.LOCKING.value)
+            self.title("VALocker - Locking")
+        else:
+            self.iconbitmap(ICON.WAITING.value)
+            self.title("VALocker - Waiting")
+
     # endregion
 
     # region: Modifying Tkinter Variables
 
-    def toggle_boolean(self, variable: ctk.BooleanVar, value: Optional[bool] = None) -> None:
+    def toggle_boolean(
+        self, variable: ctk.BooleanVar, value: Optional[bool] = None
+    ) -> None:
         """
         Toggles the value of the given boolean variable.
 
@@ -398,7 +417,9 @@ class VALocker(ctk.CTk):
 
         variable.set(value)
 
-    def increment_int(self, variable: ctk.IntVar, max: int, value: Optional[int] = None) -> None:
+    def increment_int(
+        self, variable: ctk.IntVar, max: int, value: Optional[int] = None
+    ) -> None:
         """
         Increments the value of the given integer variable.
 
@@ -426,7 +447,7 @@ class VALocker(ctk.CTk):
             for agent, status in self.agent_status.items()
         }
 
-        # TODO: Implement This
+        # TODO: SAVE MAP SPECIFIC AGENTS
         save_data["mapSpecificAgents"] = {
             map_name: None
             for map_name in self.file_manager.get_value(FILE.AGENT_CONFIG, "maps")
@@ -438,20 +459,31 @@ class VALocker(ctk.CTk):
         if save_current_config:
             self.save_data()
 
+        self.file_manager.set_value(FILE.SETTINGS, "activeSaveFile", save_name)
         self.save_manager.load_save(save_name)
 
+        for agent in self.save_manager.get_agent_status().items():
+            self.agent_status[agent[0]][0].set(agent[1][0])
+            self.agent_status[agent[0]][1].set(agent[1][1])
+            
         self.current_save_name.set(self.save_manager.get_current_save_name())
         self.selected_agent.set(
             value=self.save_manager.get_current_agent().capitalize()
         )
 
-        for agent in self.save_manager.get_agent_status().items():
-            self.agent_status[agent[0]][0].set(agent[1][0])
-            self.agent_status[agent[0]][1].set(agent[1][1])
-
         self.agent_unlock_status_changed()
 
     # endregion
+    
+    def set_locking_agent(self, *_) -> None:
+        unlocked_agents = [
+            agent[0]
+            for agent in self.agent_status.items()
+            if agent[1][0].get()
+        ]
+        
+        index = unlocked_agents.index(self.selected_agent.get().lower())
+        self.agent_index.set(index)
 
 
 class SettingsFrame(SideFrame):
@@ -460,7 +492,6 @@ class SettingsFrame(SideFrame):
 
         label = ThemedLabel(self, text="Settings")
         label.pack()
-
 
 
 if __name__ == "__main__":
