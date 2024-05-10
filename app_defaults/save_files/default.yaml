@@ -2,9 +2,8 @@
 selectedAgent: brimstone
 
 # State of each agent
-# [unlocked, random]
-# Default is false, false
-# Default agents are always unlocked, so they only have one value
+# [unlocked, random], with default values of [false, false]
+# Default agents are always unlocked, so they are stored as [random] with the default value of [false]
 agents:
   astra:
     - false
@@ -12,7 +11,8 @@ agents:
   breach:
     - false
     - false
-  brimstone: false
+  brimstone:
+    - false
   chamber:
     - false
     - false
@@ -37,7 +37,8 @@ agents:
   iso:
     - false
     - false
-  jett: false
+  jett:
+    - false
   kayo:
     - false
     - false
@@ -50,26 +51,27 @@ agents:
   omen:
     - false
     - false
-  phoenix: false
+  phoenix:
+    - false
   raze:
     - false
     - false
   reyna:
     - false
     - false
-  sage: false
+  sage:
+    - false
   skye:
     - false
     - false
-  sova: false
+  sova:
+    - false
   viper:
     - false
     - false
   yoru:
     - false
     - false
-
-# Agent selected for each map, null if not selected
 mapSpecificAgents:
   ascent:
   bind:
