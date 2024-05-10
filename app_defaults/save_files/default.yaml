@@ -1,5 +1,5 @@
 # Current selected agent
-selectedAgent: "brimstone"
+selectedAgent: brimstone
 
 # State of each agent
 # [unlocked, random]
@@ -71,13 +71,13 @@ agents:
 
 # Agent selected for each map, null if not selected
 mapSpecificAgents:
-  ascent: null
-  bind: null
-  breeze: null
-  fracture: null
-  haven: null
-  icebox: null
-  lotus: null
-  pearl: null
-  split: null
-  sunset: null
+  ascent:
+  bind:
+  breeze:
+  fracture:
+  haven:
+  icebox:
+  lotus:
+  pearl:
+  split:
+  sunset:

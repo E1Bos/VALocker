@@ -1,14 +1,14 @@
 # Version of the settings config
-version: "1.0.0"
+version: 1.0.0
 
 # Time since the last check for updates, in epoch time
-lastChecked: "0"
+lastChecked: 1715332832
 
 # The theme of the application, excluding "-theme.yaml"
-theme: "default"
+theme: default
 
 # The active save file, including the extension
-activeSaveFile: "default.json"
+activeSaveFile: default.yaml
 
 # The save files that are favorited
 favoritedSaveFiles: []
@@ -28,21 +28,15 @@ fastModeTimings:
 
 # Timings for safe mode, for low/medium/high in seconds
 safeModeTimings:
-  - 
-    - 0.4
-    - 0.6
-  - 
-    - 0.7
-    - 0.9
-  - 
-    - 1.0
-    - 1.2
+  - [0.4, 0.6]
+  - [0.7, 0.9]
+  - [1.0, 1.2]
 
 # Whether to show the default save file
 hideDefaultSave: false
 
 # The anti-afk mode
-antiAfkMode: "forward"
+antiAfkMode: forward
 
 # Whether files have already been migrated
 alreadyMigrated: true
