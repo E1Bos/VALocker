@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from VALocker import VALocker
@@ -8,14 +8,15 @@ import threading
 import random
 from customtkinter import BooleanVar, IntVar
 
-
 # Instalocker specific
 import pynput.mouse as pynmouse
 import pynput.keyboard as pynkeyboard
 import dxcam
+import numpy as np
 
 # Custom Imports
 from CustomLogger import CustomLogger
+from Constants import Region
 
 
 class Instalocker:
@@ -27,37 +28,64 @@ class Instalocker:
     locking_config: dict
 
     # Locking Variables
-    lock_region: tuple[int, int, int, int]
-    lock_colors: tuple[int, int, int]
+    lock_region: Region
     lock_button_location: tuple[int, int]
 
+    # Wait Variables
+    waiting_regions: list[Region]
+
+    # States
     state: BooleanVar
     hover: BooleanVar
+    agent_states: dict[str, list[BooleanVar]]
+    safe_mode_enabled = BooleanVar
+    safe_mode_strength = IntVar
     random_select: BooleanVar
     exclusiselect: BooleanVar
     map_specific: BooleanVar
     agent_index: IntVar
     box_coords: list = []
 
+    # Timings
+    fast_mode_timings: tuple[int, int, int]
+    safe_mode_timings = list[tuple[int, int]]
+
+    # Screen Recorder
     cam: dxcam.DXCamera
 
-    mouse: pynmouse.Controller = pynmouse.Controller()
-    keyboard: pynkeyboard.Controller = pynkeyboard.Controller()
+    # Controllers
+    mouse: pynmouse.Controller
+    keyboard: pynkeyboard.Controller
+
+    # Thread
+    thread: Optional[threading.Thread] = None
 
     def __init__(self, parent: "VALocker") -> None:
         self.locking_config = parent.locking_config
 
         self.state = parent.instalocker_status
         self.hover = parent.hover
+
+        self.agent_states = parent.agent_states
+
+        self.fast_mode_timings = parent.fast_mode_timings
+
+        self.safe_mode_enabled = parent.safe_mode_enabled
+        self.safe_mode_strength = parent.safe_mode_strength
+        self.safe_mode_timings = parent.safe_mode_timings
+
         self.random_select = parent.random_select
         self.exclusiselect = parent.exclusiselect
         self.map_specific = parent.map_specific
         self.agent_index = parent.agent_index
 
-        self.cam = dxcam.create(output_color="RGB")
+        self.cam = dxcam.create()
+
+        self.mouse = pynmouse.Controller()
+        self.keyboard = pynkeyboard.Controller()
 
         self.calculate_box_locations(parent.total_agents)
-        self.calculate_lock_variables()
+        self.load_config()
 
     # region: Pre-Processing
 
@@ -85,12 +113,33 @@ class Instalocker:
 
         self.logger.info("Locking box locations calculated")
 
-    def calculate_lock_variables(self) -> None:
-        lock_location = self.locking_config["lockLocation"]
+    def load_config(self) -> None:
 
-        self.lock_region = lock_location[0]
-        self.lock_colors = lock_location[1]
+        # Lock Config
+        lock_config = self.locking_config["lockRegion"]
 
+        self.lock_region = Region(
+            x=lock_config["xCoord"],
+            y=lock_config["yCoord"],
+            width=lock_config["width"],
+            height=lock_config["height"],
+            color=lock_config["color"],
+        )
+
+        # Wating Config
+        self.waiting_regions = []
+        for region in self.locking_config["waitingRegions"]:
+            self.waiting_regions.append(
+                Region(
+                    x=region["xCoord"],
+                    y=region["yCoord"],
+                    width=region["width"],
+                    height=region["height"],
+                    color=region["color"],
+                )
+            )
+
+        # Box Size
         self.box_size = self.locking_config["agentButtons"]["size"] // 2
 
         # Top left location
@@ -126,60 +175,138 @@ class Instalocker:
 
         return x, y
 
+    def frame_matches(self, frame, region: Region) -> bool:
+        if frame is None:
+            return False
+
+        area = np.array(frame[region.y : region.y_end, region.x : region.x_end])
+
+        return np.all(np.all(area == region.color, axis=2))
+
+    def calculate_random_agent(self) -> int:
+        unlocked_agents = []
+        random_agents = []
+        
+        for agent, values in self.agent_states.items():
+            if len(values) == 1:
+                unlocked_agents.append(agent)
+                
+                if values[0].get():
+                    random_agents.append(agent)
+            
+                continue
+            
+            if values[0].get():
+                unlocked_agents.append(agent)
+                
+                if values[1].get():
+                    random_agents.append(agent)
+        
+        if len(random_agents) == 0:
+            self.logger.error("No random agents selected but random agent mode enabled")
+            raise ValueError("No random agents selected but random agent mode enabled")
+        
+        selected_agent = random.choice(random_agents)
+        return unlocked_agents.index(selected_agent)
+
+    def get_latest_frame(self) -> np.ndarray:
+        try:
+            return self.cam.get_latest_frame()
+        except Exception as e:
+            self.logger.error(f"Error getting frame: {e}")
+            return None
+
     # region: Threading
 
     def main(self):
+        self.cam.start(target_fps=144)
         while not self.stop_flag:
             if self.state.get():
                 self.locking()
             else:
                 self.waiting()
+        self.cam.stop()
+        self.logger.debug("Thread reached end of main")
 
-    def locking(self):
-        self.cam.start(region=self.lock_region)
+    def locking(self) -> None:
         while not self.stop_flag and self.state.get():
-            next_frame = self.cam.get_latest_frame()
-
-            next_frame = list(next_frame[0][0])
-
-            if next_frame == self.lock_colors:
+            frame = self.get_latest_frame()
+            if self.frame_matches(frame, self.lock_region):
                 start = time.time()
 
-                self.lock_agent(self.agent_index.get())
-                self.toggle_state()
+                if self.random_select.get():
+                    agent_index = self.calculate_random_agent()
+                else:
+                    agent_index = self.agent_index.get()
+
+                self.lock_agent(agent_index)
+                self.toggle_state(False)
 
                 end = time.time()
 
                 self.logger.info(f"Locked in {(end-start)*1000:.2f}ms")
                 return
 
-    def waiting(self):
+    def waiting(self) -> None:
         while not self.stop_flag and not self.state.get():
-            print("waiting")
-            time.sleep(1)
+            print("Waiting")
+            frame = self.get_latest_frame()
+            for region in self.waiting_regions:
+                if self.frame_matches(frame, region):
+                    self.toggle_state(True)
+                    self.logger.info(f"Matched waiting region:\n{region}")
+                    return
+            time.sleep(0.3)
 
-    def lock_agent(self, agent_index: int):
+    def lock_agent(self, agent_index: int) -> None:
+        # Sets timings based on safe mode
+        if self.safe_mode_enabled.get():
+            timing = self.safe_mode_timings[self.safe_mode_strength.get()]
+            min_timing, max_timing = timing[0] / 4, timing[1] / 4
+            timings = [random.uniform(min_timing, max_timing) for _ in range(4)]
+            time.sleep(timings[-1])
+        else:
+            timings = self.fast_mode_timings
+
         self.mouse.position = self.location_in_agent_button(
             self.box_coords[agent_index]
         )
-        time.sleep(0.02)
+        time.sleep(timings[0])
         self.mouse.click(pynmouse.Button.left, 1)
-        time.sleep(0.02)
+        time.sleep(timings[1])
         self.mouse.position = self.location_in_lock_button()
-        time.sleep(0.02)
+        time.sleep(timings[2])
         self.mouse.click(pynmouse.Button.left, 1)
 
-    def toggle_state(self):
-        self.state.set(not self.state.get())
+    def toggle_state(self, value: Optional[bool] = None):
+        if value is None:
+            value = not self.state.get()
+        self.state.set(value)
 
     def start(self):
+        # Check if thread is already running, if so return
+        if self.thread is not None and self.thread.is_alive():
+            self.logger.warning("Thread already running")
+            return
+
+        # Start thread
         self.stop_flag = False
         self.logger.info("Thread started")
         self.thread = threading.Thread(target=self.main, daemon=True)
         self.thread.start()
 
     def stop(self):
-        self.cam.stop()
+        # Ensure thread exists
+        if self.thread is None:
+            self.logger.info("Thread not started")
+            return
+        
+        # If thread is not alive, thread is already stopped
+        if not self.thread.is_alive():
+            self.logger.warning("Thread already stopped")
+            return
+
+        # Stop thread
         self.stop_flag = True
         self.logger.info("Thread stopped")
 
