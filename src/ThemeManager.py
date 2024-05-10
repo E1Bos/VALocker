@@ -1,4 +1,4 @@
-import json
+from ruamel.yaml import YAML
 
 from Constants import FOLDER, GET_WORKING_DIR, BRIGHTEN_COLOR
 from CustomLogger import CustomLogger
@@ -20,10 +20,13 @@ class ThemeManager:
         Args:
             theme_name (str): The name of the theme to set.
         """
+        yaml = YAML(typ='rt')
+        # yaml.indent(mapping=2, sequence=4, offset=2)
+        
         with open(
-            f"{self.working_dir}/{FOLDER.THEMES.value}/{theme_name}-theme.json", "r"
+            f"{self.working_dir}/{FOLDER.THEMES.value}/{theme_name}-theme.yaml", "r"
         ) as theme_file:
-            self.theme = json.load(theme_file)
+            self.theme = yaml.load(theme_file)
 
         for element_to_brighten in [
             "accent",
@@ -46,4 +49,5 @@ class ThemeManager:
 
 if __name__ == "__main__":
     theme_manager = ThemeManager()
-    theme_manager.set_theme("default")
+    theme = theme_manager.get_theme("default")
+    print(theme)
