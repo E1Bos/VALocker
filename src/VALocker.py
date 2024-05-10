@@ -2,7 +2,6 @@ import customtkinter as ctk
 from typing import Optional
 import sys
 import time
-import os
 from PIL import Image
 
 # Custom imports
@@ -39,8 +38,10 @@ class VALocker(ctk.CTk):
     # Variables
     instalocker_thread_running: ctk.BooleanVar
     instalocker_status: ctk.BooleanVar
+    fast_mode_timings: tuple[int, int, int]
     safe_mode_enabled: ctk.BooleanVar
     safe_mode_strength: ctk.IntVar
+    safe_mode_timings: list[tuple[int, int]]
     current_save_name: ctk.StringVar
     selected_agent: ctk.StringVar
     last_lock: ctk.StringVar
@@ -52,6 +53,7 @@ class VALocker(ctk.CTk):
     locking_config: dict
     total_agents: int
     hover: ctk.BooleanVar
+    random_select_available: ctk.BooleanVar
     random_select: ctk.BooleanVar
     exclusiselect: ctk.BooleanVar
     map_specific: ctk.BooleanVar
@@ -63,7 +65,7 @@ class VALocker(ctk.CTk):
     drop_spike: ctk.BooleanVar
 
     # UI
-    agent_status: dict[str, tuple[ctk.BooleanVar, ctk.BooleanVar]]
+    agent_states: dict[str, tuple[ctk.BooleanVar, ctk.BooleanVar] | ctk.BooleanVar]
     frames: Dict[
         FRAME, OverviewFrame | AgentToggleFrame | RandomSelectFrame | SaveFilesFrame
     ] = dict()
@@ -98,9 +100,12 @@ class VALocker(ctk.CTk):
         self.instalocker_thread_running = ctk.BooleanVar(
             value=self.file_manager.get_value(FILE.SETTINGS, "enableOnStartup")
         )
-        
+
         self.instalocker_status = ctk.BooleanVar(value=True)
-        
+
+        self.fast_mode_timings = self.file_manager.get_value(
+            FILE.SETTINGS, "fastModeTimings"
+        )
 
         self.safe_mode_enabled = ctk.BooleanVar(
             value=self.file_manager.get_value(FILE.SETTINGS, "safeModeOnStartup")
@@ -112,17 +117,26 @@ class VALocker(ctk.CTk):
             )
         )
 
-        self.all_agents = [
-            agent
-            for role in self.file_manager.get_value(
-                FILE.AGENT_CONFIG, "allAgents"
-            ).values()
-            for agent in role
-        ]
-        self.all_agents = list(sorted(self.all_agents))
+        self.safe_mode_timings = self.file_manager.get_value(
+            FILE.SETTINGS, "safeModeTimings"
+        )
 
-        self.agent_status = {
-            agent: (ctk.BooleanVar(value=False), ctk.BooleanVar(value=False))
+        roles = self.file_manager.get_value(FILE.AGENT_CONFIG, "roles")
+        self.all_agents = sorted(
+            [
+                agent
+                for role in roles
+                for agent in self.file_manager.get_value(FILE.AGENT_CONFIG, role)
+            ]
+        )
+
+        default_agents = self.file_manager.get_value(FILE.AGENT_CONFIG, "defaultAgents")
+        self.agent_states = {
+            agent: (
+                (ctk.BooleanVar(value=False), ctk.BooleanVar(value=False))
+                if agent not in default_agents
+                else (ctk.BooleanVar(value=False),)
+            )
             for agent in self.all_agents
         }
 
@@ -140,6 +154,7 @@ class VALocker(ctk.CTk):
         self.total_agents = len(self.all_agents)
 
         self.hover = ctk.BooleanVar(value=False)
+        self.random_select_available = ctk.BooleanVar(value=False)
         self.random_select = ctk.BooleanVar(value=False)
         self.exclusiselect = ctk.BooleanVar(value=False)
         self.map_specific = ctk.BooleanVar(value=False)
@@ -166,7 +181,7 @@ class VALocker(ctk.CTk):
         # Update icon
         self.instalocker_thread_running.trace_add("write", self.update_title_and_icon)
         self.instalocker_status.trace_add("write", self.update_title_and_icon)
-        
+
         # Update stats when the safe mode is enabled or the safe mode strength is changed
         self.safe_mode_enabled.trace_add("write", self.update_stats)
         self.safe_mode_strength.trace_add("write", self.update_stats)
@@ -366,11 +381,8 @@ class VALocker(ctk.CTk):
         Args:
             _: Unused.
         """
-        unlocked_agents = [
-            agent[0].capitalize()
-            for agent in self.agent_status.items()
-            if agent[1][0].get()
-        ]
+        unlocked_agents = self.get_unlocked_agents()
+        unlocked_agents = [agent.capitalize() for agent in unlocked_agents]
 
         if not self.selected_agent.get() in unlocked_agents:
             self.selected_agent.set(value=unlocked_agents[0])
@@ -442,16 +454,18 @@ class VALocker(ctk.CTk):
     def save_data(self) -> None:
         save_data = self.save_manager.get_save_data()
         save_data["selectedAgent"] = self.selected_agent.get().lower()
-        save_data["agents"] = {
-            agent: [status[0].get(), status[1].get()]
-            for agent, status in self.agent_status.items()
-        }
+        
+        save_data["agents"] = {}
+        for agent_name, values in self.agent_states.items():
+            if len(values) == 1:
+                save_data["agents"][agent_name] = (values[0].get(),)
+                continue
+
+            save_data["agents"][agent_name] = [values[0].get(), values[1].get()]
 
         # TODO: SAVE MAP SPECIFIC AGENTS
-        save_data["mapSpecificAgents"] = {
-            map_name: None
-            for map_name in self.file_manager.get_value(FILE.AGENT_CONFIG, "maps")
-        }
+        for map_name in self.file_manager.get_value(FILE.AGENT_CONFIG, "maps"):
+            save_data["mapSpecificAgents"][map_name] = None
 
         self.save_manager.save_file(save_data)
 
@@ -462,10 +476,14 @@ class VALocker(ctk.CTk):
         self.file_manager.set_value(FILE.SETTINGS, "activeSaveFile", save_name)
         self.save_manager.load_save(save_name)
 
-        for agent in self.save_manager.get_agent_status().items():
-            self.agent_status[agent[0]][0].set(agent[1][0])
-            self.agent_status[agent[0]][1].set(agent[1][1])
-            
+        for agent_name, values in self.save_manager.get_agent_status().items():
+            if len(values) == 1:
+                self.agent_states[agent_name][0].set(values[0])
+                continue
+
+            self.agent_states[agent_name][0].set(values[0])
+            self.agent_states[agent_name][1].set(values[1])
+
         self.current_save_name.set(self.save_manager.get_current_save_name())
         self.selected_agent.set(
             value=self.save_manager.get_current_agent().capitalize()
@@ -474,16 +492,21 @@ class VALocker(ctk.CTk):
         self.agent_unlock_status_changed()
 
     # endregion
-    
+
     def set_locking_agent(self, *_) -> None:
-        unlocked_agents = [
-            agent[0]
-            for agent in self.agent_status.items()
-            if agent[1][0].get()
-        ]
-        
+        unlocked_agents = self.get_unlocked_agents()
+
         index = unlocked_agents.index(self.selected_agent.get().lower())
         self.agent_index.set(index)
+
+    def get_unlocked_agents(self) -> list[str]:
+        return sorted(
+            [
+                agent_name
+                for agent_name, values in self.agent_states.items()
+                if len(values) == 1 or values[0].get()
+            ]
+        )
 
 
 class SettingsFrame(SideFrame):
