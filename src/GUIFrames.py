@@ -250,10 +250,11 @@ class OverviewFrame(SideFrame):
         )
         hover_button.grid(row=3, column=0, sticky="nsew", padx=10)
 
-        random_agent_button = IndependentButton(
+        random_agent_button = ColorDependentButton(
             middle_frame,
             text="Random Agent",
             variable=self.parent.random_select,
+            dependent_variable=self.parent.random_select_available,
             command=lambda: self.parent.toggle_boolean(self.parent.random_select),
         )
         random_agent_button.grid(row=4, column=0, sticky="nsew", padx=10, pady=10)
@@ -339,13 +340,6 @@ class OverviewFrame(SideFrame):
         Args:
             unlocked_agents (list[str]): A list of unlocked agents.
         """
-
-        # Code to calculate unlocked agents list
-        # unlocked_agents = [
-        #     agent[0].capitalize()
-        #     for agent in self.parent.agent_status.items()
-        #     if agent[1][0].get()
-        # ]
 
         self.agent_dropdown.set_values(unlocked_agents)
 
@@ -635,6 +629,8 @@ class RandomSelectFrame(SideFrame):
                 ypad = 5 if row == 0 else (0, 5)
                 self.agent_checkboxes[role][agent_name].pack(pady=ypad)
 
+        self.update_super_checkboxes()
+
     def on_raise(self):
         self.update_super_checkboxes()
 
@@ -704,6 +700,11 @@ class RandomSelectFrame(SideFrame):
         elif none_selected:
             self.none_checkbox.disable()
 
+        if not none_selected:
+            self.parent.random_select_available.set(True)
+        else:
+            self.parent.random_select_available.set(False)
+
 
 # endregion
 
@@ -713,6 +714,7 @@ class RandomSelectFrame(SideFrame):
 class SaveFilesFrame(SideFrame):
     parent: "VALocker"
 
+    buttons: list[SaveButton]
     favorite_buttons: list[SaveButton] = []
 
     new_file_icon = ctk.CTkImage(Image.open(ICON.NEW_FILE.value), size=(20, 20))
@@ -742,6 +744,13 @@ class SaveFilesFrame(SideFrame):
         self.new_save_button.pack(side=ctk.RIGHT, pady=(5, 10), padx=0)
 
         self.change_selected(self.parent.current_save_name.get())
+
+        for favorited_save in self.parent.file_manager.get_value(FILE.SETTINGS, "favoritedSaveFiles"):
+            print(favorited_save)
+            for button in self.buttons:
+                if button.save_name == favorited_save:
+                    button.toggle_favorite()
+
         self.reorder_buttons()
 
     def new_save(self) -> None:
@@ -758,13 +767,20 @@ class SaveFilesFrame(SideFrame):
             else:
                 button.set_selected(False)
 
-    def favorite_button(self, button: SaveButton) -> None:
+    def favorite_button(self, button: SaveButton, reorderList = True) -> None:
         if button.favorited:
             self.favorite_buttons.append(button)
         else:
             self.favorite_buttons.remove(button)
 
-        self.reorder_buttons()
+        if reorderList:
+            self.reorder_buttons()
+
+        self.parent.file_manager.set_value(
+            FILE.SETTINGS,
+            "favoritedSaveFiles",
+            [button.save_file for button in self.favorite_buttons],
+        )
 
     def reorder_buttons(self) -> None:
         other_buttons = sorted(
