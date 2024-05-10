@@ -1,5 +1,6 @@
 import requests
 import time
+from ruamel.yaml import YAML
 
 # Custom imports
 from Constants import URL, FOLDER, FILE
@@ -33,7 +34,7 @@ class Updater():
             check_frequency_met: Checks if the check frequency has been met for the agent.
             check_for_version_update: Checks if an update is available for the agent.
             check_for_config_updates: Checks for updates and updates the agent if necessary.
-            compare_json_configs: Compares the version of the current agent configuration with the latest version available.
+            compare_yaml_configs: Compares the version of the current agent configuration with the latest version available.
             compare_release_versions: Compares the version of the current agent with the latest version available.
             compare_versions: Compare two version numbers and determine if an update is required.
             update_last_checked: Updates the last checked time in the settings file.
@@ -87,15 +88,15 @@ class Updater():
         )
 
         for file in self.FILES_TO_CHECK:
-            if self.compare_json_configs(file):
+            if self.compare_yaml_configs(file):
                 self._logger.info(f"{file.name} configuration needs updating")
                 self._file_manager.update_file(file)
 
         self._logger.info("Config files checked.")
 
-    # region: JSON Config Versions
+    # region: YAML Config Versions
 
-    def compare_json_configs(self, config_file: FILE) -> bool:
+    def compare_yaml_configs(self, config_file: FILE) -> bool:
         """
         Compares the version of the current agent configuration with the latest version available.
 
@@ -105,7 +106,7 @@ class Updater():
         Returns:
             bool: True if the current version is older than the latest version, False otherwise.
         """
-        self._logger.info(f"Comparing JSON config versions for {config_file.name}")
+        self._logger.info(f"Comparing YAML config versions for {config_file.name}")
         current_version: str = self._file_manager.get_config(config_file).get(
             "version", None
         )
@@ -134,7 +135,9 @@ class Updater():
         config_url = f"{URL.DOWNLOAD_URL.value}/{FOLDER.DEFAULTS.value}/{download_path}"
 
         try:
-            config_file: dict = requests.get(config_url, timeout=timeout).json()
+            response = requests.get(config_url, timeout=timeout)
+            response.raise_for_status()
+            config_file: dict = self._file_manager.yaml.load(response.text)
 
         except requests.exceptions.RequestException as e:
             self._logger.error(
@@ -174,12 +177,12 @@ class Updater():
             release_info: requests.Response = requests.get(URL.API_RELEASE_URL.value, timeout=timeout)
             release_info.raise_for_status()
 
-            release_json: dict = release_info.json()
-            release_number: str = release_json.get("tag_name", None)
+            release_yaml: dict = self._file_manager.yaml.load(release_info.text)
+            release_number: str = release_yaml.get("tag_name", None)
 
             if release_number is None:
                 self._logger.error(
-                    f"tag_name not found in release info, web returned: {release_json}"
+                    f"tag_name not found in release info, web returned: {release_yaml}"
                 )
                 return None
 
