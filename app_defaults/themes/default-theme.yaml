@@ -17,7 +17,7 @@ button-enabled: "#2e8b57"
 button-disabled: "#b52d3b"
 
 # Color for each role
-controllers: "#d68909"
-duelists: "#bf124d"
-initiators: "#0a7ad3"
-sentinels: "#3c8c40"
+controller: "#d68909"
+duelist: "#bf124d"
+initiator: "#0a7ad3"
+sentinel: "#3c8c40"
