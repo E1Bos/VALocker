@@ -1,6 +1,20 @@
+# --------------------------------------------------
 # Current selected agent
 selectedAgent: brimstone
-
+# --------------------------------------------------
+# Maps and their designated agent, null by default
+mapSpecificAgents:
+  ascent:
+  bind:
+  breeze:
+  fracture:
+  haven:
+  icebox:
+  lotus:
+  pearl:
+  split:
+  sunset:
+# --------------------------------------------------
 # State of each agent
 # [unlocked, random], with default values of [false, false]
 # Default agents are always unlocked, so they are stored as [random] with the default value of [false]
@@ -72,14 +86,3 @@ agents:
   yoru:
     - false
     - false
-mapSpecificAgents:
-  ascent:
-  bind:
-  breeze:
-  fracture:
-  haven:
-  icebox:
-  lotus:
-  pearl:
-  split:
-  sunset:

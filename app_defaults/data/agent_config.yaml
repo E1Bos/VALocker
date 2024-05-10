@@ -1,16 +1,17 @@
+# --------------------------------------------------
 # Version of the confguration
 version: "1.0.0"
-
+# --------------------------------------------------
 # Agents that are unlocked be default
 defaultAgents: ["brimstone", "jett", "phoenix", "sage", "sova"]
-
+# --------------------------------------------------
 # Possible agent roles
 roles:
   - "duelist"
   - "initiator"
   - "controller"
   - "sentinel"
-
+# --------------------------------------------------
 # Agents, grouped by their roles
 controller:
   - "astra"
@@ -19,7 +20,6 @@ controller:
   - "harbor"
   - "omen"
   - "viper"
-
 duelist:
   - "iso"
   - "jett"
@@ -28,7 +28,6 @@ duelist:
   - "raze"
   - "reyna"
   - "yoru"
-
 initiator:
   - "breach"
   - "deadlock"
@@ -37,13 +36,12 @@ initiator:
   - "kayo"
   - "skye"
   - "sova"
-
 sentinel:
   - "chamber"
   - "cypher"
   - "killjoy"
   - "sage"
-
+# --------------------------------------------------
 # All the maps in game
 maps:
   - "ascent"
@@ -56,3 +54,4 @@ maps:
   - "pearl"
   - "split"
   - "sunset"
+# --------------------------------------------------

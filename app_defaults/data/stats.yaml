@@ -1,12 +1,14 @@
+# --------------------------------------------------
 # Times the instalocker has been used
 timesUsed: 0
-
+# --------------------------------------------------
 # List of the time it took the instalocker to lock in seconds for fast mode
 timeToLock: []
-
+# --------------------------------------------------
 # List of the time it took the instalocker to lock in seconds for safe mode
 # Low, medium, high
 timeToLockSafe:
   - []
   - []
   - []
+# --------------------------------------------------

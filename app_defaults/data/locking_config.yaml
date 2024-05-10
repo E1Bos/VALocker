@@ -1,6 +1,6 @@
 # Version of the confguration
 version: "1.0.0"
-
+# --------------------------------------------------
 # The location of the agent buttons
 # size: size of the agent buttons
 # columns: number of columns
@@ -13,14 +13,14 @@ agentButtons:
   xDistance: 12
   yDistance: 12
   start: [588, 805]
-
+# --------------------------------------------------
 # The location of the lock button
 # size: size of the lock button
 # location: the top left corner of the lock button
 lockButton:
   size: [234, 59]
   location: [842, 701]
-
+# --------------------------------------------------
 # Regions that are checked to see when to initiate the lock
 # xCoord: x coordinate of the top left corner of the region
 # yCoord: y coordinate of the top left corner of the region
@@ -33,7 +33,7 @@ lockRegion:
   width: 1
   height: 1
   color: [234, 238, 178]
-
+# --------------------------------------------------
 # Regions that are checked to see when the user is not in a game
 # xCoord: x coordinate of the top left corner of the region
 # yCoord: y coordinate of the top left corner of the region
@@ -66,3 +66,4 @@ waitingRegions:
     width: 2
     height: 2
     color: [255, 255, 255]
+# --------------------------------------------------
