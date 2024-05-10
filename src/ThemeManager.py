@@ -24,7 +24,7 @@ class ThemeManager:
         # yaml.indent(mapping=2, sequence=4, offset=2)
         
         with open(
-            f"{self.working_dir}/{FOLDER.THEMES.value}/{theme_name}-theme.yaml", "r"
+            f"{self.working_dir}/{FOLDER.THEMES.value}/{theme_name}", "r"
         ) as theme_file:
             self.theme = yaml.load(theme_file)
 
@@ -49,5 +49,5 @@ class ThemeManager:
 
 if __name__ == "__main__":
     theme_manager = ThemeManager()
-    theme = theme_manager.get_theme("default")
+    theme = theme_manager.get_theme("default-theme.yaml")
     print(theme)
