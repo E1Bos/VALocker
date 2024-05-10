@@ -398,13 +398,10 @@ class AgentToggleFrame(SideFrame):
         self.specific_agent_frame = ThemedFrame(self.outer_agent_frame)
         self.specific_agent_frame.pack(anchor=ctk.CENTER, pady=10, padx=0)
 
-        default_agents = self.parent.file_manager.get_value(
-            FILE.AGENT_CONFIG, "defaultAgents"
-        )
         self.toggleable_agents: dict[str, ctk.BooleanVar] = {
-            agent_item[0]: agent_item[1][0]
-            for agent_item in self.parent.agent_status.items()
-            if agent_item[0] not in default_agents
+            agent_name: values[0]
+            for agent_name, values in self.parent.agent_states.items()
+            if len(values) != 1
         }
 
         NUMBER_OF_COLS = 4
@@ -569,23 +566,23 @@ class RandomSelectFrame(SideFrame):
         )
         self.none_checkbox.grid(row=0, column=1)
 
-        roles_dict = self.parent.file_manager.get_value(FILE.AGENT_CONFIG, "allAgents")
+        roles_list: list[str] = self.parent.file_manager.get_value(
+            FILE.AGENT_CONFIG, "roles"
+        )
 
         super_role_checkboxes_frame = ThemedFrame(self)
         super_role_checkboxes_frame.pack(fill=ctk.X, pady=(0, 10))
 
-        self.role_variables = {
-            role: ctk.BooleanVar(value=False) for role in roles_dict.keys()
-        }
+        self.role_variables = {role: ctk.BooleanVar(value=False) for role in roles_list}
 
-        for col, role in enumerate(roles_dict.keys()):
+        for col, role in enumerate(roles_list):
             super_role_checkboxes_frame.grid_columnconfigure(col, weight=1)
 
             role_color = self.theme[role]
 
             self.super_role_checkboxes[role] = ThemedCheckbox(
                 super_role_checkboxes_frame,
-                text=role.capitalize(),
+                text=f"{role.capitalize()}s",
                 text_color=BRIGHTEN_COLOR(role_color, 1.3),
                 fg_color=role_color,
                 hover_color=BRIGHTEN_COLOR(role_color, 1.1),
@@ -597,29 +594,46 @@ class RandomSelectFrame(SideFrame):
         agents_frame = ThemedFrame(self, fg_color="transparent")
         agents_frame.pack(fill=ctk.BOTH, expand=True, pady=(0, 10))
 
-        self.agent_checkboxes = {role: dict() for role in roles_dict.keys()}
-        for col, (role_name, agents) in enumerate(roles_dict.items()):
+        always_true = ctk.BooleanVar(value=True)
+        self.agent_checkboxes = {role: dict() for role in roles_list}
+        for col, role in enumerate(roles_list):
+            role_agents: list[str] = self.parent.file_manager.get_value(
+                FILE.AGENT_CONFIG, role
+            )
             agents_frame.grid_columnconfigure(col, weight=1)
 
             role_frame = ThemedFrame(agents_frame)
             padx = 0 if col == 0 else (5, 0)
             role_frame.grid(row=0, column=col, sticky=ctk.NSEW, padx=padx)
-            role_color = self.theme[role_name]
+            role_color = self.theme[role]
 
-            for i, agent in enumerate(agents):
-                self.agent_checkboxes[role_name][agent] = DependentCheckbox(
+            for row, agent_name in enumerate(role_agents):
+
+                dependent_var = (
+                    self.parent.agent_states[agent_name][0]
+                    if len(self.parent.agent_states[agent_name]) != 1
+                    else always_true
+                )
+
+                variable = (
+                    self.parent.agent_states[agent_name][1]
+                    if len(self.parent.agent_states[agent_name]) != 1
+                    else self.parent.agent_states[agent_name][0]
+                )
+
+                self.agent_checkboxes[role][agent_name] = DependentCheckbox(
                     role_frame,
-                    text=agent.capitalize(),
+                    text=agent_name.capitalize(),
                     text_color=BRIGHTEN_COLOR(role_color, 1.3),
                     fg_color=role_color,
                     hover_color=BRIGHTEN_COLOR(role_color, 1.1),
-                    variable=self.parent.agent_status[agent][1],
-                    dependent_variable=self.parent.agent_status[agent][0],
+                    variable=variable,
+                    dependent_variable=dependent_var,
                     command=lambda: self.toggle_agent(True),
                 )
 
-                ypad = 5 if i == 0 else (0, 5)
-                self.agent_checkboxes[role_name][agent].pack(pady=ypad)
+                ypad = 5 if row == 0 else (0, 5)
+                self.agent_checkboxes[role][agent_name].pack(pady=ypad)
 
     def on_raise(self):
         self.update_super_checkboxes()
@@ -643,11 +657,11 @@ class RandomSelectFrame(SideFrame):
     def super_toggle_role(self, role: str, update_super=False):
         value = self.role_variables[role].get()
 
-        for agent in self.parent.file_manager.get_value(FILE.AGENT_CONFIG, "allAgents")[
-            role
-        ]:
-            if self.agent_checkboxes[role][agent].cget("state") == ctk.NORMAL:
-                self.parent.agent_status[agent][1].set(value)
+        for agent in self.agent_checkboxes[role]:
+            if not self.agent_checkboxes[role][agent].dependent_variable.get():
+                continue
+            
+            self.agent_checkboxes[role][agent].variable.set(value)
 
         if update_super:
             self.update_super_checkboxes()
@@ -658,26 +672,26 @@ class RandomSelectFrame(SideFrame):
 
     def update_super_checkboxes(self):
 
-        for role in self.role_variables:
-            if all(
-                [
-                    self.parent.agent_status[agent][1].get()
-                    for agent in self.parent.file_manager.get_value(
-                        FILE.AGENT_CONFIG, "allAgents"
-                    )[role]
-                    if self.parent.agent_status[agent][0].get()
-                ]
-            ):
+        agent_values = {}
+        for role in self.agent_checkboxes:
+            agent_values[role] = [
+                self.agent_checkboxes[role][agent].variable.get()
+                for agent in self.agent_checkboxes[role]
+                if self.agent_checkboxes[role][agent].dependent_variable.get()
+            ]
+
+        for role, values in agent_values.items():
+            if all(values):
                 self.role_variables[role].set(True)
             else:
                 self.role_variables[role].set(False)
 
         all_selected = all(
-            [self.role_variables[role].get() for role in self.role_variables]
+            [all(role) for role in agent_values.values()]
         )
-
+        
         none_selected = all(
-            [not agent_var[1].get() for agent_var in self.parent.agent_status.values()]
+            [not any(role) for role in agent_values.values()]
         )
 
         self.all_variable.set(all_selected)
@@ -689,6 +703,7 @@ class RandomSelectFrame(SideFrame):
             self.all_checkbox.disable()
         elif none_selected:
             self.none_checkbox.disable()
+
 
 # endregion
 
@@ -712,13 +727,15 @@ class SaveFilesFrame(SideFrame):
         self.buttons: list[SaveButton] = []
 
         for save_name in parent.save_manager.get_all_save_files():
-            button = SaveButton(
-                scrollable_frame, save_file=save_name
-            )
+            button = SaveButton(scrollable_frame, save_file=save_name)
             self.buttons.append(button)
 
         self.new_save_button = ThemedButton(
-            self, text="", image=self.new_file_icon, width=40, command=self.new_save,
+            self,
+            text="",
+            image=self.new_file_icon,
+            width=40,
+            command=self.new_save,
             fg_color=self.theme["foreground"],
             hover_color=self.theme["foreground-hover"],
         )
@@ -732,7 +749,7 @@ class SaveFilesFrame(SideFrame):
 
     def change_save(self, save_name: str) -> None:
         self.change_selected(save_name)
-        self.parent.load_save(f"{save_name}.json", save_current_config=True)
+        self.parent.load_save(f"{save_name}.yaml", save_current_config=True)
 
     def change_selected(self, save_name: str) -> None:
         for button in self.buttons:
