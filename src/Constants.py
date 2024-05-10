@@ -1,5 +1,6 @@
 from enum import Enum
 import os
+from typing import Optional
 
 # Profile Imports
 from cProfile import Profile
@@ -51,12 +52,12 @@ class FILE(Enum):
     Enum for Files used in the project
     """
 
-    AGENT_CONFIG: str = f"{FOLDER.DATA.value}/agent_config.json"
-    LOCKING_CONFIG: str = f"{FOLDER.DATA.value}/locking_config.json"
-    STATS: str = f"{FOLDER.DATA.value}/stats.json"
-    SETTINGS: str = f"{FOLDER.SETTINGS.value}/settings.json"
-    DEFAULT_SAVE: str = f"{FOLDER.SAVE_FILES.value}/default.json"
-    DEFAULT_THEME: str = f"{FOLDER.THEMES.value}/default-theme.json"
+    AGENT_CONFIG: str = f"{FOLDER.DATA.value}/agent_config.yaml"
+    LOCKING_CONFIG: str = f"{FOLDER.DATA.value}/locking_config.yaml"
+    STATS: str = f"{FOLDER.DATA.value}/stats.yaml"
+    SETTINGS: str = f"{FOLDER.SETTINGS.value}/settings.yaml"
+    DEFAULT_SAVE: str = f"{FOLDER.SAVE_FILES.value}/default.yaml"
+    DEFAULT_THEME: str = f"{FOLDER.THEMES.value}/default-theme.yaml"
 
 
 class FRAME(Enum):
@@ -110,6 +111,98 @@ def BRIGHTEN_COLOR(color: str, factor: float) -> str:
     b = min(int(b * factor), 255)
     return f"#{r:02x}{g:02x}{b:02x}"
 
+
+class Region:
+    """
+    Represents a region with coordinates, size, and color.
+
+    Attributes:
+        x (int): The x-coordinate of the region.
+        y (int): The y-coordinate of the region.
+        width (int): The width of the region. Default is 1.
+        height (int): The height of the region. Default is 1.
+        color (tuple[int, int, int]): The color of the region represented as an RGB tuple. The entire area must be this color.
+
+    Raises:
+        ValueError: If width or height is less than or equal to 0.
+    """
+
+    x: int
+    x_end: int
+    y: int
+    y_end: int
+    color: tuple[int, int, int]
+
+    def __init__(
+        self,
+        x: int,
+        y: int,
+        color: tuple[int, int, int],
+        width: Optional[int] = 1,
+        height: Optional[int] = 1,
+        x_end: Optional[int] = None,
+        y_end: Optional[int] = None,
+    ) -> None:
+
+        if (width <= 0 or height <= 0) and (x_end is None or y_end is None):
+            raise ValueError(
+                "Width and height must be greater than 0 or x_end and y_end must be provided."
+            )
+
+        self.x = x
+        self.y = y
+        self.color = color
+        
+        self.x_end = x_end or x + width
+        self.y_end = y_end or y + height
+
+        self.width = width if width else x_end - x 
+        self.height = height if height else y_end - y
+
+
+    def __repr__(self) -> str:
+        return f"Region(x={self.x} -> {self.x_end}, y={self.y} -> {self.y_end}, w.h={self.width}x{self.height}, color={self.color})"
+
+'''
+class Save():
+    """
+    Represents a save file with a name and data.
+
+    Attributes:
+        name (str): The name of the save file.
+        data (dict): The data of the save file.
+    """
+
+    name: str
+    selectedAgent: str
+    agents: dict[str, tuple[bool, bool] | tuple[bool]]
+    maps: dict[str, str | None]
+
+    def __init__(self, name: str) -> None:
+        self.name = name
+        
+    def set_selected_agent(self, agent: str) -> None:
+        self.selectedAgent = agent
+    
+    def set_agents(self, agents: dict[str, tuple[bool, bool] | tuple[bool]]) -> None:
+        self.agents = agents
+    
+    def set_maps(self, maps: dict[str, str | None]) -> None:
+        self.maps = maps
+        
+    def get_all_data(self) -> dict:
+        return {
+            "selectedAgent": self.selectedAgent,
+            "agents": self.agents,
+            "mapSpecificAgents": self.maps
+        }
+
+    def __repr__(self) -> str:
+        return f"Save(name={self.name}, data={self.data})"
+
+    def __str__(self) -> str:
+        return f"{self.name}"
+'''
 
 # region: Profiler
 
