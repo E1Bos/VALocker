@@ -1,0 +1,83 @@
+# Current selected agent
+selectedAgent: "brimstone"
+
+# State of each agent
+# [unlocked, random]
+# Default is false, false
+# Default agents are always unlocked, so they only have one value
+agents:
+  astra:
+    - false
+    - false
+  breach:
+    - false
+    - false
+  brimstone: false
+  chamber:
+    - false
+    - false
+  clove:
+    - false
+    - false
+  cypher:
+    - false
+    - false
+  deadlock:
+    - false
+    - false
+  fade:
+    - false
+    - false
+  gekko:
+    - false
+    - false
+  harbor:
+    - false
+    - false
+  iso:
+    - false
+    - false
+  jett: false
+  kayo:
+    - false
+    - false
+  killjoy:
+    - false
+    - false
+  neon:
+    - false
+    - false
+  omen:
+    - false
+    - false
+  phoenix: false
+  raze:
+    - false
+    - false
+  reyna:
+    - false
+    - false
+  sage: false
+  skye:
+    - false
+    - false
+  sova: false
+  viper:
+    - false
+    - false
+  yoru:
+    - false
+    - false
+
+# Agent selected for each map, null if not selected
+mapSpecificAgents:
+  ascent: null
+  bind: null
+  breeze: null
+  fracture: null
+  haven: null
+  icebox: null
+  lotus: null
+  pearl: null
+  split: null
+  sunset: null
