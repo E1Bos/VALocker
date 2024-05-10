@@ -134,26 +134,29 @@ class DependentButton(ThemedButton):
         command: Callable[..., None],
         **kwargs,
     ):
-        super().__init__(parent, command=command, **kwargs)
         self.dependent_variable = dependent_variable
         self.variable = variable
         self.text = text
 
-        self.configure(
-            text=self.get_current_text(),
-            fg_color=self.theme["accent"],
-            hover_color=self.theme["accent-hover"],
-        )
+        config = {"text": self.get_current_text()}
+        config.update(kwargs)
 
+        super().__init__(parent, command=command, **config)
+        
         self.variable.trace_add("write", self.variable_update)
         self.dependent_variable.trace_add("write", self.dependent_variable_update)
         self.check_disable()
 
     def variable_update(self, *_):
-        self.configure(text=self.get_current_text())
+        config = {
+            "text": self.get_current_text()
+        }
+        self.configure(**config)
 
     def dependent_variable_update(self, *_):
-        self.configure(text=self.get_current_text())
+        config = {
+            "text": self.get_current_text()
+        }
         self.check_disable()
 
     def check_disable(self):
@@ -163,12 +166,64 @@ class DependentButton(ThemedButton):
             self.configure(state=ctk.DISABLED)
 
     def get_current_text(self) -> str:
+        if type(self.text) == str:
+            return self.text
+        
         return (
             self.text[2]
             if not self.dependent_variable.get()
             else self.text[0] if self.variable.get() else self.text[1]
         )
 
+class ColorDependentButton(ThemedButton):
+    dependent_variable: ctk.BooleanVar
+    variable: ctk.BooleanVar
+    text: list[str]
+
+    def __init__(
+        self,
+        parent: "SideFrame",
+        variable: ctk.BooleanVar,
+        dependent_variable: ctk.BooleanVar,
+        command: Callable[..., None],
+        **kwargs,
+    ):
+        self.theme = parent.theme
+        self.dependent_variable = dependent_variable
+        self.variable = variable
+
+        config = self.get_color()
+        config.update(kwargs)
+
+        super().__init__(parent, command=command, **config)
+        
+        self.variable.trace_add("write", self.variable_update)
+        self.dependent_variable.trace_add("write", self.dependent_variable_update)
+        self.check_disable()
+
+    def get_color(self) -> str:
+        config = {
+            "fg_color": self.theme["button-enabled"] if self.variable.get() else self.theme["button-disabled"],
+            "hover_color": self.theme["button-enabled-hover"] if self.variable.get() else self.theme["button-disabled-hover"],
+        }
+        
+        return config
+
+    def variable_update(self, *_):
+        config = self.get_color()
+        self.configure(**config)
+
+    def dependent_variable_update(self, *_):
+        config = self.get_color()
+        self.configure(**config)
+        self.check_disable()
+
+    def check_disable(self):
+        if self.dependent_variable.get():
+            self.configure(state=ctk.NORMAL)
+        else:
+            self.configure(state=ctk.DISABLED)
+            self.variable.set(False)
 
 class SplitButton:
     parent: object
@@ -338,7 +393,7 @@ class SaveButton:
         self.favorite_icon = ThemedButton(
             self.frame,
             image=self.favorite_off_img,
-            command=self.toggle_favorite,
+            command=lambda: self.toggle_favorite(True),
             **icon_config,
         )
 
@@ -403,7 +458,7 @@ class SaveButton:
 
     # region: Icon Commands
 
-    def toggle_favorite(self):
+    def toggle_favorite(self, reorderList = False):
         """
         Toggles the favorite status of the element.
 
@@ -419,7 +474,7 @@ class SaveButton:
             image=self.favorite_on_img if self.favorited else self.favorite_off_img
         )
 
-        self.side_frame.favorite_button(self)
+        self.side_frame.favorite_button(self, reorderList=reorderList)
 
     def rename(self):
         raise NotImplementedError("Save Rename functionality not implemented")
