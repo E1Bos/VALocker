@@ -1,6 +1,7 @@
 import os
 import requests
 import json
+from ruamel.yaml import YAML
 
 # Custom imports
 from CustomLogger import CustomLogger
@@ -43,7 +44,11 @@ class FileManager:
 
     configs: dict = dict()
 
+    yaml: YAML = YAML(typ='rt')
     _logger: CustomLogger = CustomLogger("File Manager").get_logger()
+
+    def __init__(self) -> None:
+        self.yaml.indent(mapping=2, sequence=4, offset=2)
 
     # Start Function
     def setup(self) -> None:
@@ -77,12 +82,11 @@ class FileManager:
                 self._logger.info(f"{file_path} not found, downloading")
                 file_data = self._download_file(file)
                 with open(file_path, "w") as f:
-                    json.dump(file_data, f, indent=4)
+                    self.yaml.dump(file_data, f)
 
         settings_rel_path = FILE.SETTINGS.value
-        self._settings: dict = json.load(
-            open(self._absolute_file_path(settings_rel_path), "r")
-        )
+        with open(self._absolute_file_path(settings_rel_path), "r") as f:
+            self._settings: dict = self.yaml.load(f)
 
         if self._settings.get("alreadyMigrated", False) == False:
             self._logger.info("Files may need to be migrated, checking for old files")
@@ -109,7 +113,8 @@ class FileManager:
             response = requests.get(url)
             response.raise_for_status()  # Raise an exception if the request failed
             self._logger.info(f"Downloaded {file.value}")
-            return json.loads(response.text)
+            return self.yaml.load(response.text)
+
         except requests.exceptions.RequestException as e:
             self._logger.error(f"Error downloading {file.value}: {e}")
             raise e
@@ -147,7 +152,8 @@ class FileManager:
         if os.path.exists(stats_file):
             self._logger.info("Found old stats.json file, migrating to new directory")
 
-            stats_data: dict = json.load(open(stats_file, "r"))
+            with open(stats_file, "r") as f:
+                stats_data: dict = json.load(f)
 
             new_stats = {
                 "timesUsed": stats_data.get("TIMES_USED"),
@@ -162,12 +168,9 @@ class FileManager:
                 "favoritedSaveFiles": stats_data.get("FAVORITED_SAVE_FILES"),
             }
 
-            print(new_stats)
-            print(new_settings)
-
             # Migrate the old stats data to the new file structure
-            self._migrate_json_data(new_stats, FILE.STATS)
-            self._migrate_json_data(new_settings, FILE.SETTINGS)
+            self._migrate_data(new_stats, FILE.STATS)
+            self._migrate_data(new_settings, FILE.SETTINGS)
 
             os.remove(stats_file)
             self._logger.info(f"Deleted {stats_file}")
@@ -179,12 +182,11 @@ class FileManager:
                 "Found old user_settings.json file, migrating to new directory"
             )
 
-            user_settings_data: dict[str, any] = json.load(
-                open(user_settings_file, "r")
-            )
+            with open(user_settings_file, "r") as f:
+                user_settings_data: dict = json.load(f)
 
             new_settings = {
-                "activeSaveFile": f"{user_settings_data.get('ACTIVE_SAVE_FILE')}.json",
+                "activeSaveFile": f"{user_settings_data.get('ACTIVE_SAVE_FILE')}.yaml",
                 "enableOnStartup": user_settings_data.get("ENABLE_ON_STARTUP"),
                 "minimizeToTray": user_settings_data.get("MINIMIZE_TO_TRAY"),
                 "startMinimized": user_settings_data.get("START_MINIMIZED"),
@@ -212,7 +214,7 @@ class FileManager:
                 ),
             }
 
-            self._migrate_json_data(new_settings, FILE.SETTINGS)
+            self._migrate_data(new_settings, FILE.SETTINGS)
 
             os.remove(user_settings_file)
             self._logger.info(f"Deleted {user_settings_file}")
@@ -220,6 +222,7 @@ class FileManager:
         # Check if config file exists
         config_file = os.path.join(old_dir, "config.json")
         if os.path.exists(config_file):
+            self._logger.info("Found old config.json file, deleting")
             os.remove(config_file)
 
         # Check for save_files directory
@@ -242,29 +245,27 @@ class FileManager:
         self._logger.info("Migration complete")
         # self._set_migrated_flag(True)
 
-    def _migrate_json_data(
-        self, data_to_migrate: dict, file_to_migrate_to: FILE
-    ) -> None:
+    def _migrate_data(self, data_to_migrate: dict, file_to_migrate_to: FILE) -> None:
         """
-        Migrates a JSON file to a new directory.
+        Migrates a file to a new directory.
 
         Args:
-            data_to_migrate (dict): The data of the JSON file to migrate.
-            file_to_migrate_to (FILE): The file enum to migrate the JSON file to.
+            data_to_migrate (dict): The data of the file to migrate.
+            file_to_migrate_to (FILE): The file enum to migrate the file to.
 
         Returns:
             None
         """
 
-        new_file = json.load(
-            open(self._absolute_file_path(file_to_migrate_to.value), "r")
-        )
+        with open(self._absolute_file_path(file_to_migrate_to.value), "r") as f:
+            new_file = self.yaml.load(f)
+
         for key in data_to_migrate:
             if key in new_file:
                 new_file[key] = data_to_migrate[key]
 
         with open(self._absolute_file_path(file_to_migrate_to.value), "w") as f:
-            json.dump(new_file, f, indent=4)
+            self.yaml.dump(new_file, f)
 
         self._logger.info(
             f"Migrated old values to {self._absolute_file_path(file_to_migrate_to.value)}"
@@ -274,34 +275,42 @@ class FileManager:
         self, old_save_file_path: str, old_save_name: str
     ) -> None:
 
-        save_data: dict = json.load(open(old_save_file_path, "r"))
+        with open(old_save_file_path, "r") as f:
+            save_data: dict = json.load(f)
 
-        current_active_agent = save_data.get("SELECTED_AGENT").lower()
+        current_active_agent: str = save_data.get("SELECTED_AGENT").lower()
+        old_agent_unlock: dict[str, bool] = save_data.get("UNLOCKED_AGENTS")
+        old_agent_random: dict[str, bool] = save_data.get("RANDOM_AGENTS")
+        old_map_specific_agents: dict[str, str] = save_data.get("MAP_SPECIFIC_AGENTS")
 
-        agent_status_list = save_data.get("UNLOCKED_AGENTS")
-        agent_random_list = save_data.get("RANDOM_AGENTS")
+        default_agents: list[str] = self.get_config(FILE.AGENT_CONFIG).get("defaultAgents")
 
-        agents = {
-            agent.lower(): [agent_status_list[agent], agent_random_list[agent]]
-            for agent in agent_status_list
-        }
-        maps = {
-            map_name.lower(): (value.lower() if value is not None else None)
-            for map_name, value in save_data.get("MAP_SPECIFIC_AGENTS").items()
-        }
+        agent_status = {}
+        for agent in old_agent_unlock:
+            if agent.lower() in default_agents:
+                agent_status[agent.lower()] = [old_agent_random[agent]]
+                continue
+            
+            agent_status[agent.lower()] = [old_agent_unlock[agent], old_agent_random[agent]]
+
+        maps = {}
+        for map_name, value in old_map_specific_agents.items():
+            maps[map_name.lower()] = value.lower() if value is not None else None
 
         new_save_data = {
             "selectedAgent": current_active_agent,
-            "agents": agents,
+            "agents": agent_status,
             "mapSpecificAgents": maps,
         }
 
+        new_save_name = old_save_name.replace(".json", ".yaml")
+
         new_save_file_location = os.path.join(
-            self._WORKING_DIR, FOLDER.SAVE_FILES.value, old_save_name
+            self._WORKING_DIR, FOLDER.SAVE_FILES.value, new_save_name
         )
 
         with open(new_save_file_location, "w") as f:
-            json.dump(new_save_data, f, indent=4)
+            self.yaml.dump(new_save_data, f)
 
         os.remove(old_save_file_path)
 
@@ -325,9 +334,9 @@ class FileManager:
         Reads all the files into memory.
         """
         for file in FILE:
-            self.configs[file.name] = json.load(
-                open(self._absolute_file_path(file.value), "r")
-            )
+            with open(self._absolute_file_path(file.value), "r") as f:
+                self.configs[file.name] = self.yaml.load(f)
+
         self._logger.info("Read all files into memory")
 
     def _absolute_file_path(self, *args) -> str:
@@ -365,7 +374,7 @@ class FileManager:
         self.configs[file.name] = config
 
         with open(self._absolute_file_path(file.value), "w") as f:
-            json.dump(config, f, indent=4)
+            self.yaml.dump(config, f)
 
     def set_value(self, file: FILE, key: str, value: any) -> None:
         """
@@ -379,7 +388,7 @@ class FileManager:
         self.configs[file.name][key] = value
 
         with open(self._absolute_file_path(file.value), "w") as f:
-            json.dump(self.configs[file.name], f, indent=4)
+            self.yaml.dump(self.configs[file.name], f)
 
     def get_value(self, file: FILE, key: str) -> any:
         """
@@ -412,7 +421,7 @@ class FileManager:
         # Download the latest version of the file
         data = self._download_file(file.value, save_path)
 
-        self._migrate_json_data(data, file)
+        self._migrate_data(data, file)
 
         self._logger.info(f"Updated {file.value} to the latest version")
 
@@ -423,3 +432,4 @@ if __name__ == "__main__":
     # Test FileManager class
     file_manager = FileManager()
     file_manager.setup()
+    file_manager._migrate_old_files()
