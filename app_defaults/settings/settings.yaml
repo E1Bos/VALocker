@@ -3,7 +3,7 @@
 version: 1.0.0
 # --------------------------------------------------
 # Time since the last check for updates, in epoch time
-lastChecked: 1715332832
+lastChecked: 0
 # --------------------------------------------------
 # The theme of the application
 theme: default-theme.yaml
