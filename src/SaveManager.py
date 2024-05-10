@@ -1,5 +1,5 @@
 import os
-import json
+from ruamel.yaml import YAML
 
 from typing import Optional
 
@@ -11,6 +11,7 @@ from FileManager import FileManager
 
 class SaveManager:
     logger: CustomLogger = CustomLogger("Save Manager").get_logger()
+
     FOLDER_PATH: str = os.path.join(GET_WORKING_DIR(), FOLDER.SAVE_FILES.value)
     file_manager: FileManager
     current_save_file: str = str()
@@ -25,14 +26,14 @@ class SaveManager:
         Sets up the SaveManager by populating the list of save files.
 
         This method iterates over the files in the specified folder path and adds
-        any files with the ".json" extension to the list of save files.
+        any files with the ".yaml" extension to the list of save files.
 
         Returns:
             None
         """
         # Reads all save files in the save file folder
         for file in os.listdir(self.FOLDER_PATH):
-            if file.endswith(".json"):
+            if file.endswith(".yaml"):
                 self.save_files.append(file)
 
         # Logs Info
@@ -62,7 +63,7 @@ class SaveManager:
         Returns:
             str: The name of the current save file.
         """
-        return self.current_save_file.removesuffix(".json")
+        return self.current_save_file.removesuffix(".yaml")
 
     def get_save_data(
         self,
@@ -92,7 +93,6 @@ class SaveManager:
             list: A list of agent names.
         """
         return list(self.save_data.get("AGENTS").keys())
-        
 
     def get_map_dict(self) -> dict[str, list[bool] | str | None] | None:
         """
@@ -115,9 +115,8 @@ class SaveManager:
     # endregion
 
     def load_save(self, file_name: str) -> None:
-
         with open(f"{self.FOLDER_PATH}/{file_name}", "r") as file:
-            self.save_data = json.load(file)
+            self.save_data = self.file_manager.yaml.load(file)
 
         self.current_save_file = file_name
 
@@ -134,19 +133,15 @@ class SaveManager:
             save_data = self.save_data
 
         with open(f"{self.FOLDER_PATH}/{self.current_save_file}", "w") as file:
-            json.dump(save_data, file, indent=4)
+            self.file_manager.yaml.dump(save_data, file)
 
         self.logger.info(f'Saved file "{self.current_save_file}"')
 
     def update_save_files(self) -> None:
         # List of all agent names
-        agent_names: list = [
-            agent
-            for role in self.file_manager.get_value(
-                FILE.AGENT_CONFIG, "allAgents"
-            ).values()
-            for agent in role
-        ]
+        roles = self.file_manager.get_value(FILE.AGENT_CONFIG, "roles")
+        agent_names = sorted([agent for role in roles for agent in self.file_manager.get_value(FILE.AGENT_CONFIG, role)])
+
 
         # List of all map names
         map_names = [
@@ -157,7 +152,7 @@ class SaveManager:
         # Iterates over all save files and update the agents and maps
         for save_file in self.save_files:
             with open(f"{self.FOLDER_PATH}/{save_file}", "r") as file:
-                save_data: dict[str, dict] = json.load(file)
+                save_data: dict[str, dict] = self.file_manager.yaml.load(file)
 
             # Remove any agents that are not in the list of agents
             agents_to_remove = [
@@ -194,15 +189,16 @@ class SaveManager:
             # Replace the selected agent if it is not in the list of agents
             if save_data.get("selectedAgent") not in agent_names:
                 available_agents = [
-                    agent
-                    for agent in save_data.get("agents")
-                    if save_data["agents"][agent][0]
+                    agent_name
+                    for agent_name, values in save_data.get("agents").items()
+                    if len(values) == 1 or values[0] is True
                 ]
+                
                 save_data["selectedAgent"] = available_agents[0]
 
             # Saves the updated save file
             with open(f"{self.FOLDER_PATH}/{save_file}", "w") as file:
-                json.dump(save_data, file, indent=4)
+                self.file_manager.yaml.dump(save_data, file)
 
         self.logger.info(f"Updated all save files")
 
@@ -212,4 +208,4 @@ if __name__ == "__main__":
     file_manager.setup()
     save_manager = SaveManager(file_manager)
     save_manager.setup()
-    save_manager.load_save("default.json")
+    save_manager.load_save("default.yaml")
