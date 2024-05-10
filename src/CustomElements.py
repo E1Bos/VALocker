@@ -306,7 +306,7 @@ class SaveButton:
 
         # File Name
         self.save_file = save_file
-        self.save_name = save_file.removesuffix(".json")
+        self.save_name = save_file.removesuffix(".yaml")
 
         # If is favorited
         self.favorited = False
@@ -566,6 +566,7 @@ class DependentCheckbox(ThemedCheckbox):
     ):
         super().__init__(parent, text=text, variable=variable, **kwargs)
         self.variable = variable
+        
         self.dependent_variable = dependent_variable
         self.dependent_variable.trace_add("write", self.dependent_variable_update)
         self._pending_config = None
