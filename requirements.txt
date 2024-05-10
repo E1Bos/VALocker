@@ -1,9 +1,6 @@
-customtkinter==5.2.0
-darkdetect==0.8.0
-mss==9.0.1
-Pillow==10.0.0
-pynput==1.7.6
-pystray==0.19.4
-six==1.16.0
-numpy==1.25.2
+customtkinter==5.2.2
 requests==2.31.0
+pillow==10.3.0
+pynput==1.7.6
+dxcam==0.0.5
+ruamel.yaml==0.18.6
