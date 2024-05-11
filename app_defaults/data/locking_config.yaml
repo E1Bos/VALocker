@@ -1,5 +1,5 @@
 # Version of the confguration
-version: "1.0.0"
+version: 1.0.0
 # --------------------------------------------------
 # The location of the agent buttons
 # size: size of the agent buttons

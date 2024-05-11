@@ -1,57 +1,57 @@
 # --------------------------------------------------
 # Version of the confguration
-version: "1.0.0"
+version: 1.0.0
 # --------------------------------------------------
 # Agents that are unlocked be default
-defaultAgents: ["brimstone", "jett", "phoenix", "sage", "sova"]
+defaultAgents: [brimstone, jett, phoenix, sage, sova]
 # --------------------------------------------------
 # Possible agent roles
 roles:
-  - "duelist"
-  - "initiator"
-  - "controller"
-  - "sentinel"
+  - duelist
+  - initiator
+  - controller
+  - sentinel
 # --------------------------------------------------
 # Agents, grouped by their roles
 controller:
-  - "astra"
-  - "brimstone"
-  - "clove"
-  - "harbor"
-  - "omen"
-  - "viper"
+  - astra
+  - brimstone
+  - clove
+  - harbor
+  - omen
+  - viper
 duelist:
-  - "iso"
-  - "jett"
-  - "neon"
-  - "phoenix"
-  - "raze"
-  - "reyna"
-  - "yoru"
+  - iso
+  - jett
+  - neon
+  - phoenix
+  - raze
+  - reyna
+  - yoru
 initiator:
-  - "breach"
-  - "deadlock"
-  - "fade"
-  - "gekko"
-  - "kayo"
-  - "skye"
-  - "sova"
+  - breach
+  - deadlock
+  - fade
+  - gekko
+  - kayo
+  - skye
+  - sova
 sentinel:
-  - "chamber"
-  - "cypher"
-  - "killjoy"
-  - "sage"
+  - chamber
+  - cypher
+  - killjoy
+  - sage
 # --------------------------------------------------
 # All the maps in game
 maps:
-  - "ascent"
-  - "bind"
-  - "breeze"
-  - "fracture"
-  - "haven"
-  - "icebox"
-  - "lotus"
-  - "pearl"
-  - "split"
-  - "sunset"
+  - ascent
+  - bind
+  - breeze
+  - fracture
+  - haven
+  - icebox
+  - lotus
+  - pearl
+  - split
+  - sunset
 # --------------------------------------------------
