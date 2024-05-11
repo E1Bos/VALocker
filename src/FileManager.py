@@ -42,7 +42,7 @@ class FileManager:
 
     _DOWNLOAD_URL: str = f"{URL.DOWNLOAD_URL.value}/{FOLDER.DEFAULTS.value}/"
 
-    configs: dict = dict()
+    configs: dict[FILE, dict] = dict()
 
     yaml: YAML = YAML(typ='rt')
     _logger: CustomLogger = CustomLogger("File Manager").get_logger()
@@ -169,8 +169,8 @@ class FileManager:
             }
 
             # Migrate the old stats data to the new file structure
-            self._migrate_data(new_stats, FILE.STATS)
-            self._migrate_data(new_settings, FILE.SETTINGS)
+            self._update_data(new_stats, FILE.STATS)
+            self._update_data(new_settings, FILE.SETTINGS)
 
             os.remove(stats_file)
             self._logger.info(f"Deleted {stats_file}")
@@ -214,7 +214,7 @@ class FileManager:
                 ),
             }
 
-            self._migrate_data(new_settings, FILE.SETTINGS)
+            self._update_data(new_settings, FILE.SETTINGS)
 
             os.remove(user_settings_file)
             self._logger.info(f"Deleted {user_settings_file}")
@@ -245,31 +245,31 @@ class FileManager:
         self._logger.info("Migration complete")
         # self._set_migrated_flag(True)
 
-    def _migrate_data(self, data_to_migrate: dict, file_to_migrate_to: FILE) -> None:
+    def _update_data(self, new_data: dict, file: FILE) -> None:
         """
-        Migrates a file to a new directory.
+        Updates a file with data and reloads the file into memory.
 
         Args:
-            data_to_migrate (dict): The data of the file to migrate.
-            file_to_migrate_to (FILE): The file enum to migrate the file to.
+            data (dict): The data of the file to migrate.
+            file (FILE): The file enum to migrate the file to.
 
         Returns:
             None
         """
 
-        with open(self._absolute_file_path(file_to_migrate_to.value), "r") as f:
-            new_file = self.yaml.load(f)
+        with open(self._absolute_file_path(file.value), "r") as f:
+            current_data: dict = self.yaml.load(f)
 
-        for key in data_to_migrate:
-            if key in new_file:
-                new_file[key] = data_to_migrate[key]
+        current_data.update(new_data)
 
-        with open(self._absolute_file_path(file_to_migrate_to.value), "w") as f:
-            self.yaml.dump(new_file, f)
+        with open(self._absolute_file_path(file.value), "w") as f:
+            self.yaml.dump(current_data, f)
 
         self._logger.info(
-            f"Migrated old values to {self._absolute_file_path(file_to_migrate_to.value)}"
+            f"Migrated old values to {self._absolute_file_path(file.value)}"
         )
+        
+        self.configs[file] = current_data
 
     def _migrate_old_save_file(
         self, old_save_file_path: str, old_save_name: str
@@ -335,7 +335,7 @@ class FileManager:
         """
         for file in FILE:
             with open(self._absolute_file_path(file.value), "r") as f:
-                self.configs[file.name] = self.yaml.load(f)
+                self.configs[file] = self.yaml.load(f)
 
         self._logger.info("Read all files into memory")
 
@@ -361,7 +361,7 @@ class FileManager:
         Returns:
             dict: The configuration dictionary for the specified file.
         """
-        return self.configs.get(file.name, None)
+        return self.configs.get(file, None)
 
     def set_config(self, file: FILE, config: dict) -> None:
         """
@@ -371,7 +371,7 @@ class FileManager:
             file (constants.Files): The file enum for which the configuration is required.
             config (dict): The configuration dictionary to set.
         """
-        self.configs[file.name] = config
+        self.configs[file] = config
 
         with open(self._absolute_file_path(file.value), "w") as f:
             self.yaml.dump(config, f)
@@ -385,10 +385,10 @@ class FileManager:
             key (str): The key to set the value for.
             value (any): The value to set for the key.
         """
-        self.configs[file.name][key] = value
+        self.configs[file][key] = value
 
         with open(self._absolute_file_path(file.value), "w") as f:
-            self.yaml.dump(self.configs[file.name], f)
+            self.yaml.dump(self.configs[file], f)
 
     def get_value(self, file: FILE, key: str) -> any:
         """
@@ -401,27 +401,23 @@ class FileManager:
         Returns:
             any: The value of the specified key.
         """
-        return self.configs[file.name].get(key, None)
+        return self.configs[file].get(key, None)
 
     # region:  Update files
 
     def update_file(self, file: FILE) -> None:
         """
         Update a file by downloading the latest version from the repository.
-        # TODO: Make this method not override settings already present
 
         Args:
             file_path (FILE): The file enum that needs to be updated.
         """
         self._logger.info(f"Updating {file.value} to the latest version")
 
-        # Store the path where the file will be saved
-        save_path = os.path.join(self._absolute_file_path(file.value))
-
         # Download the latest version of the file
-        data = self._download_file(file.value, save_path)
+        data = self._download_file(file)
 
-        self._migrate_data(data, file)
+        self._update_data(data, file)
 
         self._logger.info(f"Updated {file.value} to the latest version")
 

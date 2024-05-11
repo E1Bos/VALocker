@@ -8,12 +8,16 @@ from CustomLogger import CustomLogger
 from FileManager import FileManager
 
 
-class Updater():
+class Updater:
     _logger: CustomLogger = CustomLogger("Updater").get_logger()
     _file_manager: FileManager
     release_version: str
     check_frequency: int
-    FILES_TO_CHECK: list[FILE]
+    FILES_TO_CHECK: list[FILE] = [
+        FILE.AGENT_CONFIG,
+        FILE.SETTINGS,
+        FILE.LOCKING_CONFIG,
+    ]
 
     def __init__(
         self, release_version, file_manager: FileManager, check_frequency=3600
@@ -41,7 +45,6 @@ class Updater():
         """
         self.release_version = release_version
         self.check_frequency = check_frequency
-        self.FILES_TO_CHECK = [FILE.AGENT_CONFIG, FILE.SETTINGS]
         self._file_manager = file_manager
 
     def check_frequency_met(self) -> bool:
@@ -174,7 +177,9 @@ class Updater():
             str: The latest release version as a string, or None if an error occurred during the request.
         """
         try:
-            release_info: requests.Response = requests.get(URL.API_RELEASE_URL.value, timeout=timeout)
+            release_info: requests.Response = requests.get(
+                URL.API_RELEASE_URL.value, timeout=timeout
+            )
             release_info.raise_for_status()
 
             release_yaml: dict = self._file_manager.yaml.load(release_info.text)
@@ -244,5 +249,5 @@ if __name__ == "__main__":
     file_manager.setup()
     updater = Updater("v1.0.0", file_manager)
     updater.check_for_config_updates()
-    updater.check_for_version_update()
-    updater.update_last_checked()
+    # updater.check_for_version_update()
+    # updater.update_last_checked()
