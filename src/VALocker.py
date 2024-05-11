@@ -3,6 +3,7 @@ from typing import Optional
 import sys
 import time
 from PIL import Image
+from threading import Thread
 
 # Custom imports
 from CustomLogger import CustomLogger
@@ -65,6 +66,7 @@ class VALocker(ctk.CTk):
     drop_spike: ctk.BooleanVar
 
     # UI
+    update_frame: UpdateFrame
     agent_states: dict[str, tuple[ctk.BooleanVar, ctk.BooleanVar] | ctk.BooleanVar]
     frames: Dict[
         FRAME, OverviewFrame | AgentToggleFrame | RandomSelectFrame | SaveFilesFrame
@@ -75,8 +77,6 @@ class VALocker(ctk.CTk):
 
         self.logger.info(f"Initializing VALocker v{self.VERSION}")
 
-        start_time = time.time()
-
         # Sets up file manager
         self.logger.info("Setting up file manager")
         self.file_manager.setup()
@@ -85,18 +85,29 @@ class VALocker(ctk.CTk):
         self.logger.info("Setting up save manager")
         self.save_manager.setup()
 
-        # Checks for updates
-        # self.logger.info("Checking for updates")
-        # self.check_for_updates()
-
         # Loads theme
         self.logger.info("Loading theme")
         theme_name = self.file_manager.get_value(FILE.SETTINGS, "theme")
         self.theme = self.theme_manager.get_theme(theme_name)
         self.logger.info(f'Theme "{theme_name}" loaded')
 
-        # region: Variable Setup
+        self.load_variables()
 
+        # Load save
+        self.logger.info("Loading Save")
+        self.load_save(self.file_manager.get_value(FILE.SETTINGS, "activeSaveFile"))
+
+        # Load exit handler
+        self.protocol("WM_DELETE_WINDOW", self.exit)
+
+        # Start UI and check for updates
+        self.logger.info("Starting UI")
+        self.initUI()
+        
+        self.load_threads()
+
+    # region Setup
+    def load_variables(self) -> None:
         self.instalocker_thread_running = ctk.BooleanVar(
             value=self.file_manager.get_value(FILE.SETTINGS, "enableOnStartup")
         )
@@ -165,17 +176,6 @@ class VALocker(ctk.CTk):
         self.anti_afk = ctk.BooleanVar(value=False)
         self.drop_spike = ctk.BooleanVar(value=False)
 
-        # endregion
-
-        # Load save
-        self.logger.info("Loading Save")
-        self.load_save(self.file_manager.get_value(FILE.SETTINGS, "activeSaveFile"))
-
-        self.logger.info("Creating UI")
-        self.initUI()
-
-        self.agent_unlock_status_changed()
-
         # region: Traces
 
         # Update icon
@@ -191,6 +191,7 @@ class VALocker(ctk.CTk):
 
         # endregion
 
+    def load_threads(self) -> None:
         # Initialize Instalocker
         self.logger.info("Initializing Instalocker")
         self.instalocker = Instalocker(self)
@@ -209,11 +210,7 @@ class VALocker(ctk.CTk):
         self.manage_tools_thread()
         self.tools_thread_running.trace_add("write", self.manage_tools_thread)
 
-        self.protocol("WM_DELETE_WINDOW", self.exit)
-
-        end_time = time.time()
-
-        self.logger.info(f"VALocker initialized in {end_time - start_time:.2f} seconds")
+    # endregion
 
     def exit(self):
         """
@@ -236,26 +233,31 @@ class VALocker(ctk.CTk):
         This method checks if the frequency for update checks is met. If it is, it proceeds to check for
         config updates and version updates. If a version update is available, it logs the update and
         provides a placeholder for implementing the update code.
+        """        
+        self.logger.info("Checking for config updates")
 
-        If the frequency is not met, it logs a message indicating that update checks are skipped.
-        """
-        if self.updater.check_frequency_met():
-            # Checks for config updates
-            self.logger.info("Checking for config updates")
-            self.updater.check_for_config_updates()
+        for file in self.updater.FILES_TO_CHECK:
+            self.updater.check_for_config_update(
+                file, self.update_frame.status_variables[file]
+            )
+            self.update_frame.update()
 
-            # Checks for version updates
-            self.logger.info("Checking for version updates")
-            version_update_available = self.updater.check_for_version_update()
+        # Checks for version updates
+        self.logger.info("Checking for version updates")
+        version_update_available = self.updater.check_for_version_update(
+            self.update_frame.version_variable
+        )
+        self.update_frame.update()
 
-            self.updater.update_last_checked()
+        self.updater.update_last_checked()
+        
+        # # If version update is available
+        if version_update_available:
+            self.logger.info("Update available")
+            # TODO: Show update popup
 
-            # If version update is available
-            if version_update_available:
-                self.logger.info("Update available")
-                # TODO: Implement update code
-        else:
-            self.logger.info("Check frequency not met, skipping update checks")
+        
+        self.after(1000, self.initMainUI)
 
     def update_stats(self, *_) -> None:
         """
@@ -329,15 +331,38 @@ class VALocker(ctk.CTk):
         """
         Initializes the user interface.
 
-        Sets the window size, title, and grid configuration.
+        Sets the window size and minimum size.
+        Updates the title and icon.
+        Checks for updates and then initializes the main user interface.
+        """
+
+        self.geometry("700x400")
+        self.minsize(700, 400)
+        self.update_title_and_icon()
+        self.configure(fg_color=self.theme["background"])
+
+        self.update_frame = UpdateFrame(self)
+
+        if self.updater.check_frequency_met():
+            self.logger.info("Check frequency met, checking for updates")
+            self.update_frame.pack(fill="both", expand=True)
+            self.after(500, self.check_for_updates)
+        else:
+            self.logger.info("Check frequency not met, skipping update check")
+            self.initMainUI()
+
+    def initMainUI(self) -> None:
+        """
+        Initializes the main user interface.
+
+        Sets the grid configuration.
         Creates navigation frame and frames for different sections.
         Raises the "Overview" frame by default.
         """
-        self.geometry("700x400")
-        self.minsize(700, 400)
         # self.resizable(False, False)
-        self.update_title_and_icon()
-        self.configure(fg_color=self.theme["background"])
+        self.update_frame.destroy()
+        del self.update_frame
+
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
         self.grid_propagate(False)
@@ -360,6 +385,7 @@ class VALocker(ctk.CTk):
         for frame in self.frames.values():
             frame.grid(row=0, column=1, sticky="nswe", padx=(10, 10))
 
+        self.agent_unlock_status_changed()
         self.select_frame(FRAME.OVERVIEW)
 
     def select_frame(self, frame: FRAME) -> None:
@@ -454,7 +480,7 @@ class VALocker(ctk.CTk):
     def save_data(self) -> None:
         save_data = self.save_manager.get_save_data()
         save_data["selectedAgent"] = self.selected_agent.get().lower()
-        
+
         save_data["agents"] = {}
         for agent_name, values in self.agent_states.items():
             if len(values) == 1:
