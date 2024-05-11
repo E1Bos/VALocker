@@ -1,6 +1,9 @@
+from typing import Optional, Tuple
 import requests
 import time
 from ruamel.yaml import YAML
+
+from customtkinter import StringVar
 
 # Custom imports
 from Constants import URL, FOLDER, FILE
@@ -15,8 +18,8 @@ class Updater:
     check_frequency: int
     FILES_TO_CHECK: list[FILE] = [
         FILE.AGENT_CONFIG,
-        FILE.SETTINGS,
         FILE.LOCKING_CONFIG,
+        FILE.SETTINGS,
     ]
 
     def __init__(
@@ -68,34 +71,47 @@ class Updater:
 
         return True
 
-    def check_for_version_update(self) -> bool:
+    def check_for_version_update(self, stringVar: Optional[StringVar] = None) -> bool:
         """
         Checks if an update is available for the agent.
 
         Returns:
             bool: True if an update is available, False otherwise.
         """
-        if self.compare_release_versions():
-            self._logger.info("New version available, release needs updating")
+        if stringVar is None:
+            stringVar = StringVar()
+        
+        self._logger.info("Checking for version update")
+        stringVar.set("Checking")
+        
+        update_available, latest_version = self.compare_release_versions()
+        
+        if update_available:
+            self._logger.info("New version available, agent needs updating")
+            stringVar.set(f"Update Available: {latest_version}")
             return True
 
+        stringVar.set("Up to date")
         return False
 
-    def check_for_config_updates(self):
-        """
-        Checks for updates and updates the agent if necessary.
-        """
+    def check_for_config_update(self, file: FILE, stringVar: Optional[StringVar] = None) -> None:
+        if stringVar is None:
+            stringVar = StringVar()
+        
+        self._logger.info(f"Checking {file.name} for updates")
+        stringVar.set("Checking")
+        
+        update_available = self.compare_yaml_configs(file)
+        
+        if update_available:
+            self._logger.info(f"{file.name} configuration needs updating")
+            stringVar.set("Downloading update...")
+            self._file_manager.update_file(file)
+            stringVar.set(f"Updated")
+        else:
+            self._logger.info(f"{file.name} is up to date")
+            stringVar.set(f"Up to date")
 
-        self._logger.info(
-            f"Checking config files for updates: {', '.join([file.name for file in self.FILES_TO_CHECK])}"
-        )
-
-        for file in self.FILES_TO_CHECK:
-            if self.compare_yaml_configs(file):
-                self._logger.info(f"{file.name} configuration needs updating")
-                self._file_manager.update_file(file)
-
-        self._logger.info("Config files checked.")
 
     # region: YAML Config Versions
 
@@ -151,7 +167,7 @@ class Updater:
 
     # region: Release Versions
 
-    def compare_release_versions(self) -> bool:
+    def compare_release_versions(self) -> Tuple[bool, str]:
         """
         Compares the version of the current agent with the latest version available.
 
@@ -164,7 +180,7 @@ class Updater:
             f"RELEASE: Current version: {self.release_version} | Latest version: {latest_version}"
         )
 
-        return self.compare_versions(self.release_version, latest_version)
+        return self.compare_versions(self.release_version, latest_version), latest_version
 
     def _get_latest_release_version(self, timeout: int = 2) -> str:
         """
