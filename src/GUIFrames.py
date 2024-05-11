@@ -656,7 +656,7 @@ class RandomSelectFrame(SideFrame):
         for agent in self.agent_checkboxes[role]:
             if not self.agent_checkboxes[role][agent].dependent_variable.get():
                 continue
-            
+
             self.agent_checkboxes[role][agent].variable.set(value)
 
         if update_super:
@@ -682,13 +682,9 @@ class RandomSelectFrame(SideFrame):
             else:
                 self.role_variables[role].set(False)
 
-        all_selected = all(
-            [all(role) for role in agent_values.values()]
-        )
-        
-        none_selected = all(
-            [not any(role) for role in agent_values.values()]
-        )
+        all_selected = all([all(role) for role in agent_values.values()])
+
+        none_selected = all([not any(role) for role in agent_values.values()])
 
         self.all_variable.set(all_selected)
         self.none_variable.set(none_selected)
@@ -745,7 +741,9 @@ class SaveFilesFrame(SideFrame):
 
         self.change_selected(self.parent.current_save_name.get())
 
-        for favorited_save in self.parent.file_manager.get_value(FILE.SETTINGS, "favoritedSaveFiles"):
+        for favorited_save in self.parent.file_manager.get_value(
+            FILE.SETTINGS, "favoritedSaveFiles"
+        ):
             print(favorited_save)
             for button in self.buttons:
                 if button.save_name == favorited_save:
@@ -767,7 +765,7 @@ class SaveFilesFrame(SideFrame):
             else:
                 button.set_selected(False)
 
-    def favorite_button(self, button: SaveButton, reorderList = True) -> None:
+    def favorite_button(self, button: SaveButton, reorderList=True) -> None:
         if button.favorited:
             self.favorite_buttons.append(button)
         else:
@@ -790,6 +788,119 @@ class SaveFilesFrame(SideFrame):
 
         for index, button in enumerate(self.favorite_buttons + other_buttons):
             button.grid(row=index, column=0, pady=5, padx=5, sticky=ctk.EW)
+
+
+# endregion
+
+# region Update Frame
+
+
+class UpdateFrame(ctk.CTkFrame):
+    default_config = {
+        "fg_color": "background",
+    }
+
+    font_size: tuple[str, int]
+
+    status_variables: dict[FILE, ctk.StringVar]
+    version_variable: ctk.StringVar
+
+    def __init__(self, parent: "VALocker", **kwargs):
+        self.parent = parent
+        self.theme = parent.theme
+
+        config = {
+            key: kwargs.get(key, parent.theme.get(value, value))
+            for key, value in self.default_config.items()
+        }
+        config.update(kwargs)
+
+        self.font_size = (self.theme["font"], 18)
+
+        super().__init__(parent, **config)
+
+        self.grid_columnconfigure(0, weight=1)
+
+        self.update_label = ThemedLabel(
+            self,
+            text="Checking for Updates",
+            font=(self.theme["font"], 20),
+        )
+        self.update_label.grid(row=0, column=0, sticky="nsew", padx=10, pady=(20, 5))
+
+        self.progress_bar = ctk.CTkProgressBar(
+            self,
+            fg_color=self.theme["foreground"],
+            border_color=self.theme["foreground-highlight"],
+            progress_color=self.theme["accent"],
+            border_width=1,
+            mode="indeterminate",
+            width=300,
+            height=10,
+        )
+        self.progress_bar.grid(row=1, column=0, pady=(0, 10))
+        self.progress_bar.start()
+
+        self.status_variables = {}
+
+        for row, file_to_check in enumerate(self.parent.updater.FILES_TO_CHECK):
+            row += 2
+
+            file_frame = ThemedFrame(self)
+
+            file_frame.grid(row=row, column=0, sticky=ctk.NSEW, padx=50, pady=10)
+
+            file_name = file_to_check.name.split("_")
+            file_name = " ".join([word.capitalize() for word in file_name])
+
+            file_label = ThemedLabel(
+                file_frame,
+                text=file_name,
+                font=self.font_size,
+            )
+            file_label.pack(side=ctk.LEFT, padx=10, pady=10)
+
+            text_var = ctk.StringVar(value="Waiting")
+            file_status = ThemedLabel(file_frame, textvariable=text_var, font=self.font_size)
+            file_status.pack(side=ctk.RIGHT, padx=10, pady=10)
+
+            self.status_variables[file_to_check] = text_var
+
+        version_frame = ThemedFrame(self)
+        version_frame.grid(row=row+1, column=0, sticky=ctk.NSEW, padx=50, pady=10)
+
+        version_label = ThemedLabel(version_frame, text="Version", font=self.font_size)
+        version_label.pack(side=ctk.LEFT, padx=10, pady=10)
+
+        self.version_variable = ctk.StringVar(value="Waiting")
+        version_status = ThemedLabel(version_frame, textvariable=self.version_variable, font=self.font_size)
+        version_status.pack(side=ctk.RIGHT, padx=10, pady=10)
+
+
+# endregion
+
+# Popups
+
+
+class ThemedPopup(ctk.CTkToplevel):
+    default_config = {
+        "fg_color": "foreground",
+    }
+
+    def __init__(self, parent: "VALocker", **kwargs):
+        self.parent = parent
+        self.theme = parent.theme
+
+        config = {
+            key: kwargs.get(key, parent.theme.get(value, value))
+            for key, value in self.default_config.items()
+        }
+        config.update(kwargs)
+
+        super().__init__(parent, **config)
+
+        self.geometry("400x300")
+        self.title = "Popup"
 
 
 # endregion
