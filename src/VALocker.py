@@ -103,10 +103,10 @@ class VALocker(ctk.CTk):
         # Start UI and check for updates
         self.logger.info("Starting UI")
         self.initUI()
-        
-        self.load_threads()
 
-    # region Setup
+        self.after_idle(self.load_threads)
+
+    # region: Setup
     def load_variables(self) -> None:
         self.instalocker_thread_running = ctk.BooleanVar(
             value=self.file_manager.get_value(FILE.SETTINGS, "enableOnStartup")
@@ -233,7 +233,7 @@ class VALocker(ctk.CTk):
         This method checks if the frequency for update checks is met. If it is, it proceeds to check for
         config updates and version updates. If a version update is available, it logs the update and
         provides a placeholder for implementing the update code.
-        """        
+        """
         self.logger.info("Checking for config updates")
 
         for file in self.updater.FILES_TO_CHECK:
@@ -250,13 +250,13 @@ class VALocker(ctk.CTk):
         self.update_frame.update()
 
         self.updater.update_last_checked()
-        
-        # # If version update is available
+
+        # If version update is available
         if version_update_available:
             self.logger.info("Update available")
             # TODO: Show update popup
 
-        
+        self.update_frame.finished_checking_updates()
         self.after(1000, self.initMainUI)
 
     def update_stats(self, *_) -> None:
@@ -346,9 +346,9 @@ class VALocker(ctk.CTk):
         if self.updater.check_frequency_met():
             self.logger.info("Check frequency met, checking for updates")
             self.update_frame.pack(fill="both", expand=True)
+            self.update()
             self.after(500, self.check_for_updates)
         else:
-            self.logger.info("Check frequency not met, skipping update check")
             self.initMainUI()
 
     def initMainUI(self) -> None:
@@ -371,7 +371,7 @@ class VALocker(ctk.CTk):
             FRAME.OVERVIEW: OverviewFrame(self),
             FRAME.AGENT_TOGGLE: AgentToggleFrame(self),
             FRAME.RANDOM_SELECT: RandomSelectFrame(self),
-            # FRAME.MAP_TOGGLE: SettingsFrame(self),
+            # FRAME.MAP_TOGGLE: MapToggleFrame(self),
             FRAME.SAVE_FILES: SaveFilesFrame(self),
             FRAME.TOOLS: SettingsFrame(self),
             FRAME.SETTINGS: SettingsFrame(self),
