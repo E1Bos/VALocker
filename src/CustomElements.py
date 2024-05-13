@@ -154,9 +154,7 @@ class DependentButton(ThemedButton):
         self.configure(**config)
 
     def dependent_variable_update(self, *_):
-        config = {
-            "text": self.get_current_text()
-        }
+        self.variable_update()
         self.check_disable()
 
     def check_disable(self):
