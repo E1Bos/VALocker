@@ -792,7 +792,7 @@ class SaveFilesFrame(SideFrame):
 
 # endregion
 
-# region Update Frame
+# region: Update Frame
 
 
 class UpdateFrame(ctk.CTkFrame):
@@ -835,6 +835,7 @@ class UpdateFrame(ctk.CTkFrame):
             progress_color=self.theme["accent"],
             border_width=1,
             mode="indeterminate",
+            indeterminate_speed=2,
             width=300,
             height=10,
         )
@@ -861,25 +862,32 @@ class UpdateFrame(ctk.CTkFrame):
             file_label.pack(side=ctk.LEFT, padx=10, pady=10)
 
             text_var = ctk.StringVar(value="Waiting")
-            file_status = ThemedLabel(file_frame, textvariable=text_var, font=self.font_size)
+            file_status = ThemedLabel(
+                file_frame, textvariable=text_var, font=self.font_size
+            )
             file_status.pack(side=ctk.RIGHT, padx=10, pady=10)
 
             self.status_variables[file_to_check] = text_var
 
         version_frame = ThemedFrame(self)
-        version_frame.grid(row=row+1, column=0, sticky=ctk.NSEW, padx=50, pady=10)
+        version_frame.grid(row=row + 1, column=0, sticky=ctk.NSEW, padx=50, pady=10)
 
         version_label = ThemedLabel(version_frame, text="Version", font=self.font_size)
         version_label.pack(side=ctk.LEFT, padx=10, pady=10)
 
         self.version_variable = ctk.StringVar(value="Waiting")
-        version_status = ThemedLabel(version_frame, textvariable=self.version_variable, font=self.font_size)
+        version_status = ThemedLabel(
+            version_frame, textvariable=self.version_variable, font=self.font_size
+        )
         version_status.pack(side=ctk.RIGHT, padx=10, pady=10)
+
+    def finished_checking_updates(self):
+        self.update_label.configure(text="Loading VALocker")
 
 
 # endregion
 
-# Popups
+# region: Popups
 
 
 class ThemedPopup(ctk.CTkToplevel):
