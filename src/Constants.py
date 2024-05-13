@@ -161,7 +161,7 @@ class Region:
 
 
     def __repr__(self) -> str:
-        return f"Region(x={self.x} -> {self.x_end}, y={self.y} -> {self.y_end}, w.h={self.width}x{self.height}, color={self.color})"
+        return f"Region(x: {self.x} -> {self.x_end}, y: {self.y} -> {self.y_end}, w.h: {self.width} . {self.height}, color: {self.color})"
 
 '''
 class Save():
