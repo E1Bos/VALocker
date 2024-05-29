@@ -1,7 +1,6 @@
 from typing import Optional, Tuple
 import requests
 import time
-from ruamel.yaml import YAML
 
 from customtkinter import StringVar
 
@@ -80,12 +79,12 @@ class Updater:
         """
         if stringVar is None:
             stringVar = StringVar()
-        
+
         self._logger.info("Checking for version update")
         stringVar.set("Checking")
-        
+
         update_available, latest_version = self.compare_release_versions()
-        
+
         if update_available:
             self._logger.info("New version available, agent needs updating")
             stringVar.set(f"Update Available: {latest_version}")
@@ -94,15 +93,17 @@ class Updater:
         stringVar.set("Up to date")
         return False
 
-    def check_for_config_update(self, file: FILE, stringVar: Optional[StringVar] = None) -> None:
+    def check_for_config_update(
+        self, file: FILE, stringVar: Optional[StringVar] = None
+    ) -> None:
         if stringVar is None:
             stringVar = StringVar()
-        
+
         self._logger.info(f"Checking {file.name} for updates")
         stringVar.set("Checking")
-        
+
         update_available = self.compare_yaml_configs(file)
-        
+
         if update_available:
             self._logger.info(f"{file.name} configuration needs updating")
             stringVar.set("Downloading update...")
@@ -111,7 +112,6 @@ class Updater:
         else:
             self._logger.info(f"{file.name} is up to date")
             stringVar.set(f"Up to date")
-
 
     # region: YAML Config Versions
 
@@ -180,7 +180,10 @@ class Updater:
             f"RELEASE: Current version: {self.release_version} | Latest version: {latest_version}"
         )
 
-        return self.compare_versions(self.release_version, latest_version), latest_version
+        return (
+            self.compare_versions(self.release_version, latest_version),
+            latest_version,
+        )
 
     def _get_latest_release_version(self, timeout: int = 2) -> str:
         """
