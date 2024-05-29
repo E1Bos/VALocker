@@ -49,6 +49,10 @@ class ThemedLabel(ctk.CTkLabel):
 
 
 class ThemedButton(ctk.CTkButton):
+    """
+    A button that is styled according to the VALocker theme.
+    """
+
     default_config = {
         "font": "button",
         "text_color": "text",
@@ -75,6 +79,11 @@ class ThemedButton(ctk.CTkButton):
 
 
 class IndependentButton(ThemedButton):
+    """
+    A button that is enabled, independent of any other variable.
+    It changes its text and color based on the state of its own variable.
+    """
+
     text: list[str]
     variable: ctk.BooleanVar
 
@@ -121,6 +130,14 @@ class IndependentButton(ThemedButton):
 
 
 class DependentButton(ThemedButton):
+    """
+    Button that is dependent on two variables,
+    one that determines if the button is enabled,
+    and the other that the button is responsable for.
+
+    The button will change its text based on the state of the dependent variable and the variable.
+    """
+
     dependent_variable: ctk.BooleanVar
     variable: ctk.BooleanVar
     text: list[str]
@@ -142,15 +159,13 @@ class DependentButton(ThemedButton):
         config.update(kwargs)
 
         super().__init__(parent, command=command, **config)
-        
+
         self.variable.trace_add("write", self.variable_update)
         self.dependent_variable.trace_add("write", self.dependent_variable_update)
         self.check_disable()
 
     def variable_update(self, *_):
-        config = {
-            "text": self.get_current_text()
-        }
+        config = {"text": self.get_current_text()}
         self.configure(**config)
 
     def dependent_variable_update(self, *_):
@@ -166,14 +181,25 @@ class DependentButton(ThemedButton):
     def get_current_text(self) -> str:
         if type(self.text) == str:
             return self.text
-        
+
         return (
             self.text[2]
             if not self.dependent_variable.get()
             else self.text[0] if self.variable.get() else self.text[1]
         )
 
+
 class ColorDependentButton(ThemedButton):
+    """
+    Button that is dependent on two variables,
+    one that determines if the button is enabled,
+    and the other that the button is responsable for.
+
+    The button will change its color based on both the state of the dependent and independent variable.
+    
+    This is equivalent to the IndependentButton, but is dependent on a second variable.
+    """
+
     dependent_variable: ctk.BooleanVar
     variable: ctk.BooleanVar
     text: list[str]
@@ -194,17 +220,25 @@ class ColorDependentButton(ThemedButton):
         config.update(kwargs)
 
         super().__init__(parent, command=command, **config)
-        
+
         self.variable.trace_add("write", self.variable_update)
         self.dependent_variable.trace_add("write", self.dependent_variable_update)
         self.check_disable()
 
     def get_color(self) -> str:
         config = {
-            "fg_color": self.theme["button-enabled"] if self.variable.get() else self.theme["button-disabled"],
-            "hover_color": self.theme["button-enabled-hover"] if self.variable.get() else self.theme["button-disabled-hover"],
+            "fg_color": (
+                self.theme["button-enabled"]
+                if self.variable.get()
+                else self.theme["button-disabled"]
+            ),
+            "hover_color": (
+                self.theme["button-enabled-hover"]
+                if self.variable.get()
+                else self.theme["button-disabled-hover"]
+            ),
         }
-        
+
         return config
 
     def variable_update(self, *_):
@@ -223,7 +257,15 @@ class ColorDependentButton(ThemedButton):
             self.configure(state=ctk.DISABLED)
             self.variable.set(False)
 
+
 class SplitButton:
+    """
+    When disabled, the button is a single button.
+    When enabled, the button splits into two buttons.
+
+    The buttons can be customized with different text and commands.
+    """
+
     parent: object
     theme: dict[str, str]
 
@@ -314,6 +356,18 @@ class SplitButton:
 
 
 class SaveButton:
+    """
+    Button that represents a save file.
+
+    The button has a label with the name of the save file and three icons:
+    - A favorite icon that toggles the favorite status of the save.
+    - A rename icon that renames the save file.
+    - A delete icon that deletes the save file.
+
+    The button is styled according to the VALocker theme.
+
+    """
+
     icon_config = {
         "text_color": "text",
         "fg_color": "transparent",
@@ -456,7 +510,7 @@ class SaveButton:
 
     # region: Icon Commands
 
-    def toggle_favorite(self, reorderList = False):
+    def toggle_favorite(self, reorderList=False):
         """
         Toggles the favorite status of the element.
 
@@ -619,7 +673,7 @@ class DependentCheckbox(ThemedCheckbox):
     ):
         super().__init__(parent, text=text, variable=variable, **kwargs)
         self.variable = variable
-        
+
         self.dependent_variable = dependent_variable
         self.dependent_variable.trace_add("write", self.dependent_variable_update)
         self._pending_config = None
