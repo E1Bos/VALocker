@@ -152,16 +152,16 @@ class Region:
         self.x = x
         self.y = y
         self.color = color
-        
+
         self.x_end = x_end or x + width
         self.y_end = y_end or y + height
 
-        self.width = width if width else x_end - x 
+        self.width = width if width else x_end - x
         self.height = height if height else y_end - y
-
 
     def __repr__(self) -> str:
         return f"Region(x: {self.x} -> {self.x_end}, y: {self.y} -> {self.y_end}, w.h: {self.width} . {self.height}, color: {self.color})"
+
 
 '''
 class Save():
