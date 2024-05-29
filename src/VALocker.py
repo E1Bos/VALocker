@@ -61,6 +61,7 @@ class VALocker(ctk.CTk):
     agent_index: ctk.IntVar
 
     # Tools Variables
+    pause_tools_thread: ctk.BooleanVar
     tools_thread_running: ctk.BooleanVar
     anti_afk: ctk.BooleanVar
     drop_spike: ctk.BooleanVar
@@ -172,6 +173,7 @@ class VALocker(ctk.CTk):
         self.agent_index = ctk.IntVar(value=0)
 
         # Tools Vars
+        self.pause_tools_thread = ctk.BooleanVar(value=False)
         self.tools_thread_running = ctk.BooleanVar(value=False)
         self.anti_afk = ctk.BooleanVar(value=False)
         self.drop_spike = ctk.BooleanVar(value=False)
@@ -188,6 +190,10 @@ class VALocker(ctk.CTk):
 
         # Change agent index when the agent is changed
         self.selected_agent.trace_add("write", self.set_locking_agent)
+
+        # Pause tools thread when instalocker is running
+        self.instalocker_thread_running.trace_add("write", self.manage_tools_pause)
+        self.instalocker_status.trace_add("write", self.manage_tools_pause)
 
         # endregion
 
@@ -323,6 +329,32 @@ class VALocker(ctk.CTk):
         else:
             self.tools.stop()
 
+    def manage_tools_pause(self, *_) -> None:
+        """
+        Manages the tools thread based on the status of the Instalocker.
+        When the instalocker is in the "Locking" state and the tools thread is running, it pauses the tools thread.
+        This makes sure the instalocker can run without interference from the tools thread.
+        """
+
+        if self.pause_tools_thread.get():
+            if self.tools_thread_running.get():
+                return
+
+            self.logger.info("Resuming Tools thread")
+            self.tools_thread_running.set(True)
+            self.pause_tools_thread.set(False)
+
+        elif self.instalocker_thread_running.get():
+            if not self.instalocker_status.get():
+                return
+
+            if not self.tools_thread_running.get():
+                return
+
+            self.logger.info("Pausing Tools thread, Instalocker is locking")
+            self.pause_tools_thread.set(True)
+            self.tools_thread_running.set(False)
+
     # endregion
 
     # region: UI
@@ -373,7 +405,7 @@ class VALocker(ctk.CTk):
             FRAME.RANDOM_SELECT: RandomSelectFrame(self),
             # FRAME.MAP_TOGGLE: MapToggleFrame(self),
             FRAME.SAVE_FILES: SaveFilesFrame(self),
-            FRAME.TOOLS: SettingsFrame(self),
+            FRAME.TOOLS: ToolsFrame(self),
             FRAME.SETTINGS: SettingsFrame(self),
         }
 
@@ -539,8 +571,8 @@ class SettingsFrame(SideFrame):
     def __init__(self, parent: "VALocker"):
         super().__init__(parent)
 
-        label = ThemedLabel(self, text="Settings")
-        label.pack()
+        scrollable_frame = ThemedScrollableFrame(self, label_text="Settings")
+        scrollable_frame.pack(fill="both", expand=True)
 
 
 if __name__ == "__main__":
