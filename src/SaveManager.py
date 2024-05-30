@@ -27,9 +27,6 @@ class SaveManager:
 
         This method iterates over the files in the specified folder path and adds
         any files with the ".yaml" extension to the list of save files.
-
-        Returns:
-            None
         """
         # Reads all save files in the save file folder
         for file in os.listdir(self.FOLDER_PATH):
@@ -124,6 +121,9 @@ class SaveManager:
     # endregion
 
     def load_save(self, file_name: str) -> None:
+        """
+        Loads a save file from disk.
+        """
         try:
             with open(f"{self.FOLDER_PATH}/{file_name}", "r") as file:
                 self.save_data = self.file_manager.yaml.load(file)
@@ -140,9 +140,6 @@ class SaveManager:
     def save_file(self, save_data: Optional[dict] = None, save_name: str = None) -> None:
         """
         Saves the current save file to disk.
-
-        Returns:
-            None
         """
         if save_data is None:
             save_data = self.save_data
@@ -161,9 +158,6 @@ class SaveManager:
     def create_new_save(self, file_name: str) -> None:
         """
         Creates a new save file with the specified name.
-
-        Returns:
-            None
         """
         save_data = self.file_manager.get_config(FILE.DEFAULT_SAVE)
 
@@ -189,6 +183,9 @@ class SaveManager:
         self.logger.info(f'Created new file "{file_name}"')
 
     def update_save_files(self) -> None:
+        """
+        Updates all saves using the information in agent_config.yaml.
+        """
         # List of all agent names
         roles = self.file_manager.get_value(FILE.AGENT_CONFIG, "roles")
         agent_names = sorted(
@@ -261,9 +258,6 @@ class SaveManager:
     def rename_save(self, old_name: str, new_name: str) -> None:
         """
         Renames a save file.
-
-        Returns:
-            None
         """
         os.rename(f"{self.FOLDER_PATH}/{old_name}", f"{self.FOLDER_PATH}/{new_name}")
 

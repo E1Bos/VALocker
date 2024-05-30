@@ -5,13 +5,13 @@ from CustomLogger import CustomLogger
 
 
 class ThemeManager:
-    logger = CustomLogger("Theme Manager").get_logger()
-    working_dir = GET_WORKING_DIR()
-    theme: dict[str, str]
-
     """
     Manages the theme for the application and provides methods to set and retrieve the theme.
     """
+    
+    logger = CustomLogger("Theme Manager").get_logger()
+    working_dir = GET_WORKING_DIR()
+    theme: dict[str, str]
 
     def get_theme(self, theme_name: str) -> dict[str, str]:
         """

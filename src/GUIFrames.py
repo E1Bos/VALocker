@@ -8,17 +8,20 @@ if TYPE_CHECKING:
 
 from Constants import BRIGHTEN_COLOR, FILE, FRAME, profile
 from CustomElements import *
-import os
 
 # region: Navigation Frame
 
 
 class NavigationFrame(ctk.CTkFrame):
+    """
+    The sidebar frame that contains the program label, navigation buttons and the exit button.
+    """
+    
     parent: "VALocker"
     theme: dict[str, str]
     nav_buttons: dict[str, ctk.CTkButton] = dict()
 
-    def __init__(self, parent: "VALocker", width: int):
+    def __init__(self, parent: "VALocker", width: int) -> None:
         super().__init__(
             parent, width=width, corner_radius=0, fg_color=parent.theme["foreground"]
         )
@@ -129,9 +132,13 @@ class NavigationFrame(ctk.CTkFrame):
 
 
 class OverviewFrame(SideFrame):
+    """
+    The main frame that displays the program status and the agent status.
+    """
+    
     agent_dropdown: ThemedDropdown
 
-    def __init__(self, parent: "VALocker"):
+    def __init__(self, parent: "VALocker") -> None:
         super().__init__(parent)
 
         # Make each frame take up equal space
@@ -350,6 +357,10 @@ class OverviewFrame(SideFrame):
 
 
 class AgentToggleFrame(SideFrame):
+    """
+    Frame that allows the user to toggle the agents unlocked status.
+    """
+    
     all_variable: ctk.BooleanVar
     none_variable: ctk.BooleanVar
 
@@ -359,7 +370,7 @@ class AgentToggleFrame(SideFrame):
     toggleable_agents: dict[str, ctk.BooleanVar]
     agent_checkboxes: dict[str, ThemedCheckbox]
 
-    def __init__(self, parent: "VALocker"):
+    def __init__(self, parent: "VALocker") -> None:
         super().__init__(parent)
 
         top_frame = ThemedFrame(self)
@@ -507,6 +518,10 @@ class AgentToggleFrame(SideFrame):
 
 
 class RandomSelectFrame(SideFrame):
+    """
+    Frame that allows the user to select the random select options.
+    """
+
     all_variable: ctk.BooleanVar
     none_variable: ctk.BooleanVar
 
@@ -518,7 +533,7 @@ class RandomSelectFrame(SideFrame):
 
     agent_checkboxes: dict[str, dict[str, DependentCheckbox]]
 
-    def __init__(self, parent: "VALocker"):
+    def __init__(self, parent: "VALocker") -> None:
         super().__init__(parent)
 
         super_frame = ThemedFrame(self)
@@ -631,10 +646,16 @@ class RandomSelectFrame(SideFrame):
 
         self.update_super_checkboxes()
 
-    def on_raise(self):
+    def on_raise(self) -> None:
+        """
+        Called when the frame is raised.
+        """
         self.update_super_checkboxes()
 
-    def super_toggle_all(self, update_super=False):
+    def super_toggle_all(self, update_super: bool = False) -> None:
+        """
+        Called when the 'All' checkbox is toggled.
+        """
         for role in self.role_variables:
             self.role_variables[role].set(True)
             self.super_toggle_role(role)
@@ -642,7 +663,10 @@ class RandomSelectFrame(SideFrame):
         if update_super:
             self.update_super_checkboxes()
 
-    def super_toggle_none(self, update_super=False):
+    def super_toggle_none(self, update_super: bool = False) -> None:
+        """
+        Called when the 'None' checkbox is toggled.
+        """
         for role in self.role_variables:
             self.role_variables[role].set(False)
             self.super_toggle_role(role)
@@ -650,7 +674,10 @@ class RandomSelectFrame(SideFrame):
         if update_super:
             self.update_super_checkboxes()
 
-    def super_toggle_role(self, role: str, update_super=False):
+    def super_toggle_role(self, role: str, update_super: bool = False) -> None:
+        """
+        Called when a role checkbox is toggled.
+        """
         value = self.role_variables[role].get()
 
         for agent in self.agent_checkboxes[role]:
@@ -662,11 +689,17 @@ class RandomSelectFrame(SideFrame):
         if update_super:
             self.update_super_checkboxes()
 
-    def toggle_agent(self, update_super=False):
+    def toggle_agent(self, update_super: bool = False) -> None:
+        """
+        Toggles a single agent checkbox.
+        """
         if update_super:
             self.update_super_checkboxes()
 
-    def update_super_checkboxes(self):
+    def update_super_checkboxes(self) -> None:
+        """
+        Updates the state of all the super checkboxes.
+        """
 
         agent_values = {}
         for role in self.agent_checkboxes:
@@ -712,6 +745,10 @@ class RandomSelectFrame(SideFrame):
 
 
 class SaveFilesFrame(SideFrame):
+    """
+    Frame that displays the save files.
+    """
+
     parent: "VALocker"
 
     buttons: list[SaveButton]
@@ -721,7 +758,7 @@ class SaveFilesFrame(SideFrame):
 
     invalid_chars: list[str] = ["/", "\\", ":", "*", "?", '"', "<", ">", "|"]
 
-    def __init__(self, parent: "VALocker"):
+    def __init__(self, parent: "VALocker") -> None:
         super().__init__(parent)
 
         self.scrollable_frame = ThemedScrollableFrame(self, label_text="Save Files")
@@ -741,7 +778,15 @@ class SaveFilesFrame(SideFrame):
         )
         self.new_save_button.pack(side=ctk.RIGHT, pady=(5, 10), padx=0)
 
-    def generate_save_button_list(self, first_time=False) -> None:
+    def generate_save_button_list(self, first_time:bool=False) -> None:
+        """
+        Generates the list of save buttons, which is rendered to the user
+        as a list of buttons that represent the save files.
+
+        Args:
+            first_time (bool, optional): Only set to true when "SaveFilesFrame" is initiated, since it reads from disk.
+            Defaults to False.
+        """
         if not first_time:
             for button in self.buttons:
                 button.destroy()
@@ -784,10 +829,20 @@ class SaveFilesFrame(SideFrame):
         return True
 
     def change_save(self, save: SaveButton) -> None:
+        """
+        Loads the specified save file.
+        """
         self.change_selected_button(save.save_name)
         self.parent.load_save(save.save_file, save_current_config=True)
 
     def change_selected_button(self, save: str | SaveButton) -> None:
+        """
+        Changes the selected button based on the save name.
+
+        Args:
+            save (str | SaveButton): The save name or the button to be selected.
+        """
+
         if isinstance(save, SaveButton):
             for button in self.buttons:
                 if button == save:
@@ -806,6 +861,12 @@ class SaveFilesFrame(SideFrame):
                 button.set_selected(False)
 
     def get_button_order(self) -> list[SaveButton]:
+        """
+        Returns the buttons in the order they should be displayed.
+
+        Returns:
+            list[SaveButton]: The buttons in the order they should be displayed.
+        """
         other_buttons = sorted(
             [button for button in self.buttons if not button.favorited],
             key=lambda button: button.save_name,
@@ -814,12 +875,23 @@ class SaveFilesFrame(SideFrame):
         return self.favorite_buttons + other_buttons
 
     def reorder_buttons(self) -> None:
+        """
+        Reorders the buttons based on the favorited status and the save name.
+        """
         for index, button in enumerate(self.get_button_order()):
             button.grid(row=index, column=0, pady=5, padx=5, sticky=ctk.EW)
 
     # Button functionality
 
-    def favorite_button(self, button: SaveButton, reorderList=True) -> None:
+    def favorite_button(self, button: SaveButton, reorderList: bool = True) -> None:
+        """
+        Favorites or unfavorites a save file.
+
+        Args:
+            button (SaveButton): The button to be favorited or unfavorited.
+            reorderList (bool, optional): Whether to reorder the buttons after the change. Defaults to True.
+        """
+
         if button.favorited:
             self.favorite_buttons.append(button)
         else:
@@ -835,6 +907,11 @@ class SaveFilesFrame(SideFrame):
         )
 
     def new_save(self) -> None:
+        """
+        Creates a new save file.
+
+        This method prompts the user to enter a name for the new save file.
+        """
         valid_input = False
         while not valid_input:
             file_name = InputDialog(
@@ -861,6 +938,13 @@ class SaveFilesFrame(SideFrame):
         self.generate_save_button_list()
 
     def rename_save(self, save_button: SaveButton) -> None:
+        """
+        Renames the specified save file.
+
+        Args:
+            save_button (SaveButton): The save button that requested the rename.
+        """
+
         valid_input = False
         save_name = save_button.save_name
         while not valid_input:
@@ -892,6 +976,12 @@ class SaveFilesFrame(SideFrame):
             self.parent.current_save_name.set(file_name)
 
     def delete_save(self, save_button: SaveButton) -> None:
+        """
+        Deletes the specified save file.
+
+        Args:
+            save_button (SaveButton): The save button that requested the deletion.
+        """
         confirm = ConfirmPopup(
             self.parent,
             title="Delete Save",
@@ -925,7 +1015,7 @@ class UpdateFrame(ctk.CTkFrame):
     status_variables: dict[FILE, ctk.StringVar]
     version_variable: ctk.StringVar
 
-    def __init__(self, parent: "VALocker", **kwargs):
+    def __init__(self, parent: "VALocker", **kwargs) -> None:
         self.parent = parent
         self.theme = parent.theme
 
@@ -1019,7 +1109,7 @@ class ToolsFrame(SideFrame):
     # Dict of tool button names and their corresponding button
     tool_buttons: dict[str, ThemedButton] = dict()
 
-    def __init__(self, parent: "VALocker"):
+    def __init__(self, parent: "VALocker") -> None:
         super().__init__(parent)
 
         tools: dict[str, ctk.BooleanVar] = {"Anti-AFK": self.parent.anti_afk}

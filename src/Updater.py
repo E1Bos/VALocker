@@ -23,7 +23,7 @@ class Updater:
 
     def __init__(
         self, release_version, file_manager: FileManager, check_frequency=3600
-    ):
+    ) -> None:
         """
         The Updater class is responsible for comparing versions and determining if an update is required.
 

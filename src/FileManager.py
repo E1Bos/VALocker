@@ -13,7 +13,7 @@ class FileManager:
     The FileManager class is responsible for managing the required files and directories for the VALocker application.
     It provides methods to ensure that the required files exist, download missing files, migrate old files to a new directory structure,
     and read all the files into memory. It also provides getters and setters for accessing and modifying the file data.
-
+    
     Methods:
         setup_file_manager(): Sets up the FileManager by ensuring that the required files exist and reading them into memory.
         update_file(FILE): Update a file by downloading the latest version from the repository.
@@ -21,22 +21,22 @@ class FileManager:
         set_config(FILE, dict): Sets the configuration dictionary for the specified file.
     """
 
-    _REQUIRED_FOLDERS: dict = {
+    _REQUIRED_FOLDERS: list[FOLDER] = [
         FOLDER.SAVE_FILES,
         FOLDER.DATA,
         FOLDER.LOGS,
         FOLDER.SETTINGS,
         FOLDER.THEMES,
-    }
+    ]
 
-    _REQUIRED_FILES: dict = {
+    _REQUIRED_FILES: list[FILE] = [
         FILE.STATS,
         FILE.LOCKING_CONFIG,
         FILE.AGENT_CONFIG,
         FILE.SETTINGS,
         FILE.DEFAULT_SAVE,
         FILE.DEFAULT_THEME,
-    }
+    ]
 
     _WORKING_DIR: str = GET_WORKING_DIR()
 
@@ -243,7 +243,7 @@ class FileManager:
             self._logger.info(f"Deleted {save_files_dir}")
 
         self._logger.info("Migration complete")
-        # self._set_migrated_flag(True)
+        self._set_migrated_flag(True)
 
     def _update_data(self, new_data: dict, file: FILE) -> None:
         """
@@ -252,9 +252,6 @@ class FileManager:
         Args:
             data (dict): The data of the file to migrate.
             file (FILE): The file enum to migrate the file to.
-
-        Returns:
-            None
         """
 
         with open(self._absolute_file_path(file.value), "r") as f:

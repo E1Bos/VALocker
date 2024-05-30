@@ -21,6 +21,12 @@ from GUIFrames import *
 
 
 class VALocker(ctk.CTk):
+    """
+    VALocker is a tool that quickly locks agents for you in Valorant, along with other tools.
+    @author: [E1Bos](https://www.github.com/E1Bos)
+    """
+    
+    
     # VERSION
     VERSION: str = "2.0.0"
 
@@ -74,7 +80,7 @@ class VALocker(ctk.CTk):
         FRAME, OverviewFrame | AgentToggleFrame | RandomSelectFrame | SaveFilesFrame
     ] = dict()
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         self.logger.info(f"Initializing VALocker v{self.VERSION}")
@@ -110,6 +116,12 @@ class VALocker(ctk.CTk):
 
     # region: Setup
     def load_variables(self) -> None:
+        """
+        Defines all the variables used in the program.
+        
+        Runs at the start of the program to define all the variables used in the program.
+        """
+        
         self.instalocker_thread_running = ctk.BooleanVar(
             value=self.file_manager.get_value(FILE.SETTINGS, "enableOnStartup")
         )
@@ -272,9 +284,6 @@ class VALocker(ctk.CTk):
     def update_stats(self, *_) -> None:
         """
         Gets the current stats of the program.
-
-        Args:
-            _: Unused.
         """
         stats = self.file_manager.get_config(FILE.STATS)
 
@@ -312,9 +321,6 @@ class VALocker(ctk.CTk):
     def manage_instalocker_thread(self, *args) -> None:
         """
         Manages the Instalocker thread, tied to the `is_thread_running` variable.
-
-        Args:
-            *args: Unused.
         """
         if self.instalocker_thread_running.get():
             self.instalocker.start()
@@ -324,9 +330,6 @@ class VALocker(ctk.CTk):
     def manage_tools_thread(self, *args) -> None:
         """
         Manages the Tools thread, tied to the `is_thread_running` variable.
-
-        Args:
-            *args: Unused.
         """
         if self.tools_thread_running.get():
             self.tools.start()
@@ -439,9 +442,6 @@ class VALocker(ctk.CTk):
     def agent_unlock_status_changed(self, *_) -> None:
         """
         Called when the status of an agent is changed.
-
-        Args:
-            _: Unused.
         """
         unlocked_agents = self.get_unlocked_agents()
         unlocked_agents = [agent.capitalize() for agent in unlocked_agents]
@@ -514,6 +514,12 @@ class VALocker(ctk.CTk):
     # region: Save Management
 
     def save_data(self, filename: str = None) -> None:
+        """Saves the data of the current configuration to the given file.
+
+        Args:
+            filename (str, optional): The filename. Defaults to None. If none
+                is provided, the current save file will be used.
+        """
         save_data = self.save_manager.get_save_data()
         save_data["selectedAgent"] = self.selected_agent.get().lower()
 
@@ -532,6 +538,15 @@ class VALocker(ctk.CTk):
         self.save_manager.save_file(save_data, filename)
 
     def load_save(self, save_name: str, save_current_config: bool = False) -> None:
+        """
+        Loads the given save file and sets the current configuration to it.
+
+        Args:
+            save_name (str): the name of the save file to load.
+            save_current_config (bool, optional): Whether to save the current file to disk. 
+                Defaults to False.
+        """
+        
         if save_current_config:
             self.save_data()
 
@@ -564,12 +579,18 @@ class VALocker(ctk.CTk):
     # endregion
 
     def set_locking_agent(self, *_) -> None:
+        """
+        Sets the agent index to the selected agent.
+        """
         unlocked_agents = self.get_unlocked_agents()
 
         index = unlocked_agents.index(self.selected_agent.get().lower())
         self.agent_index.set(index)
 
     def get_unlocked_agents(self) -> list[str]:
+        """
+        Returns a list of all unlocked agents, sorted alphabetically.
+        """
         return sorted(
             [
                 agent_name
@@ -579,6 +600,9 @@ class VALocker(ctk.CTk):
         )
 
     def exclusiselect_update_gui(self) -> None:
+        """
+        Bound to the exclusiselect variable, updates the GUI to reflect the state of the variable.
+        """
         self.frames[FRAME.RANDOM_SELECT].on_raise()
 
     def exclusiselect_toggled(self, *_) -> None:

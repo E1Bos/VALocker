@@ -17,7 +17,7 @@ class CustomLogger(Logger):
 
     """
 
-    def __init__(self, name: str, log_file: str = "VALocker.log"):
+    def __init__(self, name: str, log_file: str = "VALocker.log") -> None:
         super().__init__(name)
         self.logger: Logger = getLogger(name)
 
@@ -42,12 +42,12 @@ class CustomLogger(Logger):
         stream_handler.setFormatter(formatter)
         self.addHandler(stream_handler)
 
-    def get_logger(self):
+    def get_logger(self) -> "CustomLogger":
         """
         Get the logger object.
 
         Returns:
-            Logger: The logger object.
+            CustomLogger: The logger object.
 
         """
         return self
