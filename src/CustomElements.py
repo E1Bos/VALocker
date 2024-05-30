@@ -490,7 +490,7 @@ class SaveButton:
         if self.selected:
             return
 
-        self.side_frame.change_save(self.save_name)
+        self.side_frame.change_save(self)
         self.set_selected(True)
 
     def set_selected(self, value: bool):
@@ -510,7 +510,7 @@ class SaveButton:
 
     # region: Icon Commands
 
-    def toggle_favorite(self, value: bool = None, reorderList:bool=False):
+    def toggle_favorite(self, value: bool = None, reorderList: bool = False):
         """
         Toggles the favorite status of the element.
 
@@ -532,10 +532,15 @@ class SaveButton:
         self.side_frame.favorite_button(self, reorderList=reorderList)
 
     def rename(self):
-        raise NotImplementedError("Save Rename functionality not implemented")
+        self.side_frame.rename_save(self)
+
+    def change_text(self, text: str):
+        self.save_label.configure(text=text)
+        self.save_name = text
+        self.save_file = text + ".yaml"
 
     def delete(self):
-        raise NotImplementedError("Save Delete functionality not implemented")
+        self.side_frame.delete_save(self)
 
     # endregion
 
@@ -778,6 +783,245 @@ class ThemedScrollableFrame(ctk.CTkScrollableFrame):
         config.update(kwargs)
 
         super().__init__(parent, **config)
+
+
+# endregion
+
+# region: Popups
+
+
+class ThemedPopup(ctk.CTkToplevel):
+    default_config = {
+        "fg_color": "background",
+    }
+
+    def __init__(self, parent: "VALocker", title, geometry: str, **kwargs):
+        self.parent = parent
+        self.theme = parent.theme
+
+        config = {
+            key: kwargs.get(key, parent.theme.get(value, value))
+            for key, value in self.default_config.items()
+        }
+        config.update(kwargs)
+
+        super().__init__(**config)
+        self.geometry(geometry)
+
+        self.title(title)
+        self.lift()  # lift window on top
+        self.attributes("-topmost", True)  # stay on top
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.after(
+            10, self.create_widgets
+        )  # create widgets with slight delay, to avoid white flickering of background
+        self.resizable(False, False)
+        self.grab_set()  # make other windows not clickable
+        self.calculate_position()
+
+    @abstractmethod
+    def create_widgets(self):
+        pass
+
+    def calculate_position(self):
+        mw_size, mw_x_shift, mw_y_shift = self.parent.winfo_geometry().split("+")
+        mw_size_x, mw_size_y = map(int, mw_size.split("x"))
+        mw_x_shift, mw_y_shift = map(int, [mw_x_shift, mw_y_shift])
+
+        popup_size, _, _ = self.geometry().split("+")
+        popup_size_x, popup_size_y = map(int, popup_size.split("x"))
+
+        # center the window
+        self.geometry(
+            "+%d+%d"
+            % (
+                mw_x_shift + (mw_size_x - popup_size_x) // 2,
+                mw_y_shift + (mw_size_y - popup_size_y) // 2,
+            )
+        )
+
+    def on_closing(self):
+        self.grab_release()
+        self.destroy()
+
+
+class InputDialog(ThemedPopup):
+    """
+    Modified version of the InputDialog class from the customtkinter library to use the active theme.
+    See https://github.com/TomSchimansky/CustomTkinter for the original class.
+    """
+
+    theme: dict[str, str]
+
+    def __init__(
+        self,
+        parent: "VALocker",
+        title: str,
+        label: str,
+        placeholder: str = None,
+        prefill: str = None,
+        **kwargs,
+    ):
+
+        self.theme = parent.theme
+
+        super().__init__(parent, title, "300x170", **kwargs)
+
+        self.user_input: Union[str, None] = None
+        self.parent = parent
+        self.label = label
+        self.placeholder = placeholder if placeholder else ""
+        self.prefill = prefill
+
+    def create_widgets(self):
+        self.grid_columnconfigure((0, 1), weight=1)
+        self.grid_rowconfigure((0,1,2), weight=1)
+
+        self.label = ThemedLabel(
+            self, width=300, wraplength=300, fg_color="transparent", text=self.label
+        )
+        self.label.grid(row=0, column=0, columnspan=2, padx=10, pady=10, sticky="ew")
+
+        self.entry = ctk.CTkEntry(
+            self,
+            width=230,
+            height=40,
+            fg_color=self.theme["foreground"],
+            text_color=self.theme["text"],
+            font=self.theme["label"],
+        )
+        self.entry.grid(
+            row=1, column=0, columnspan=2, padx=10, pady=(0, 10), sticky="ew"
+        )
+
+        if self.prefill:
+            self.entry.insert(0, self.prefill)
+
+        self.ok_button = ThemedButton(
+            self,
+            fg_color=self.theme["button-enabled"],
+            hover_color=self.theme["button-enabled-hover"],
+            text="Ok",
+            height=30,
+            command=self.ok_event,
+        )
+        self.ok_button.grid(
+            row=2, column=1, columnspan=1, padx=(20, 10), pady=(0, 10), sticky="ew"
+        )
+
+        self.cancel_button = ThemedButton(
+            self,
+            fg_color=self.theme["button-disabled"],
+            hover_color=self.theme["button-disabled-hover"],
+            text="Cancel",
+            height=30,
+            command=self.cancel_event,
+        )
+        self.cancel_button.grid(
+            row=2, column=0, columnspan=1, padx=(10, 20), pady=(0, 10), sticky="ew"
+        )
+
+        self.after(
+            150, lambda: self.entry.focus()
+        )  # set focus to entry with slight delay, otherwise it won't work
+        self.entry.bind("<Return>", self.ok_event)
+        self.entry.bind("<Escape>", self.cancel_event)
+
+    def ok_event(self, event=None):
+        self.user_input = self.entry.get()
+        self.grab_release()
+        self.destroy()
+
+    def cancel_event(self):
+        self.grab_release()
+        self.destroy()
+
+    def get_input(self):
+        self.master.wait_window(self)
+        return self.user_input
+
+
+class ErrorPopup(ThemedPopup):
+    theme: dict[str, str]
+
+    def __init__(self, parent: "VALocker", message: str, **kwargs):
+        self.theme = parent.theme
+        self.message = message
+
+        super().__init__(parent, "Error", "300x100", **kwargs)
+
+    def create_widgets(self):
+        self.label = ThemedLabel(
+            self,
+            text=self.message,
+        )
+        self.label.pack(side=ctk.TOP, padx=10, pady=10)
+
+        self.ok_button = ThemedButton(self, text="Ok", height=30, command=self.destroy)
+        self.ok_button.pack(side=ctk.BOTTOM, padx=10, pady=10)
+
+        self.bind("<Return>", lambda e: self.destroy())
+        self.master.wait_window(self)
+
+
+class ConfirmPopup(ThemedPopup):
+    theme: dict[str, str]
+
+    def __init__(self, parent: "VALocker", title: str, message: str, **kwargs):
+        self.theme = parent.theme
+        self.message = message
+        self.confirm = False
+
+        super().__init__(parent, title, "300x150", **kwargs)
+
+    def create_widgets(self):
+        self.grid_columnconfigure((0, 1), weight=1)
+        self.grid_rowconfigure((0, 1), weight=1)
+        
+        self.label = ThemedLabel(
+            self,
+            text=self.message,
+        )
+        self.label.grid(row=0, column=0, columnspan=2, padx=10, pady=10, sticky="ew")
+
+        self.ok_button = ThemedButton(
+            self,
+            text="Yes",
+            height=30,
+            command=self.ok_event,
+            fg_color=self.theme["button-disabled"],
+            hover_color=self.theme["button-disabled-hover"],
+        )
+        self.ok_button.grid(
+            row=1, column=1, columnspan=1, padx=(10, 20), pady=(0, 10), sticky="ew"
+        )
+
+        self.no_button = ThemedButton(
+            self,
+            text="No",
+            height=30,
+            command=self.cancel_event,
+            fg_color=self.theme["button-enabled"],
+            hover_color=self.theme["button-enabled-hover"],
+        )
+        self.no_button.grid(
+            row=1, column=0, columnspan=1, padx=(20, 10), pady=(0, 10), sticky="ew"
+        )
+        
+        self.bind("<Return>", lambda e: self.ok_event())
+        self.bind("<Escape>", lambda e: self.cancel_event())
+
+    def ok_event(self):
+        self.confirm = True
+        self.destroy()
+
+    def cancel_event(self):
+        self.confirm = False
+        self.destroy()
+
+    def get_input(self):
+        self.master.wait_window(self)
+        return self.confirm
 
 
 # endregion
