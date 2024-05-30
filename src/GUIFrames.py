@@ -719,6 +719,8 @@ class SaveFilesFrame(SideFrame):
 
     new_file_icon = ctk.CTkImage(Image.open(ICON.NEW_FILE.value), size=(20, 20))
 
+    invalid_chars: list[str] = ["/", "\\", ":", "*", "?", '"', "<", ">", "|"]
+
     def __init__(self, parent: "VALocker"):
         super().__init__(parent)
 
@@ -726,7 +728,7 @@ class SaveFilesFrame(SideFrame):
         self.scrollable_frame.pack(fill=ctk.BOTH, expand=True, pady=(10, 0))
         self.scrollable_frame.grid_columnconfigure(0, weight=1)
 
-        self.generate_save_list(first_time=True)
+        self.generate_save_button_list(first_time=True)
 
         self.new_save_button = ThemedButton(
             self,
@@ -739,12 +741,12 @@ class SaveFilesFrame(SideFrame):
         )
         self.new_save_button.pack(side=ctk.RIGHT, pady=(5, 10), padx=0)
 
-    def generate_save_list(self, first_time=False) -> None:
+    def generate_save_button_list(self, first_time=False) -> None:
         if not first_time:
             for button in self.buttons:
                 button.destroy()
 
-        favorite_button_names = [f"{button.save_name}.yaml" for button in self.favorite_buttons]
+        favorite_button_names = [button.save_file for button in self.favorite_buttons]
         if first_time:
             for favorited_save in self.parent.file_manager.get_value(
                 FILE.SETTINGS, "favoritedSaveFiles"
@@ -753,49 +755,69 @@ class SaveFilesFrame(SideFrame):
 
         self.buttons = []
         self.favorite_buttons = []
-        for save_name in self.parent.save_manager.get_all_save_files():
-            button = SaveButton(self.scrollable_frame, save_file=save_name)
-            if f"{button.save_name}.yaml" in favorite_button_names:
+        for save_file in self.parent.save_manager.get_all_save_files():
+            button = SaveButton(self.scrollable_frame, save_file=save_file)
+            if button.save_file in favorite_button_names:
                 button.toggle_favorite(value=True)
             self.buttons.append(button)
 
         self.reorder_buttons()
-        self.change_selected(self.parent.current_save_name.get())
+        self.change_selected_button(self.parent.current_save_name.get())
 
-    def new_save(self) -> None:
-        dialog = InputDialog(
-            self.parent, title="New Save", label="Enter New Save Name:", placeholder="Save Name"
-        )
-        file_name = dialog.get_input()
-        
-        if file_name is None:
-            return
-                
-        if file_name in self.parent.save_manager.get_all_save_files():
-            self.parent.logger.error(f"Save '{file_name}' already exists.")
-            return
-        
+    def validate_file_name(self, file_name: str) -> bool | None:
+        """
+        Validates the file name.
+
+        Raises an exception if the file name is invalid.
+        Returns True if the file name is valid.
+        """
         if file_name == "":
-            self.parent.logger.error("Save name cannot be empty.")
+            raise Exception("File name cannot be empty")
+
+        for char in self.invalid_chars:
+            if char in file_name:
+                raise Exception(f'Invalid character: "{char}".')
+
+        if f"{file_name}.yaml" in self.parent.save_manager.get_all_save_files():
+            raise Exception(f'Save file "{file_name}" already exists')
+
+        return True
+
+    def change_save(self, save: SaveButton) -> None:
+        self.change_selected_button(save.save_name)
+        self.parent.load_save(save.save_file, save_current_config=True)
+
+    def change_selected_button(self, save: str | SaveButton) -> None:
+        if isinstance(save, SaveButton):
+            for button in self.buttons:
+                if button == save:
+                    button.set_selected(True)
+                else:
+                    button.set_selected(False)
             return
-        
-        file_name = file_name.strip() + ".yaml"
-        
-        self.parent.save_manager.create_new_save(file_name)
-        self.parent.load_save(file_name, save_current_config=True)
-        self.generate_save_list()
 
-    def change_save(self, save_name: str) -> None:
-        save_name += ".yaml"
-        self.change_selected(save_name)
-        self.parent.load_save(save_name, save_current_config=True)
+        if save.endswith(".yaml"):
+            save = save.removesuffix(".yaml")
 
-    def change_selected(self, save_name: str) -> None:
         for button in self.buttons:
-            if button.save_name == save_name:
+            if button.save_name == save:
                 button.set_selected(True)
             else:
                 button.set_selected(False)
+
+    def get_button_order(self) -> list[SaveButton]:
+        other_buttons = sorted(
+            [button for button in self.buttons if not button.favorited],
+            key=lambda button: button.save_name,
+        )
+
+        return self.favorite_buttons + other_buttons
+
+    def reorder_buttons(self) -> None:
+        for index, button in enumerate(self.get_button_order()):
+            button.grid(row=index, column=0, pady=5, padx=5, sticky=ctk.EW)
+
+    # Button functionality
 
     def favorite_button(self, button: SaveButton, reorderList=True) -> None:
         if button.favorited:
@@ -812,14 +834,80 @@ class SaveFilesFrame(SideFrame):
             [button.save_file for button in self.favorite_buttons],
         )
 
-    def reorder_buttons(self) -> None:
-        other_buttons = sorted(
-            [button for button in self.buttons if not button.favorited],
-            key=lambda button: button.save_name,
-        )
-        
-        for index, button in enumerate(self.favorite_buttons + other_buttons):
-            button.grid(row=index, column=0, pady=5, padx=5, sticky=ctk.EW)
+    def new_save(self) -> None:
+        valid_input = False
+        while not valid_input:
+            file_name = InputDialog(
+                self.parent,
+                title="New Save",
+                label="Enter new save name:",
+                placeholder="Save Name",
+            ).get_input()
+
+            if file_name is None:
+                self.parent.logger.info("New Save Cancelled")
+                return
+
+            try:
+                valid_input = self.validate_file_name(file_name)
+            except Exception as e:
+                self.parent.logger.warning(f"Error creating new file: {e}")
+                ErrorPopup(self.parent, message=str(e))
+
+        file_name = file_name.strip() + ".yaml"
+
+        self.parent.save_manager.create_new_save(file_name)
+        self.parent.load_save(file_name, save_current_config=True)
+        self.generate_save_button_list()
+
+    def rename_save(self, save_button: SaveButton) -> None:
+        valid_input = False
+        save_name = save_button.save_name
+        while not valid_input:
+            file_name = InputDialog(
+                self.parent,
+                title="Rename Save",
+                label=f'Rename save file \n"{save_name}"',
+                prefill=save_name,
+            ).get_input()
+
+            if file_name is None:
+                self.parent.logger.info("Rename Save Cancelled")
+                return
+
+            try:
+                valid_input = self.validate_file_name(file_name)
+            except Exception as e:
+                self.parent.logger.warning(f"Error renaming file: {e}")
+                ErrorPopup(self.parent, message=str(e))
+
+        file_name = file_name.strip()
+
+        old_name = save_button.save_file
+        save_button.change_text(file_name)
+
+        self.parent.save_manager.rename_save(old_name, save_button.save_file)
+
+        if old_name.removesuffix(".yaml") == self.parent.current_save_name.get():
+            self.parent.current_save_name.set(file_name)
+
+    def delete_save(self, save_button: SaveButton) -> None:
+        confirm = ConfirmPopup(
+            self.parent,
+            title="Delete Save",
+            message=f'Are you sure you want to delete\n"{save_button.save_name}"?',
+        ).get_input()
+
+        if not confirm:
+            return
+
+        self.parent.save_manager.delete_save(save_button.save_file)
+        self.generate_save_button_list()
+
+        if save_button.save_name == self.parent.current_save_name.get():
+            first_save = self.get_button_order()[0]
+            self.parent.load_save(first_save.save_file, save_current_config=False)
+            self.change_selected_button(first_save)
 
 
 # endregion
@@ -965,142 +1053,6 @@ class ToolsFrame(SideFrame):
             button.grid(row=index, column=0, padx=10, pady=10, sticky=ctk.NSEW)
 
             self.tool_buttons[tool] = button
-
-
-# endregion
-
-# region: Popups
-
-
-class ThemedPopup(ctk.CTkToplevel):
-    default_config = {
-        "fg_color": "foreground",
-    }
-
-    def __init__(self, parent: "VALocker", title, **kwargs):
-        self.theme = parent.theme
-
-        config = {
-            key: kwargs.get(key, parent.theme.get(value, value))
-            for key, value in self.default_config.items()
-        }
-        config.update(kwargs)
-
-        super().__init__(**config)
-        self.geometry("300x200")
-        self.title = title
-
-
-class InputDialog(ctk.CTkToplevel):
-    """
-    Modified version of the InputDialog class from the customtkinter library to use the active theme.
-    See https://github.com/TomSchimansky/CustomTkinter for the original class.
-    """
-    
-    default_config = {
-        "fg_color": "background",
-    }
-
-    theme: dict[str, str]
-
-    def __init__(self, parent: "VALocker", title: str, label: str, placeholder: str, prefill: str = None, **kwargs):
-
-        self.theme = parent.theme
-
-        config = {
-            key: kwargs.get(key, parent.theme.get(value, value))
-            for key, value in self.default_config.items()
-        }
-        config.update(kwargs)
-
-        super().__init__(**config)
-
-        self.user_input: Union[str, None] = None
-        self.label = label
-        self.placeholder = placeholder
-        self.prefill = prefill
-
-        self.title(title)
-        self.lift()  # lift window on top
-        self.attributes("-topmost", True)  # stay on top
-        self.protocol("WM_DELETE_WINDOW", self._on_closing)
-        self.after(
-            10, self.create_widgets
-        )  # create widgets with slight delay, to avoid white flickering of background
-        self.resizable(False, False)
-        self.grab_set()  # make other windows not clickable
-
-    def create_widgets(self):
-        self.grid_columnconfigure((0, 1), weight=1)
-        self.rowconfigure(0, weight=1)
-
-        self.label = ThemedLabel(
-            self,
-            width=300,
-            wraplength=300,
-            fg_color="transparent",
-            text=self.label
-        )
-        self.label.grid(row=0, column=0, columnspan=2, padx=20, pady=20, sticky="ew")
-
-        self.entry = ctk.CTkEntry(
-            self,
-            width=230,
-            fg_color=self.theme["foreground"],
-            text_color=self.theme["text"],
-            font=self.theme["label"],
-        )
-        self.entry.grid(
-            row=1, column=0, columnspan=2, padx=20, pady=(0, 20), sticky="ew"
-        )
-        
-        if self.prefill:
-            self.entry.insert(0, self.prefill)
-
-        self.ok_button = ThemedButton(
-            self,
-            fg_color=self.theme["button-enabled"],
-            hover_color=self.theme["button-enabled-hover"],
-            text="Ok",
-            command=self._ok_event,
-        )
-        self.ok_button.grid(
-            row=2, column=1, columnspan=1, padx=(20, 10), pady=(0, 20), sticky="ew"
-        )
-
-        self.cancel_button = ThemedButton(
-            self,
-            fg_color=self.theme["button-disabled"],
-            hover_color=self.theme["button-disabled-hover"],
-            text="Cancel",
-            command=self._cancel_event,
-        )
-        self.cancel_button.grid(
-            row=2, column=0, columnspan=1, padx=(10, 20), pady=(0, 20), sticky="ew"
-        )
-
-        self.after(
-            150, lambda: self.entry.focus()
-        )  # set focus to entry with slight delay, otherwise it won't work
-        self.entry.bind("<Return>", self._ok_event)
-        self.entry.bind("<Escape>", self._cancel_event)
-
-    def _ok_event(self, event=None):
-        self.user_input = self.entry.get()
-        self.grab_release()
-        self.destroy()
-
-    def _on_closing(self):
-        self.grab_release()
-        self.destroy()
-
-    def _cancel_event(self):
-        self.grab_release()
-        self.destroy()
-
-    def get_input(self):
-        self.master.wait_window(self)
-        return self.user_input
 
 
 # endregion

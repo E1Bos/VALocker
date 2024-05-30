@@ -127,18 +127,17 @@ class SaveManager:
         try:
             with open(f"{self.FOLDER_PATH}/{file_name}", "r") as file:
                 self.save_data = self.file_manager.yaml.load(file)
-                
+
             self.current_save_file = file_name
-            
+
             self.logger.info(f'Loaded file "{file_name}"')
-        
+
         except FileNotFoundError:
             self.logger.error(f'File "{file_name}" not found')
             self.load_save(self.save_files[0])
             raise FileNotFoundError(f'File "{file_name}" not found')
 
-
-    def save_file(self, save_data: Optional[dict] = None) -> None:
+    def save_file(self, save_data: Optional[dict] = None, save_name: str = None) -> None:
         """
         Saves the current save file to disk.
 
@@ -148,7 +147,13 @@ class SaveManager:
         if save_data is None:
             save_data = self.save_data
 
-        with open(f"{self.FOLDER_PATH}/{self.current_save_file}", "w") as file:
+        if save_name is None:
+            save_name = self.current_save_file
+            
+            if not save_name.endswith(".yaml"):
+                save_name += ".yaml"
+
+        with open(f"{self.FOLDER_PATH}/{save_name}", "w") as file:
             self.file_manager.yaml.dump(save_data, file)
 
         self.logger.info(f'Saved file "{self.current_save_file}"')
@@ -170,7 +175,7 @@ class SaveManager:
             if agent in default_agents:
                 save_data.get("agents")[agent] = (False,)
                 continue
-            
+
             save_data.get("agents")[agent] = (False, False)
 
         for map in save_data.get("mapSpecificAgents"):
@@ -253,6 +258,35 @@ class SaveManager:
 
         self.logger.info(f"Updated all save files")
 
+    def rename_save(self, old_name: str, new_name: str) -> None:
+        """
+        Renames a save file.
+
+        Returns:
+            None
+        """
+        os.rename(f"{self.FOLDER_PATH}/{old_name}", f"{self.FOLDER_PATH}/{new_name}")
+
+        self.save_files.remove(old_name)
+        self.save_files.append(new_name)
+
+        if self.current_save_file == old_name:
+            self.current_save_file = new_name
+
+        self.logger.info(f'Renamed file "{old_name}" to "{new_name}"')
+
+    def delete_save(self, save_name: str) -> None:
+        """
+        Deletes a save file.
+
+        Returns:
+            None
+        """
+        os.remove(f"{self.FOLDER_PATH}/{save_name}")
+
+        self.save_files.remove(save_name)
+
+        self.logger.info(f'Deleted file "{save_name}"')
 
 if __name__ == "__main__":
     file_manager = FileManager()

@@ -513,7 +513,7 @@ class VALocker(ctk.CTk):
 
     # region: Save Management
 
-    def save_data(self) -> None:
+    def save_data(self, filename: str = None) -> None:
         save_data = self.save_manager.get_save_data()
         save_data["selectedAgent"] = self.selected_agent.get().lower()
 
@@ -529,9 +529,9 @@ class VALocker(ctk.CTk):
         for map_name in self.file_manager.get_value(FILE.AGENT_CONFIG, "maps"):
             save_data["mapSpecificAgents"][map_name] = None
 
-        self.save_manager.save_file(save_data)
+        self.save_manager.save_file(save_data, filename)
 
-    def load_save(self, save_name: str, save_current_config=False) -> None:
+    def load_save(self, save_name: str, save_current_config: bool = False) -> None:
         if save_current_config:
             self.save_data()
 
@@ -638,7 +638,7 @@ class SettingsFrame(SideFrame):
         super().__init__(parent)
 
         scrollable_frame = ThemedScrollableFrame(self, label_text="Settings")
-        scrollable_frame.pack(fill="both", expand=True)
+        scrollable_frame.pack(fill="both", expand=True, pady=10)
 
 
 if __name__ == "__main__":
