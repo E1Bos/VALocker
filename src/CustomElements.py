@@ -196,7 +196,7 @@ class ColorDependentButton(ThemedButton):
     and the other that the button is responsable for.
 
     The button will change its color based on both the state of the dependent and independent variable.
-    
+
     This is equivalent to the IndependentButton, but is dependent on a second variable.
     """
 
@@ -445,7 +445,7 @@ class SaveButton:
         self.favorite_icon = ThemedButton(
             self.frame,
             image=self.favorite_off_img,
-            command=lambda: self.toggle_favorite(True),
+            command=lambda: self.toggle_favorite(reorderList=True),
             **icon_config,
         )
 
@@ -510,7 +510,7 @@ class SaveButton:
 
     # region: Icon Commands
 
-    def toggle_favorite(self, reorderList=False):
+    def toggle_favorite(self, value: bool = None, reorderList:bool=False):
         """
         Toggles the favorite status of the element.
 
@@ -520,7 +520,10 @@ class SaveButton:
         itself as an argument.
 
         """
-        self.favorited = not self.favorited
+        if value is not None:
+            self.favorited = value
+        else:
+            self.favorited = not self.favorited
 
         self.favorite_icon.configure(
             image=self.favorite_on_img if self.favorited else self.favorite_off_img
@@ -562,6 +565,9 @@ class SaveButton:
             self.frame.configure(fg_color=self.theme["accent"])
 
     # endregion
+
+    def destroy(self):
+        self.frame.destroy()
 
     def grid(self, **kwargs):
         self.frame.grid(**kwargs)
