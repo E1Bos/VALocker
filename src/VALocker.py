@@ -536,7 +536,15 @@ class VALocker(ctk.CTk):
             self.save_data()
 
         self.file_manager.set_value(FILE.SETTINGS, "activeSaveFile", save_name)
-        self.save_manager.load_save(save_name)
+
+        try:
+            self.save_manager.load_save(save_name)
+        except FileNotFoundError:
+            self.file_manager.set_value(
+                FILE.SETTINGS,
+                "activeSaveFile",
+                self.save_manager.get_current_save_file(),
+            )
 
         for agent_name, values in self.save_manager.get_agent_status().items():
             if len(values) == 1:
@@ -576,7 +584,7 @@ class VALocker(ctk.CTk):
     def exclusiselect_toggled(self, *_) -> None:
         """
         Called when the exclusive select variable is toggled.
-        
+
         Creates a temporary dict with the current state of the agents.
         If exclusive select is enabled, it will clone the current state of the agents.
         If exclusive select is disabled, it will set the state of the agents to the temporary dict.
@@ -585,44 +593,45 @@ class VALocker(ctk.CTk):
         if self.exclusiselect.get():
             # Clone the current state of the agents
             agent_states_clone = self.agent_states.copy()
-            
+
             # Create a temporary dict with the random agent states
             self.temp_random_agents: dict[str, bool] = dict()
-            
+
             for agent_name, values in agent_states_clone.items():
                 # Used for default agents
                 if len(values) == 1:
                     self.temp_random_agents[agent_name] = values[0].get()
                     continue
-            
+
                 # Used for other agents
                 self.temp_random_agents[agent_name] = values[1].get()
-        
+
         # If exlusive select is disabled
         else:
             # If the temp_random_agents is None, return (error handling)
             if self.temp_random_agents is None:
                 return
-            
+
             # For all agents in the temporary dict
-            for agent, value in self.temp_random_agents.items():        
+            for agent, value in self.temp_random_agents.items():
                 # If the agent is a default agent, set the value
                 if len(self.agent_states[agent]) == 1:
                     self.agent_states[agent][0].set(value)
                     continue
-                
+
                 # If the agent is not unlocked, continue (error handling)
                 if not self.agent_states[agent][0].get():
                     continue
-                
+
                 # Set the value of the agent
                 self.agent_states[agent][1].set(value)
-            
+
             # Clear the temporary dict
             self.temp_random_agents = None
 
         # Update the random select frame to reflect the changes
         self.frames[FRAME.RANDOM_SELECT].on_raise()
+
 
 class SettingsFrame(SideFrame):
     def __init__(self, parent: "VALocker"):

@@ -722,15 +722,11 @@ class SaveFilesFrame(SideFrame):
     def __init__(self, parent: "VALocker"):
         super().__init__(parent)
 
-        scrollable_frame = ThemedScrollableFrame(self, label_text="Save Files")
-        scrollable_frame.pack(fill=ctk.BOTH, expand=True, pady=(10, 0))
-        scrollable_frame.grid_columnconfigure(0, weight=1)
+        self.scrollable_frame = ThemedScrollableFrame(self, label_text="Save Files")
+        self.scrollable_frame.pack(fill=ctk.BOTH, expand=True, pady=(10, 0))
+        self.scrollable_frame.grid_columnconfigure(0, weight=1)
 
-        self.buttons: list[SaveButton] = []
-
-        for save_name in parent.save_manager.get_all_save_files():
-            button = SaveButton(scrollable_frame, save_file=save_name)
-            self.buttons.append(button)
+        self.generate_save_list(first_time=True)
 
         self.new_save_button = ThemedButton(
             self,
@@ -743,24 +739,56 @@ class SaveFilesFrame(SideFrame):
         )
         self.new_save_button.pack(side=ctk.RIGHT, pady=(5, 10), padx=0)
 
-        self.change_selected(self.parent.current_save_name.get())
-
-        for favorited_save in self.parent.file_manager.get_value(
-            FILE.SETTINGS, "favoritedSaveFiles"
-        ):
-            print(favorited_save)
+    def generate_save_list(self, first_time=False) -> None:
+        if not first_time:
             for button in self.buttons:
-                if button.save_name == favorited_save:
-                    button.toggle_favorite()
+                button.destroy()
+
+        favorite_button_names = [f"{button.save_name}.yaml" for button in self.favorite_buttons]
+        if first_time:
+            for favorited_save in self.parent.file_manager.get_value(
+                FILE.SETTINGS, "favoritedSaveFiles"
+            ):
+                favorite_button_names.append(favorited_save)
+
+        self.buttons = []
+        self.favorite_buttons = []
+        for save_name in self.parent.save_manager.get_all_save_files():
+            button = SaveButton(self.scrollable_frame, save_file=save_name)
+            if f"{button.save_name}.yaml" in favorite_button_names:
+                button.toggle_favorite(value=True)
+            self.buttons.append(button)
 
         self.reorder_buttons()
+        self.change_selected(self.parent.current_save_name.get())
 
     def new_save(self) -> None:
-        raise NotImplementedError("New Save functionality not implemented")
+        dialog = InputDialog(
+            self.parent, title="New Save", label="Enter New Save Name:", placeholder="Save Name"
+        )
+        file_name = dialog.get_input()
+        
+        if file_name is None:
+            return
+                
+        if file_name in self.parent.save_manager.get_all_save_files():
+            self.parent.logger.error(f"Save '{file_name}' already exists.")
+            return
+        
+        if file_name == "":
+            self.parent.logger.error("Save name cannot be empty.")
+            return
+        
+        file_name = file_name.strip() + ".yaml"
+        
+        self.parent.save_manager.create_new_save(file_name)
+        self.parent.load_save(file_name, save_current_config=True)
+        self.generate_save_list()
 
     def change_save(self, save_name: str) -> None:
+        save_name += ".yaml"
         self.change_selected(save_name)
-        self.parent.load_save(f"{save_name}.yaml", save_current_config=True)
+        self.parent.load_save(save_name, save_current_config=True)
 
     def change_selected(self, save_name: str) -> None:
         for button in self.buttons:
@@ -789,7 +817,7 @@ class SaveFilesFrame(SideFrame):
             [button for button in self.buttons if not button.favorited],
             key=lambda button: button.save_name,
         )
-
+        
         for index, button in enumerate(self.favorite_buttons + other_buttons):
             button.grid(row=index, column=0, pady=5, padx=5, sticky=ctk.EW)
 
@@ -949,8 +977,7 @@ class ThemedPopup(ctk.CTkToplevel):
         "fg_color": "foreground",
     }
 
-    def __init__(self, parent: "VALocker", **kwargs):
-        self.parent = parent
+    def __init__(self, parent: "VALocker", title, **kwargs):
         self.theme = parent.theme
 
         config = {
@@ -959,10 +986,121 @@ class ThemedPopup(ctk.CTkToplevel):
         }
         config.update(kwargs)
 
-        super().__init__(parent, **config)
+        super().__init__(**config)
+        self.geometry("300x200")
+        self.title = title
 
-        self.geometry("400x300")
-        self.title = "Popup"
+
+class InputDialog(ctk.CTkToplevel):
+    """
+    Modified version of the InputDialog class from the customtkinter library to use the active theme.
+    See https://github.com/TomSchimansky/CustomTkinter for the original class.
+    """
+    
+    default_config = {
+        "fg_color": "background",
+    }
+
+    theme: dict[str, str]
+
+    def __init__(self, parent: "VALocker", title: str, label: str, placeholder: str, prefill: str = None, **kwargs):
+
+        self.theme = parent.theme
+
+        config = {
+            key: kwargs.get(key, parent.theme.get(value, value))
+            for key, value in self.default_config.items()
+        }
+        config.update(kwargs)
+
+        super().__init__(**config)
+
+        self.user_input: Union[str, None] = None
+        self.label = label
+        self.placeholder = placeholder
+        self.prefill = prefill
+
+        self.title(title)
+        self.lift()  # lift window on top
+        self.attributes("-topmost", True)  # stay on top
+        self.protocol("WM_DELETE_WINDOW", self._on_closing)
+        self.after(
+            10, self.create_widgets
+        )  # create widgets with slight delay, to avoid white flickering of background
+        self.resizable(False, False)
+        self.grab_set()  # make other windows not clickable
+
+    def create_widgets(self):
+        self.grid_columnconfigure((0, 1), weight=1)
+        self.rowconfigure(0, weight=1)
+
+        self.label = ThemedLabel(
+            self,
+            width=300,
+            wraplength=300,
+            fg_color="transparent",
+            text=self.label
+        )
+        self.label.grid(row=0, column=0, columnspan=2, padx=20, pady=20, sticky="ew")
+
+        self.entry = ctk.CTkEntry(
+            self,
+            width=230,
+            fg_color=self.theme["foreground"],
+            text_color=self.theme["text"],
+            font=self.theme["label"],
+        )
+        self.entry.grid(
+            row=1, column=0, columnspan=2, padx=20, pady=(0, 20), sticky="ew"
+        )
+        
+        if self.prefill:
+            self.entry.insert(0, self.prefill)
+
+        self.ok_button = ThemedButton(
+            self,
+            fg_color=self.theme["button-enabled"],
+            hover_color=self.theme["button-enabled-hover"],
+            text="Ok",
+            command=self._ok_event,
+        )
+        self.ok_button.grid(
+            row=2, column=1, columnspan=1, padx=(20, 10), pady=(0, 20), sticky="ew"
+        )
+
+        self.cancel_button = ThemedButton(
+            self,
+            fg_color=self.theme["button-disabled"],
+            hover_color=self.theme["button-disabled-hover"],
+            text="Cancel",
+            command=self._cancel_event,
+        )
+        self.cancel_button.grid(
+            row=2, column=0, columnspan=1, padx=(10, 20), pady=(0, 20), sticky="ew"
+        )
+
+        self.after(
+            150, lambda: self.entry.focus()
+        )  # set focus to entry with slight delay, otherwise it won't work
+        self.entry.bind("<Return>", self._ok_event)
+        self.entry.bind("<Escape>", self._cancel_event)
+
+    def _ok_event(self, event=None):
+        self.user_input = self.entry.get()
+        self.grab_release()
+        self.destroy()
+
+    def _on_closing(self):
+        self.grab_release()
+        self.destroy()
+
+    def _cancel_event(self):
+        self.grab_release()
+        self.destroy()
+
+    def get_input(self):
+        self.master.wait_window(self)
+        return self.user_input
 
 
 # endregion

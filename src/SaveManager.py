@@ -56,6 +56,15 @@ class SaveManager:
         """
         return self.save_files
 
+    def get_current_save_file(self) -> str:
+        """
+        Gets the current save file.
+
+        Returns:
+            str: The current save file.
+        """
+        return self.current_save_file
+
     def get_current_save_name(self) -> str:
         """
         Gets the name of the current save file.
@@ -115,12 +124,19 @@ class SaveManager:
     # endregion
 
     def load_save(self, file_name: str) -> None:
-        with open(f"{self.FOLDER_PATH}/{file_name}", "r") as file:
-            self.save_data = self.file_manager.yaml.load(file)
+        try:
+            with open(f"{self.FOLDER_PATH}/{file_name}", "r") as file:
+                self.save_data = self.file_manager.yaml.load(file)
+                
+            self.current_save_file = file_name
+            
+            self.logger.info(f'Loaded file "{file_name}"')
+        
+        except FileNotFoundError:
+            self.logger.error(f'File "{file_name}" not found')
+            self.load_save(self.save_files[0])
+            raise FileNotFoundError(f'File "{file_name}" not found')
 
-        self.current_save_file = file_name
-
-        self.logger.info(f'Loaded file "{file_name}"')
 
     def save_file(self, save_data: Optional[dict] = None) -> None:
         """
@@ -137,11 +153,46 @@ class SaveManager:
 
         self.logger.info(f'Saved file "{self.current_save_file}"')
 
+    def create_new_save(self, file_name: str) -> None:
+        """
+        Creates a new save file with the specified name.
+
+        Returns:
+            None
+        """
+        save_data = self.file_manager.get_config(FILE.DEFAULT_SAVE)
+
+        default_agents = self.file_manager.get_value(FILE.AGENT_CONFIG, "defaultAgents")
+
+        save_data["selectedAgent"] = default_agents[0]
+
+        for agent in save_data.get("agents"):
+            if agent in default_agents:
+                save_data.get("agents")[agent] = (False,)
+                continue
+            
+            save_data.get("agents")[agent] = (False, False)
+
+        for map in save_data.get("mapSpecificAgents"):
+            save_data.get("mapSpecificAgents")[map] = None
+
+        with open(f"{self.FOLDER_PATH}/{file_name}", "w") as file:
+            self.file_manager.yaml.dump(save_data, file)
+
+        self.save_files.append(file_name)
+
+        self.logger.info(f'Created new file "{file_name}"')
+
     def update_save_files(self) -> None:
         # List of all agent names
         roles = self.file_manager.get_value(FILE.AGENT_CONFIG, "roles")
-        agent_names = sorted([agent for role in roles for agent in self.file_manager.get_value(FILE.AGENT_CONFIG, role)])
-
+        agent_names = sorted(
+            [
+                agent
+                for role in roles
+                for agent in self.file_manager.get_value(FILE.AGENT_CONFIG, role)
+            ]
+        )
 
         # List of all map names
         map_names = [
@@ -193,7 +244,7 @@ class SaveManager:
                     for agent_name, values in save_data.get("agents").items()
                     if len(values) == 1 or values[0] is True
                 ]
-                
+
                 save_data["selectedAgent"] = available_agents[0]
 
             # Saves the updated save file
