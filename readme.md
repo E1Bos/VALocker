@@ -21,6 +21,9 @@ VALocker is a program written in Python that allows you to automatically lock an
 > **Disclaimer:**
 > This program is not affiliated with or endorsed by Riot Games or VALORANT. The software is provided "as is" without any warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, and non-infringement. In no event shall the authors or copyright holders be liable for any claim, damages, or other liability, whether in an action of contract, tort, or otherwise, arising from, out of, or in connection with the software or the use or other dealings in the software.
 
+## ⚠️ Note
+VALocker was designed to be used at 1920x1080 at 16:9. However, it can be used with other resolutions if you modify the Python files. For more information on how to change VALocker to work for you, see [here](https://github.com/E1Bos/VALocker/issues/2).
+
 ## 📚 Features
 - Provides a user-friendly GUI for easy interaction.
 - Can be run as an executable, no Python installation required.
