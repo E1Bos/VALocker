@@ -24,6 +24,9 @@ class Instalocker:
 
     stop_flag = False
 
+    # Parent
+    parent: "VALocker"
+
     # Lock Confog
     locking_config: dict
 
@@ -61,6 +64,8 @@ class Instalocker:
     thread: Optional[threading.Thread] = None
 
     def __init__(self, parent: "VALocker") -> None:
+        self.parent = parent
+        
         self.locking_config = parent.locking_config
 
         self.state = parent.instalocker_status
@@ -207,6 +212,20 @@ class Instalocker:
             raise ValueError("No random agents selected but random agent mode enabled")
         
         selected_agent = random.choice(random_agents)
+        
+        if self.exclusiselect.get():
+            agent_state = self.agent_states[selected_agent]
+            if len(agent_state) == 1:
+                agent_state[0].set(False)
+            else:
+                agent_state[1].set(False)
+            
+            if len(random_agents) == 1:
+                self.logger.info(f"ExclusiSelect selected final agent, disabling exclusiselect")
+                self.exclusiselect.set(False)
+        
+        self.parent.exclusiselect_update_gui()
+        
         return unlocked_agents.index(selected_agent)
 
     def get_latest_frame(self) -> np.ndarray:
