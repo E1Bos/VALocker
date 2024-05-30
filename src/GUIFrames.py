@@ -689,12 +689,16 @@ class RandomSelectFrame(SideFrame):
         self.all_variable.set(all_selected)
         self.none_variable.set(none_selected)
 
-        self.none_checkbox.enable()
-        self.all_checkbox.enable()
-        if all_selected:
-            self.all_checkbox.disable()
-        elif none_selected:
-            self.none_checkbox.disable()
+        match self.all_variable.get(), self.none_variable.get():
+            case (True, False):
+                self.all_checkbox.disable()
+                self.none_checkbox.enable()
+            case (False, True):
+                self.all_checkbox.enable()
+                self.none_checkbox.disable()
+            case _:
+                self.all_checkbox.enable()
+                self.none_checkbox.enable()
 
         if not none_selected:
             self.parent.random_select_available.set(True)
@@ -902,9 +906,7 @@ class ToolsFrame(SideFrame):
     def __init__(self, parent: "VALocker"):
         super().__init__(parent)
 
-        tools: dict[str, ctk.BooleanVar] = {
-            "Anti-AFK": self.parent.anti_afk
-        }
+        tools: dict[str, ctk.BooleanVar] = {"Anti-AFK": self.parent.anti_afk}
 
         self.tool_status = self.parent.tools_thread_running
 
@@ -925,7 +927,7 @@ class ToolsFrame(SideFrame):
         # Scrollable frame items
         for index, tool in enumerate(tools):
             var = tools[tool]
-            
+
             button = IndependentButton(
                 scrollable_tools_frame,
                 text=tool,
@@ -933,8 +935,11 @@ class ToolsFrame(SideFrame):
                 command=lambda tool=var: self.parent.toggle_boolean(tool),
             )
             button.grid(row=index, column=0, padx=10, pady=10, sticky=ctk.NSEW)
-            
+
             self.tool_buttons[tool] = button
+
+
+# endregion
 
 # region: Popups
 
