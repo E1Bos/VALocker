@@ -7,9 +7,9 @@ defaultAgents: [brimstone, jett, phoenix, sage, sova]
 # --------------------------------------------------
 # Possible agent roles
 roles:
+  - controller
   - duelist
   - initiator
-  - controller
   - sentinel
 # --------------------------------------------------
 # Agents, grouped by their roles
