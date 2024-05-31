@@ -350,6 +350,8 @@ class OverviewFrame(SideFrame):
 
         self.agent_dropdown.set_values(unlocked_agents)
 
+    def on_raise(self) -> None:
+        pass
 
 # endregion
 
@@ -395,10 +397,10 @@ class AgentToggleFrame(SideFrame):
             variable=self.none_variable,
             command=self.toggle_none,
         )
-        self.none_checkbox.grid(row=0, column=1, padx=10, pady=10)
+        self.none_checkbox.grid(row=0, column=1, padx=10, pady=(10,0))
 
         self.outer_agent_frame = ThemedFrame(self)
-        self.outer_agent_frame.pack(expand=True, fill=ctk.BOTH, pady=(0, 10), padx=0)
+        self.outer_agent_frame.pack(expand=True, fill=ctk.BOTH, pady=10, padx=0)
 
         self.specific_agent_frame = ThemedFrame(self.outer_agent_frame)
         self.specific_agent_frame.pack(anchor=ctk.CENTER, pady=10, padx=0)
@@ -913,14 +915,16 @@ class SaveFilesFrame(SideFrame):
         This method prompts the user to enter a name for the new save file.
         """
         valid_input = False
+        prefill = ''
         while not valid_input:
             file_name = InputDialog(
                 self.parent,
                 title="New Save",
                 label="Enter new save name:",
                 placeholder="Save Name",
+                prefill=None if prefill == '' else prefill,
             ).get_input()
-
+            prefill = file_name
             if file_name is None:
                 self.parent.logger.info("New Save Cancelled")
                 return
@@ -954,7 +958,6 @@ class SaveFilesFrame(SideFrame):
                 label=f'Rename save file \n"{save_name}"',
                 prefill=save_name,
             ).get_input()
-
             if file_name is None:
                 self.parent.logger.info("Rename Save Cancelled")
                 return
@@ -999,6 +1002,8 @@ class SaveFilesFrame(SideFrame):
             self.parent.load_save(first_save.save_file, save_current_config=False)
             self.change_selected_button(first_save)
 
+    def on_raise(self) -> None:
+        pass
 
 # endregion
 
@@ -1123,10 +1128,10 @@ class ToolsFrame(SideFrame):
             command=lambda: self.parent.toggle_boolean(self.tool_status),
             corner_radius=10,
         )
-        toggle_tool_status.pack(side=ctk.TOP, fill=ctk.X, pady=10)
+        toggle_tool_status.pack(side=ctk.TOP, fill=ctk.X, pady=(10,0), padx=0)
 
         scrollable_tools_frame = ThemedScrollableFrame(self)
-        scrollable_tools_frame.pack(fill=ctk.BOTH, expand=True, pady=(0, 10))
+        scrollable_tools_frame.pack(fill=ctk.BOTH, expand=True, pady=10)
 
         scrollable_tools_frame.columnconfigure(0, weight=1)
 
@@ -1144,5 +1149,7 @@ class ToolsFrame(SideFrame):
 
             self.tool_buttons[tool] = button
 
+    def on_raise(self) -> None:
+        pass
 
 # endregion
