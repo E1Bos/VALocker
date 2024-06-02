@@ -162,7 +162,7 @@ class Updater:
                 except ValueError:
                     data = self._file_manager.get_config(config_file)
                     
-                    if data.get("custom", True):
+                    if data.get("custom", False):
                         self._logger.info(f"Found custom config \"{data.get('title')}\", skipping")
                         continue
                     else:

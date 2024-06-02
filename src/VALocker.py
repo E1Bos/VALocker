@@ -215,13 +215,11 @@ class VALocker(ctk.CTk):
     def load_threads(self) -> None:
         # Initialize Instalocker
         self.logger.info("Initializing Instalocker")
-        self.instalocker = Instalocker(self)
-        
-        locking_config = LOCKING_CONFIG(
-            self.file_manager.get_value(FILE.SETTINGS, "lockingConfig")
+        self.instalocker = Instalocker(
+            self,
+            self.file_manager.get_locking_config_by_file_name(
+                self.file_manager.get_value(FILE.SETTINGS, "lockingConfig"))
         )
-        
-        self.instalocker.set_locking_config(locking_config)
 
         self.logger.info("Managing Instalocker thread")
         self.manage_instalocker_thread()
@@ -280,7 +278,7 @@ class VALocker(ctk.CTk):
         # If version update is available
         if version_update is not None:
             self.update_frame.stop_progress()
-            
+
             self.logger.info("Version update available")
 
             message = f"VALocker v{version_update} is available\nYou're currently on v{self.VERSION}.\nWould you like to be taken to the download page?"
@@ -450,7 +448,7 @@ class VALocker(ctk.CTk):
             frame.grid(row=0, column=1, sticky="nswe", padx=(10, 10))
 
         self.agent_unlock_status_changed()
-        self.select_frame(FRAME.OVERVIEW)
+        self.select_frame(FRAME.SETTINGS)
 
     def select_frame(self, frame: FRAME) -> None:
         """
@@ -681,13 +679,50 @@ class VALocker(ctk.CTk):
         # Update the random select frame to reflect the changes
         self.frames[FRAME.RANDOM_SELECT].on_raise()
 
+    def change_locking_config(self, file: LOCKING_CONFIG | str) -> None:
+        self.instalocker.set_locking_config(file)
+
+        if type(file) is LOCKING_CONFIG:
+            file = os.path.basename(file.value)
+
+        self.file_manager.set_value(FILE.SETTINGS, "lockingConfig", file)
+
 
 class SettingsFrame(SideFrame):
+    locking_config_var = ctk.StringVar
+
     def __init__(self, parent: "VALocker"):
         super().__init__(parent)
 
         scrollable_frame = ThemedScrollableFrame(self, label_text="Settings")
         scrollable_frame.pack(fill="both", expand=True, pady=10)
+
+        locking_configs = self.parent.file_manager.get_locking_configs()
+
+        self.locking_config_var = ctk.StringVar(
+            value=self.parent.file_manager.get_locking_config_by_file_name(
+                self.parent.file_manager.get_value(FILE.SETTINGS, "lockingConfig"),
+                get_title=True,
+            )
+        )
+
+        self.locking_config_dropdown = ThemedDropdown(
+            scrollable_frame,
+            variable=self.locking_config_var,
+            values=list(locking_configs.keys()),
+        )
+        self.locking_config_dropdown.pack(fill="x", pady=5)
+
+        self.locking_config_var.trace_add("write", self.change_locking_config)
+
+    def change_locking_config(self, *_) -> None:
+        config_title = self.locking_config_dropdown.get()
+        locking_configs = self.parent.file_manager.get_locking_configs()
+        config_file = locking_configs.get(config_title)
+
+        self.parent.logger.info(f'Changing locking config to "{config_title}"')
+
+        self.parent.change_locking_config(config_file)
 
     def on_raise(self) -> None:
         pass

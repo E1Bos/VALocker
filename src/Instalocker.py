@@ -63,7 +63,7 @@ class Instalocker:
     # Thread
     thread: Optional[threading.Thread] = None
 
-    def __init__(self, parent: "VALocker") -> None:
+    def __init__(self, parent: "VALocker", locking_config: LOCKING_CONFIG | str) -> None:
         self.parent = parent
         self.file_manager = parent.file_manager
 
@@ -87,13 +87,20 @@ class Instalocker:
 
         self.mouse = pynmouse.Controller()
         self.keyboard = pynkeyboard.Controller()
+        
+        self.set_locking_config(locking_config)
 
     # region: Pre-Processing
 
-    def set_locking_config(self, locking_config: LOCKING_CONFIG) -> None:
+    def set_locking_config(self, locking_config: LOCKING_CONFIG | str) -> None:
         self.locking_config = self.file_manager.get_config(locking_config)
         
-        self.logger.info(f"Locking config {locking_config.name} loaded")
+        if type(locking_config) is LOCKING_CONFIG:
+            config_name = locking_config.name
+        else:
+            config_name = self.locking_config.get('title')
+        
+        self.logger.info(f"Locking config \"{config_name}\" loaded")
         
         self.calculate_box_locations(self.parent.total_agents)
         self.load_config()

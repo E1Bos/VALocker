@@ -13,7 +13,7 @@ class FileManager:
     The FileManager class is responsible for managing the required files and directories for the VALocker application.
     It provides methods to ensure that the required files exist, download missing files, migrate old files to a new directory structure,
     and read all the files into memory. It also provides getters and setters for accessing and modifying the file data.
-    
+
     Methods:
         setup_file_manager(): Sets up the FileManager by ensuring that the required files exist and reading them into memory.
         update_file(FILE): Update a file by downloading the latest version from the repository.
@@ -43,8 +43,9 @@ class FileManager:
     _DOWNLOAD_URL: str = f"{URL.DOWNLOAD_URL.value}/{FOLDER.DEFAULTS.value}/"
 
     configs: dict[FILE | LOCKING_CONFIG, dict] = dict()
+    locking_configs: dict[str, LOCKING_CONFIG] = dict()
 
-    yaml: YAML = YAML(typ='rt')
+    yaml: YAML = YAML(typ="rt")
     _logger: CustomLogger = CustomLogger("File Manager").get_logger()
 
     def __init__(self) -> None:
@@ -115,7 +116,10 @@ class FileManager:
             self._logger.info(f"Downloaded {file.value}")
             return self.yaml.load(response.text)
 
-        except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
+        except (
+            requests.exceptions.RequestException,
+            requests.exceptions.HTTPError,
+        ) as e:
             self._logger.error(f"Error downloading {file.value}: {e}")
             raise e
 
@@ -265,7 +269,7 @@ class FileManager:
         self._logger.info(
             f"Migrated old values to {self._absolute_file_path(file.value)}"
         )
-        
+
         self.configs[file] = current_data
 
     def _migrate_old_save_file(
@@ -280,15 +284,20 @@ class FileManager:
         old_agent_random: dict[str, bool] = save_data.get("RANDOM_AGENTS")
         old_map_specific_agents: dict[str, str] = save_data.get("MAP_SPECIFIC_AGENTS")
 
-        default_agents: list[str] = self.get_config(FILE.AGENT_CONFIG).get("defaultAgents")
+        default_agents: list[str] = self.get_config(FILE.AGENT_CONFIG).get(
+            "defaultAgents"
+        )
 
         agent_status = {}
         for agent in old_agent_unlock:
             if agent.lower() in default_agents:
                 agent_status[agent.lower()] = [old_agent_random[agent]]
                 continue
-            
-            agent_status[agent.lower()] = [old_agent_unlock[agent], old_agent_random[agent]]
+
+            agent_status[agent.lower()] = [
+                old_agent_unlock[agent],
+                old_agent_random[agent],
+            ]
 
         maps = {}
         for map_name, value in old_map_specific_agents.items():
@@ -333,20 +342,29 @@ class FileManager:
         for config in FILE:
             with open(self._absolute_file_path(config.value), "r") as f:
                 self.configs[config] = self.yaml.load(f)
-        
-        for config in os.listdir(self._absolute_file_path(FOLDER.LOCKING_CONFIGS.value)):
+
+        for config in os.listdir(
+            self._absolute_file_path(FOLDER.LOCKING_CONFIGS.value)
+        ):
             try:
                 config_enum = LOCKING_CONFIG(config)
                 with open(self._absolute_file_path(config_enum.value), "r") as f:
-                    self.configs[config_enum] = self.yaml.load(f)
+                    data: dict = self.yaml.load(f)
             except ValueError:
-                with open(self._absolute_file_path(FOLDER.LOCKING_CONFIGS.value, config), "r") as f:
-                    config_data: dict = self.yaml.load(f)
-                    
-                    is_custom = config_data.get("custom", True)
-                    
-                    self._logger.info(f"Found custom config: {config} - {is_custom}")
-                    self.configs[config] = config_data
+                with open(
+                    self._absolute_file_path(FOLDER.LOCKING_CONFIGS.value, config), "r"
+                ) as f:
+                    data: dict = self.yaml.load(f)
+
+                    is_custom = data.get("custom", False)
+
+                    config_enum = config
+                    self._logger.info(f"Found config: {config_enum} - custom: {is_custom}")
+
+            self.configs[config_enum] = data
+
+            title = data.get("title")
+            self.locking_configs[title] = config_enum
 
         self._logger.info("Read all files into memory")
 
@@ -369,7 +387,7 @@ class FileManager:
         Args:
             file (constants.Files | constants.LOCKING_CONFIG | str): The enum for which the configuration is required.
                 If the file is custom, a string representing the file name is required.
-            
+
 
         Returns:
             dict: The configuration dictionary for the specified file.
@@ -416,6 +434,47 @@ class FileManager:
         """
         return self.configs[file].get(key, None)
 
+    def get_locking_configs(self) -> dict[str, LOCKING_CONFIG]:
+        """
+        Returns a dictionary of locking configs with the title as the key.
+
+        Returns:
+            dict[str, LOCKING_CONFIG]: A dictionary of locking configs with the title as the key.
+        """
+        return self.locking_configs
+
+    def get_locking_config_by_file_name(
+        self, file_name: str, get_title: bool = False, get_data: bool = False
+    ) -> str | LOCKING_CONFIG | dict[str, any]:
+        """
+        Returns the locking config value saved in self.configs.
+
+        Args:
+            file_name (str): The file name of the locking config.
+            get_title (bool): If True, the title of the locking config is returned.
+            get_data (bool): If True, the data of the locking config is returned.
+        
+        Returns:
+            str | LOCKING_CONFIG: The locking config
+        """
+
+        if get_title and get_data:
+            raise ValueError("Only one of get_title and get_data can be True")
+
+        for config in self.get_locking_configs().items():
+            if type(config[1]) is LOCKING_CONFIG:
+                file = config[1].value
+            else:
+                file = config[1]
+
+            file = os.path.basename(file)
+            if file == file_name:
+                if get_title:
+                    return config[0]
+                if get_data:
+                    return self.configs[config[1]]
+                return config[1]
+
     # region:  Update files
 
     def update_file(self, file: FILE | LOCKING_CONFIG) -> None:
@@ -434,6 +493,8 @@ class FileManager:
 
         self._logger.info(f"Updated {file.value} to the latest version")
 
+    # endregion
+
     def get_files_in_folder(self, folder: FOLDER) -> list[str]:
         """
         Get all the files in a specified folder.
@@ -446,8 +507,6 @@ class FileManager:
         """
         folder_path = self._absolute_file_path(folder.value)
         return os.listdir(folder_path)
-
-    # endregion
 
 
 if __name__ == "__main__":
