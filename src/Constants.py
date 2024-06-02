@@ -52,8 +52,8 @@ class FILE(Enum):
     Enum for Files used in the project
     """
 
-    AGENT_CONFIG: str = f"{FOLDER.DATA.value}/agent_config.yaml"
-    LOCKING_CONFIG: str = f"{FOLDER.DATA.value}/locking_config.yaml"
+    AGENT_CONFIG: str = f"{FOLDER.DATA.value}/agent-config.yaml"
+    LOCKING_CONFIG: str = f"{FOLDER.DATA.value}/locking-config-1920-1080-16-9.yaml"
     STATS: str = f"{FOLDER.DATA.value}/stats.yaml"
     SETTINGS: str = f"{FOLDER.SETTINGS.value}/settings.yaml"
     DEFAULT_SAVE: str = f"{FOLDER.SAVE_FILES.value}/default.yaml"

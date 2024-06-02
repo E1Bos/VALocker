@@ -1,6 +1,9 @@
 # Version of the confguration
 version: 1.0.0
 # --------------------------------------------------
+# Title of the configuration
+title: 1920x1080 16:9
+# --------------------------------------------------
 # The location of the agent buttons
 # size: size of the agent buttons
 # columns: number of columns
