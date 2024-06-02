@@ -40,8 +40,9 @@ class FOLDER(Enum):
     PARENT_FOLDER: str = "VALocker"
 
     # Folders in parent folder
-    SAVE_FILES: str = "save_files"
+    SAVE_FILES: str = "save-files"
     DATA: str = "data"
+    LOCKING_CONFIGS: str = f"{DATA.value}/locking-configs"
     LOGS: str = "logs"
     SETTINGS: str = "settings"
     THEMES: str = "themes"
