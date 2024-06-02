@@ -1,5 +1,6 @@
 # Version of the confguration
 version: 1.0.0
+custom: False
 # --------------------------------------------------
 # Title of the configuration
 title: 1920x1080 16:9
