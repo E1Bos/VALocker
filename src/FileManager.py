@@ -5,7 +5,7 @@ from ruamel.yaml import YAML
 
 # Custom imports
 from CustomLogger import CustomLogger
-from Constants import URL, FOLDER, FILE, GET_WORKING_DIR
+from Constants import URL, FOLDER, FILE, LOCKING_CONFIG, GET_WORKING_DIR
 
 
 class FileManager:
@@ -29,20 +29,20 @@ class FileManager:
         FOLDER.THEMES,
     ]
 
-    _REQUIRED_FILES: list[FILE] = [
+    _REQUIRED_FILES: list[FILE | LOCKING_CONFIG] = [
         FILE.STATS,
-        FILE.LOCKING_CONFIG,
         FILE.AGENT_CONFIG,
         FILE.SETTINGS,
         FILE.DEFAULT_SAVE,
         FILE.DEFAULT_THEME,
+        LOCKING_CONFIG.CONFIG_1920_1080_16_9,
     ]
 
     _WORKING_DIR: str = GET_WORKING_DIR()
 
     _DOWNLOAD_URL: str = f"{URL.DOWNLOAD_URL.value}/{FOLDER.DEFAULTS.value}/"
 
-    configs: dict[FILE, dict] = dict()
+    configs: dict[FILE | LOCKING_CONFIG, dict] = dict()
 
     yaml: YAML = YAML(typ='rt')
     _logger: CustomLogger = CustomLogger("File Manager").get_logger()
@@ -92,7 +92,7 @@ class FileManager:
             self._logger.info("Files may need to be migrated, checking for old files")
             self._migrate_old_files()
 
-    def _download_file(self, file: FILE) -> dict:
+    def _download_file(self, file: FILE | LOCKING_CONFIG) -> dict:
         """
         Download a file from a public GitHub repository and returns the content.
 
@@ -115,7 +115,7 @@ class FileManager:
             self._logger.info(f"Downloaded {file.value}")
             return self.yaml.load(response.text)
 
-        except requests.exceptions.RequestException as e:
+        except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
             self._logger.error(f"Error downloading {file.value}: {e}")
             raise e
 
@@ -245,7 +245,7 @@ class FileManager:
         self._logger.info("Migration complete")
         self._set_migrated_flag(True)
 
-    def _update_data(self, new_data: dict, file: FILE) -> None:
+    def _update_data(self, new_data: dict, file: FILE | LOCKING_CONFIG) -> None:
         """
         Updates a file with data and reloads the file into memory.
 
@@ -330,9 +330,14 @@ class FileManager:
         """
         Reads all the files into memory.
         """
-        for file in FILE:
-            with open(self._absolute_file_path(file.value), "r") as f:
-                self.configs[file] = self.yaml.load(f)
+        for config in FILE:
+            with open(self._absolute_file_path(config.value), "r") as f:
+                self.configs[config] = self.yaml.load(f)
+        
+        for config in os.listdir(self._absolute_file_path(FOLDER.LOCKING_CONFIGS.value)):
+            config_enum = LOCKING_CONFIG(config)
+            with open(self._absolute_file_path(config_enum.value), "r") as f:
+                self.configs[config_enum] = self.yaml.load(f)
 
         self._logger.info("Read all files into memory")
 
@@ -348,7 +353,7 @@ class FileManager:
         """
         return os.path.join(self._WORKING_DIR, *args)
 
-    def get_config(self, file: FILE) -> dict:
+    def get_config(self, file: FILE | LOCKING_CONFIG) -> dict:
         """
         Returns the configuration dictionary for the specified file.
 
@@ -358,9 +363,9 @@ class FileManager:
         Returns:
             dict: The configuration dictionary for the specified file.
         """
-        return self.configs.get(file, None)
+        return self.configs.get(file, {})
 
-    def set_config(self, file: FILE, config: dict) -> None:
+    def set_config(self, file: FILE | LOCKING_CONFIG, config: dict) -> None:
         """
         Sets the configuration dictionary for the specified file.
 
@@ -373,7 +378,7 @@ class FileManager:
         with open(self._absolute_file_path(file.value), "w") as f:
             self.yaml.dump(config, f)
 
-    def set_value(self, file: FILE, key: str, value: any) -> None:
+    def set_value(self, file: FILE | LOCKING_CONFIG, key: str, value: any) -> None:
         """
         Sets the value of the specified key in the configuration dictionary of the specified file.
 
@@ -387,7 +392,7 @@ class FileManager:
         with open(self._absolute_file_path(file.value), "w") as f:
             self.yaml.dump(self.configs[file], f)
 
-    def get_value(self, file: FILE, key: str) -> any:
+    def get_value(self, file: FILE | LOCKING_CONFIG, key: str) -> any:
         """
         Returns the value of the specified key from the configuration dictionary of the specified file.
 
@@ -402,7 +407,7 @@ class FileManager:
 
     # region:  Update files
 
-    def update_file(self, file: FILE) -> None:
+    def update_file(self, file: FILE | LOCKING_CONFIG) -> None:
         """
         Update a file by downloading the latest version from the repository.
 
@@ -417,6 +422,19 @@ class FileManager:
         self._update_data(data, file)
 
         self._logger.info(f"Updated {file.value} to the latest version")
+
+    def get_files_in_folder(self, folder: FOLDER) -> list[str]:
+        """
+        Get all the files in a specified folder.
+
+        Args:
+            folder (FOLDER): The folder enum for which the files are required.
+
+        Returns:
+            list[str]: A list of file names in the specified folder.
+        """
+        folder_path = self._absolute_file_path(folder.value)
+        return os.listdir(folder_path)
 
     # endregion
 
