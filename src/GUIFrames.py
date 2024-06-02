@@ -16,7 +16,7 @@ class NavigationFrame(ctk.CTkFrame):
     """
     The sidebar frame that contains the program label, navigation buttons and the exit button.
     """
-    
+
     parent: "VALocker"
     theme: dict[str, str]
     nav_buttons: dict[str, ctk.CTkButton] = dict()
@@ -135,7 +135,7 @@ class OverviewFrame(SideFrame):
     """
     The main frame that displays the program status and the agent status.
     """
-    
+
     agent_dropdown: ThemedDropdown
 
     def __init__(self, parent: "VALocker") -> None:
@@ -353,6 +353,7 @@ class OverviewFrame(SideFrame):
     def on_raise(self) -> None:
         pass
 
+
 # endregion
 
 # region: Agent Toggle Frame
@@ -362,7 +363,7 @@ class AgentToggleFrame(SideFrame):
     """
     Frame that allows the user to toggle the agents unlocked status.
     """
-    
+
     all_variable: ctk.BooleanVar
     none_variable: ctk.BooleanVar
 
@@ -397,7 +398,7 @@ class AgentToggleFrame(SideFrame):
             variable=self.none_variable,
             command=self.toggle_none,
         )
-        self.none_checkbox.grid(row=0, column=1, padx=10, pady=(10,0))
+        self.none_checkbox.grid(row=0, column=1, padx=10, pady=(10, 0))
 
         self.outer_agent_frame = ThemedFrame(self)
         self.outer_agent_frame.pack(expand=True, fill=ctk.BOTH, pady=10, padx=0)
@@ -780,7 +781,7 @@ class SaveFilesFrame(SideFrame):
         )
         self.new_save_button.pack(side=ctk.RIGHT, pady=(5, 10), padx=0)
 
-    def generate_save_button_list(self, first_time:bool=False) -> None:
+    def generate_save_button_list(self, first_time: bool = False) -> None:
         """
         Generates the list of save buttons, which is rendered to the user
         as a list of buttons that represent the save files.
@@ -915,14 +916,14 @@ class SaveFilesFrame(SideFrame):
         This method prompts the user to enter a name for the new save file.
         """
         valid_input = False
-        prefill = ''
+        prefill = ""
         while not valid_input:
             file_name = InputDialog(
                 self.parent,
                 title="New Save",
                 label="Enter new save name:",
                 placeholder="Save Name",
-                prefill=None if prefill == '' else prefill,
+                prefill=None if prefill == "" else prefill,
             ).get_input()
             prefill = file_name
             if file_name is None:
@@ -1005,6 +1006,7 @@ class SaveFilesFrame(SideFrame):
     def on_raise(self) -> None:
         pass
 
+
 # endregion
 
 # region: Update Frame
@@ -1059,7 +1061,7 @@ class UpdateFrame(ctk.CTkFrame):
 
         self.status_variables = {}
 
-        for row, file_to_check in enumerate(self.parent.updater.FILES_TO_CHECK):
+        for row, file_to_check in enumerate(self.parent.updater.ITEMS_TO_CHECK):
             row += 2
 
             file_frame = ThemedFrame(self)
@@ -1096,6 +1098,9 @@ class UpdateFrame(ctk.CTkFrame):
         )
         version_status.pack(side=ctk.RIGHT, padx=10, pady=10)
 
+    def stop_progress(self) -> None:
+        self.progress_bar.stop()
+
     def finished_checking_updates(self):
         self.update_label.configure(text="Loading VALocker")
 
@@ -1128,7 +1133,7 @@ class ToolsFrame(SideFrame):
             command=lambda: self.parent.toggle_boolean(self.tool_status),
             corner_radius=10,
         )
-        toggle_tool_status.pack(side=ctk.TOP, fill=ctk.X, pady=(10,0), padx=0)
+        toggle_tool_status.pack(side=ctk.TOP, fill=ctk.X, pady=(10, 0), padx=0)
 
         scrollable_tools_frame = ThemedScrollableFrame(self)
         scrollable_tools_frame.pack(fill=ctk.BOTH, expand=True, pady=10)
@@ -1151,5 +1156,6 @@ class ToolsFrame(SideFrame):
 
     def on_raise(self) -> None:
         pass
+
 
 # endregion
