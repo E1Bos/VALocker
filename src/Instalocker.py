@@ -16,7 +16,7 @@ import numpy as np
 
 # Custom Imports
 from CustomLogger import CustomLogger
-from Constants import Region
+from Constants import Region, LOCKING_CONFIG
 
 
 class Instalocker:
@@ -65,8 +65,7 @@ class Instalocker:
 
     def __init__(self, parent: "VALocker") -> None:
         self.parent = parent
-        
-        self.locking_config = parent.locking_config
+        self.file_manager = parent.file_manager
 
         self.state = parent.instalocker_status
         self.hover = parent.hover
@@ -89,10 +88,15 @@ class Instalocker:
         self.mouse = pynmouse.Controller()
         self.keyboard = pynkeyboard.Controller()
 
-        self.calculate_box_locations(parent.total_agents)
-        self.load_config()
-
     # region: Pre-Processing
+
+    def set_locking_config(self, locking_config: LOCKING_CONFIG) -> None:
+        self.locking_config = self.file_manager.get_config(locking_config)
+        
+        self.logger.info(f"Locking config {locking_config.name} loaded")
+        
+        self.calculate_box_locations(self.parent.total_agents)
+        self.load_config()
 
     def calculate_box_locations(self, total_agents: int) -> None:
         agent_buttons = self.locking_config["agentButtons"]
