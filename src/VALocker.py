@@ -6,6 +6,7 @@ from PIL import Image
 from threading import Thread
 import webbrowser
 import threading
+import ctypes
 
 # Custom imports
 from CustomLogger import CustomLogger
@@ -58,6 +59,7 @@ class VALocker(ctk.CTk):
     agent_times_locked: ctk.StringVar
 
     # Instalocker Variables
+    instalocker_thread_lock: threading.Lock = threading.Lock()
     total_agents: int
     hover: ctk.BooleanVar
     random_select_available: ctk.BooleanVar
@@ -68,10 +70,11 @@ class VALocker(ctk.CTk):
     agent_index: ctk.IntVar
 
     # Tools Variables
+    tools_thread_lock: threading.Lock = threading.Lock()
     pause_tools_thread: ctk.BooleanVar
     tools_thread_running: ctk.BooleanVar
     anti_afk: ctk.BooleanVar
-    drop_spike: ctk.BooleanVar
+    # drop_spike: ctk.BooleanVar
 
     # UI
     update_frame: UpdateFrame
@@ -107,6 +110,7 @@ class VALocker(ctk.CTk):
 
         # Load exit handler
         self.protocol("WM_DELETE_WINDOW", self.exit)
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("VALocker.GUI")
 
         # Start UI and check for updates
         self.logger.info("Starting UI")
@@ -189,7 +193,7 @@ class VALocker(ctk.CTk):
         self.pause_tools_thread = ctk.BooleanVar(value=False)
         self.tools_thread_running = ctk.BooleanVar(value=False)
         self.anti_afk = ctk.BooleanVar(value=False)
-        self.drop_spike = ctk.BooleanVar(value=False)
+        # self.drop_spike = ctk.BooleanVar(value=False)
 
         # region: Traces
 
@@ -344,19 +348,21 @@ class VALocker(ctk.CTk):
         """
         Manages the Instalocker thread, tied to the `is_thread_running` variable.
         """
-        if self.instalocker_thread_running.get():
-            self.instalocker.start()
-        else:
-            self.instalocker.stop()
+        with self.instalocker_thread_lock:
+            if self.instalocker_thread_running.get():
+                self.instalocker.start()
+            else:
+                self.instalocker.stop()
 
     def manage_tools_thread(self, *args) -> None:
         """
         Manages the Tools thread, tied to the `is_thread_running` variable.
         """
-        if self.tools_thread_running.get():
-            self.tools.start()
-        else:
-            self.tools.stop()
+        with self.tools_thread_lock:
+            if self.tools_thread_running.get():
+                self.tools.start()
+            else:
+                self.tools.stop()
 
     def manage_tools_pause(self, *_) -> None:
         """
@@ -689,6 +695,7 @@ class VALocker(ctk.CTk):
 
 
 class SettingsFrame(SideFrame):
+    # TODO: FINISH SETTINGS FRAME
     locking_config_var = ctk.StringVar
 
     def __init__(self, parent: "VALocker"):
