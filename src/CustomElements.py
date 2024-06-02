@@ -1319,16 +1319,31 @@ class ConfirmPopup(ThemedPopup):
     """
     A popup that asks the user to confirm an action.
     Returns True if the user confirms, False if the user cancels.
+    
+    Args:
+        parent (VALocker): The parent widget.
+        title (str): The title of the popup.
+        message (str): The message to display to the user.
+        default_no (bool): Whether the default option is 'No'. Defaults to True.
+        geometry (str): The geometry of the popup window. Defaults to "300x150".
+        **kwargs: Additional keyword arguments to pass to the ThemedPopup constructor.
     """
 
     theme: dict[str, str]
+    message: str
+    confirm: bool
+    default_no: bool
 
-    def __init__(self, parent: "VALocker", title: str, message: str, **kwargs) -> None:
+    def __init__(self, parent: "VALocker", title: str, message: str, default_no: bool = True, geometry: str = None, **kwargs) -> None:
         self.theme = parent.theme
         self.message = message
         self.confirm = False
+        self.default_no = default_no
+        
+        if geometry is None:
+            geometry = "300x150"
 
-        super().__init__(parent, title, "300x150", **kwargs)
+        super().__init__(parent, title, geometry, **kwargs)
 
     def create_widgets(self) -> None:
         """
@@ -1347,16 +1362,33 @@ class ConfirmPopup(ThemedPopup):
         )
         self.label.grid(row=0, column=0, columnspan=2, padx=10, pady=10, sticky="ew")
 
+        if self.default_no:
+            ok_button_color = self.theme["button-disabled"]
+            ok_button_hover_color = self.theme["button-disabled-hover"]
+            
+            no_button_color = self.theme["button-enabled"]
+            no_button_hover_color = self.theme["button-enabled-hover"]
+            
+            column = (0, 1)
+        else:
+            ok_button_color = self.theme["button-enabled"]
+            ok_button_hover_color = self.theme["button-enabled-hover"]
+            
+            no_button_color = self.theme["button-disabled"]
+            no_button_hover_color = self.theme["button-disabled-hover"]
+            
+            column = (1, 0)
+
         self.ok_button = ThemedButton(
             self,
             text="Yes",
             height=30,
             command=self.ok_event,
-            fg_color=self.theme["button-disabled"],
-            hover_color=self.theme["button-disabled-hover"],
+            fg_color=ok_button_color,
+            hover_color=ok_button_hover_color,
         )
         self.ok_button.grid(
-            row=1, column=1, columnspan=1, padx=(10, 20), pady=(0, 10), sticky="ew"
+            row=1, column=column[0], columnspan=1, padx=(10, 20), pady=(0, 10), sticky="ew"
         )
 
         self.no_button = ThemedButton(
@@ -1364,15 +1396,19 @@ class ConfirmPopup(ThemedPopup):
             text="No",
             height=30,
             command=self.cancel_event,
-            fg_color=self.theme["button-enabled"],
-            hover_color=self.theme["button-enabled-hover"],
+            fg_color=no_button_color,
+            hover_color=no_button_hover_color,
         )
         self.no_button.grid(
-            row=1, column=0, columnspan=1, padx=(20, 10), pady=(0, 10), sticky="ew"
+            row=1, column=column[1], columnspan=1, padx=(20, 10), pady=(0, 10), sticky="ew"
         )
 
-        self.bind("<Return>", lambda e: self.ok_event())
-        self.bind("<Escape>", lambda e: self.cancel_event())
+        if self.default_no:
+            self.bind("<Return>", lambda e: self.cancel_event())
+            self.bind("<Escape>", lambda e: self.cancel_event())
+        else:
+            self.bind("<Return>", lambda e: self.ok_event())
+            self.bind("<Escape>", lambda e: self.cancel_event())
 
     def ok_event(self) -> None:
         """
