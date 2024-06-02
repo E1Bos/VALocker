@@ -4,10 +4,12 @@ import sys
 import time
 from PIL import Image
 from threading import Thread
+import webbrowser
+import threading
 
 # Custom imports
 from CustomLogger import CustomLogger
-from Constants import FILE, FRAME, ICON, BRIGHTEN_COLOR
+from Constants import FILE, FRAME, ICON, LOCKING_CONFIG, BRIGHTEN_COLOR
 from FileManager import FileManager
 from SaveManager import SaveManager
 from Updater import Updater
@@ -25,8 +27,7 @@ class VALocker(ctk.CTk):
     VALocker is a tool that quickly locks agents for you in Valorant, along with other tools.
     @author: [E1Bos](https://www.github.com/E1Bos)
     """
-    
-    
+
     # VERSION
     VERSION: str = "2.0.0"
 
@@ -57,7 +58,6 @@ class VALocker(ctk.CTk):
     agent_times_locked: ctk.StringVar
 
     # Instalocker Variables
-    locking_config: dict
     total_agents: int
     hover: ctk.BooleanVar
     random_select_available: ctk.BooleanVar
@@ -118,10 +118,10 @@ class VALocker(ctk.CTk):
     def load_variables(self) -> None:
         """
         Defines all the variables used in the program.
-        
+
         Runs at the start of the program to define all the variables used in the program.
         """
-        
+
         self.instalocker_thread_running = ctk.BooleanVar(
             value=self.file_manager.get_value(FILE.SETTINGS, "enableOnStartup")
         )
@@ -175,7 +175,6 @@ class VALocker(ctk.CTk):
         self.update_stats()
 
         # Instalocker Vars
-        self.locking_config = self.file_manager.get_config(FILE.LOCKING_CONFIG)
         self.total_agents = len(self.all_agents)
 
         self.hover = ctk.BooleanVar(value=False)
@@ -217,6 +216,12 @@ class VALocker(ctk.CTk):
         # Initialize Instalocker
         self.logger.info("Initializing Instalocker")
         self.instalocker = Instalocker(self)
+        
+        locking_config = LOCKING_CONFIG(
+            self.file_manager.get_value(FILE.SETTINGS, "lockingConfig")
+        )
+        
+        self.instalocker.set_locking_config(locking_config)
 
         self.logger.info("Managing Instalocker thread")
         self.manage_instalocker_thread()
@@ -258,26 +263,45 @@ class VALocker(ctk.CTk):
         """
         self.logger.info("Checking for config updates")
 
-        for file in self.updater.FILES_TO_CHECK:
+        for file in self.updater.ITEMS_TO_CHECK:
             self.updater.check_for_config_update(
                 file, self.update_frame.status_variables[file]
             )
-            self.update_frame.update()
 
         # Checks for version updates
         self.logger.info("Checking for version updates")
-        version_update_available = self.updater.check_for_version_update(
+
+        version_update = None
+
+        version_update = self.updater.check_for_version_update(
             self.update_frame.version_variable
         )
-        self.update_frame.update()
-
-        self.updater.update_last_checked()
 
         # If version update is available
-        if version_update_available:
-            self.logger.info("Update available")
-            # TODO: Show update popup
+        if version_update is not None:
+            self.update_frame.stop_progress()
+            
+            self.logger.info("Version update available")
 
+            message = f"VALocker v{version_update} is available\nYou're currently on v{self.VERSION}.\nWould you like to be taken to the download page?"
+
+            go_to_update = ConfirmPopup(
+                self,
+                title="Update Available",
+                message=message,
+                default_no=False,
+                geometry="400x150",
+            ).get_input()
+
+            if go_to_update:
+                self.logger.info("Opening update page")
+                webbrowser.open(
+                    "https://www.github.com/E1Bos/VALocker/releases/latest/"
+                )
+                self.exit()
+                sys.exit()
+
+        self.updater.update_last_checked()
         self.update_frame.finished_checking_updates()
         self.after(1000, self.initMainUI)
 
@@ -386,7 +410,8 @@ class VALocker(ctk.CTk):
             self.logger.info("Check frequency met, checking for updates")
             self.update_frame.pack(fill="both", expand=True)
             self.update()
-            self.after(500, self.check_for_updates)
+            thread = threading.Thread(target=self.check_for_updates, daemon=True)
+            thread.start()
         else:
             self.initMainUI()
 
@@ -543,10 +568,10 @@ class VALocker(ctk.CTk):
 
         Args:
             save_name (str): the name of the save file to load.
-            save_current_config (bool, optional): Whether to save the current file to disk. 
+            save_current_config (bool, optional): Whether to save the current file to disk.
                 Defaults to False.
         """
-        
+
         if save_current_config:
             self.save_data()
 
@@ -663,6 +688,9 @@ class SettingsFrame(SideFrame):
 
         scrollable_frame = ThemedScrollableFrame(self, label_text="Settings")
         scrollable_frame.pack(fill="both", expand=True, pady=10)
+
+    def on_raise(self) -> None:
+        pass
 
 
 if __name__ == "__main__":
