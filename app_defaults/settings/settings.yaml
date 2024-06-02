@@ -8,6 +8,9 @@ lastChecked: 0
 # The theme of the application
 theme: default-theme.yaml
 # --------------------------------------------------
+# Current Locking Config
+lockingConfig: locking-config-1920-1080-16-9.yaml
+# --------------------------------------------------
 # The active save file, including the extension
 activeSaveFile: default.yaml
 # --------------------------------------------------
