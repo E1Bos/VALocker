@@ -1,16 +1,19 @@
 # Version of the confguration
+# If the configuration is custom, uncomment the custom line and comment out the version line
 version: 1.0.0
-custom: False
+# custom: True
 # --------------------------------------------------
 # Title of the configuration
 title: 1920x1080 16:9
 # --------------------------------------------------
 # The location of the agent buttons
+# only the selectable portion of the buttons should be used
+# The selectable area is the area that changes color when an agent is hovered over
 # size: size of the agent buttons
 # columns: number of columns
 # xDistance: x distance between the columns
 # yDistance: y distance between the rows
-# start: the top left corner of the first agent button
+# start: the top left most corner of the first agent button
 agentButtons:
   size: 72
   columns: 9
@@ -19,13 +22,14 @@ agentButtons:
   start: [588, 805]
 # --------------------------------------------------
 # The location of the lock button
+# Only the selectable portion of the lock button should be added
 # size: size of the lock button
-# location: the top left corner of the lock button
+# location: the top left most pixel of the lock button
 lockButton:
   size: [234, 59]
   location: [842, 701]
 # --------------------------------------------------
-# Regions that are checked to see when to initiate the lock
+# Region that is checked to see when the game is in the agent selection screen
 # xCoord: x coordinate of the top left corner of the region
 # yCoord: y coordinate of the top left corner of the region
 # width: width of the region
@@ -39,6 +43,7 @@ lockRegion:
   color: [234, 238, 178]
 # --------------------------------------------------
 # Regions that are checked to see when the user is not in a game
+# in the form of a list, all these regions are checked every 3 or so seconds
 # xCoord: x coordinate of the top left corner of the region
 # yCoord: y coordinate of the top left corner of the region
 # width: width of the region
