@@ -42,11 +42,10 @@ class FOLDER(Enum):
     # Folders in parent folder
     SAVE_FILES: str = "save-files"
     DATA: str = "data"
-    LOCKING_CONFIGS: str = f"{DATA.value}/locking-configs"
+    LOCKING_CONFIGS: str = f"{DATA}/locking-configs"
     LOGS: str = "logs"
     SETTINGS: str = "settings"
     THEMES: str = "themes"
-
 
 class FILE(Enum):
     """
@@ -54,12 +53,23 @@ class FILE(Enum):
     """
 
     AGENT_CONFIG: str = f"{FOLDER.DATA.value}/agent-config.yaml"
-    LOCKING_CONFIG: str = f"{FOLDER.DATA.value}/locking-config-1920-1080-16-9.yaml"
     STATS: str = f"{FOLDER.DATA.value}/stats.yaml"
     SETTINGS: str = f"{FOLDER.SETTINGS.value}/settings.yaml"
     DEFAULT_SAVE: str = f"{FOLDER.SAVE_FILES.value}/default.yaml"
     DEFAULT_THEME: str = f"{FOLDER.THEMES.value}/default-theme.yaml"
 
+class LOCKING_CONFIG(Enum):
+    """
+    Enum for Locking Configs used in the project
+    """
+    CONFIG_1920_1080_16_9: str = "locking-config-1920-1080-16-9.yaml"
+    
+    # Sets all values to the full path
+    def __getattribute__(self, name):
+        if name == "value":
+            return f"{FOLDER.LOCKING_CONFIGS.value}/{super().__getattribute__(name)}"
+        else:
+            return super().__getattribute__(name)
 
 class FRAME(Enum):
     """
@@ -76,18 +86,21 @@ class FRAME(Enum):
 
 
 class ICON(Enum):
-    ICON_PATH: str = "images/icons"
+    DISABLED: str = "valocker-disabled.ico"
+    LOCKING: str = "valocker-locking.ico"
+    WAITING: str = "valocker-waiting.ico"
 
-    DISABLED: str = RESOURCE_PATH(f"{ICON_PATH}/valocker-disabled.ico")
-    LOCKING: str = RESOURCE_PATH(f"{ICON_PATH}/valocker-locking.ico")
-    WAITING: str = RESOURCE_PATH(f"{ICON_PATH}/valocker-waiting.ico")
+    NEW_FILE: str = "new_file.png"
+    DELETE: str = "delete.png"
+    FAVORITE_ON: str = "favorite_on.png"
+    FAVORITE_OFF: str = "favorite_off.png"
+    RENAME: str = "rename.png"
 
-    NEW_FILE: str = RESOURCE_PATH(f"{ICON_PATH}/new_file.png")
-    DELETE: str = RESOURCE_PATH(f"{ICON_PATH}/delete.png")
-    FAVORITE_ON: str = RESOURCE_PATH(f"{ICON_PATH}/favorite_on.png")
-    FAVORITE_OFF: str = RESOURCE_PATH(f"{ICON_PATH}/favorite_off.png")
-    RENAME: str = RESOURCE_PATH(f"{ICON_PATH}/rename.png")
-
+    def __getattribute__(self, name):
+        if name == "value":
+            return RESOURCE_PATH(f"images/icons/{super().__getattribute__(name)}")
+        else:
+            return super().__getattribute__(name)
 
 def GET_WORKING_DIR() -> str:
     """
