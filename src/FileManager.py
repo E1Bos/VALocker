@@ -335,9 +335,18 @@ class FileManager:
                 self.configs[config] = self.yaml.load(f)
         
         for config in os.listdir(self._absolute_file_path(FOLDER.LOCKING_CONFIGS.value)):
-            config_enum = LOCKING_CONFIG(config)
-            with open(self._absolute_file_path(config_enum.value), "r") as f:
-                self.configs[config_enum] = self.yaml.load(f)
+            try:
+                config_enum = LOCKING_CONFIG(config)
+                with open(self._absolute_file_path(config_enum.value), "r") as f:
+                    self.configs[config_enum] = self.yaml.load(f)
+            except ValueError:
+                with open(self._absolute_file_path(FOLDER.LOCKING_CONFIGS.value, config), "r") as f:
+                    config_data: dict = self.yaml.load(f)
+                    
+                    is_custom = config_data.get("custom", True)
+                    
+                    self._logger.info(f"Found custom config: {config} - {is_custom}")
+                    self.configs[config] = config_data
 
         self._logger.info("Read all files into memory")
 
@@ -353,12 +362,14 @@ class FileManager:
         """
         return os.path.join(self._WORKING_DIR, *args)
 
-    def get_config(self, file: FILE | LOCKING_CONFIG) -> dict:
+    def get_config(self, file: FILE | LOCKING_CONFIG | str) -> dict:
         """
         Returns the configuration dictionary for the specified file.
 
         Args:
-            file (constants.Files): The file enum for which the configuration is required.
+            file (constants.Files | constants.LOCKING_CONFIG | str): The enum for which the configuration is required.
+                If the file is custom, a string representing the file name is required.
+            
 
         Returns:
             dict: The configuration dictionary for the specified file.

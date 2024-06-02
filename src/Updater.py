@@ -142,23 +142,33 @@ class Updater:
             total_files = len(files)
 
             for checking, config_file in enumerate(files):
-                config_enum = LOCKING_CONFIG(config_file)
-                self._logger.info(f"Checking {config_enum.name} for updates")
-                stringVar.set(f"({checking+1}/{total_files}) Checking")
+                try:
+                    config_enum = LOCKING_CONFIG(config_file)
+                    
+                    self._logger.info(f"Checking {config_enum.name} for updates")
+                    stringVar.set(f"({checking+1}/{total_files}) Checking")
 
-                time.sleep(1)
-                update_available = self.compare_yaml_configs(config_enum)
+                    update_available = self.compare_yaml_configs(config_enum)
 
-                if update_available:
-                    self._logger.info(
-                        f"{config_enum.name} configuration needs updating"
-                    )
-                    self._file_manager.update_file(item)
-                else:
-                    self._logger.info(f"{config_enum.name} is up to date")
-                    stringVar.set(f"({checking + 1}/{total_files}) Up to date")
-
-                # self.
+                    if update_available:
+                        self._logger.info(
+                            f"{config_enum.name} configuration needs updating"
+                        )
+                        self._file_manager.update_file(item)
+                    else:
+                        self._logger.info(f"{config_enum.name} is up to date")
+                        stringVar.set(f"({checking + 1}/{total_files}) Up to date")
+                        
+                except ValueError:
+                    data = self._file_manager.get_config(config_file)
+                    
+                    if data.get("custom", True):
+                        self._logger.info(f"Found custom config \"{data.get('title')}\", skipping")
+                        continue
+                    else:
+                        self._logger.error(f"Failed to parse config file {config_file}")
+                        stringVar.set(f"({checking + 1}/{total_files}) Error")
+                        continue
 
     # region: YAML Config Versions
 
