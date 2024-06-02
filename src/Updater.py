@@ -5,9 +5,20 @@ import time
 from customtkinter import StringVar
 
 # Custom imports
-from Constants import URL, FOLDER, FILE
+from Constants import URL, FOLDER, FILE, LOCKING_CONFIG
 from CustomLogger import CustomLogger
 from FileManager import FileManager
+
+
+class DummyStringVar:
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def set(self, value: str):
+        pass
+
+    def get(self):
+        pass
 
 
 class Updater:
@@ -15,10 +26,10 @@ class Updater:
     _file_manager: FileManager
     release_version: str
     check_frequency: int
-    FILES_TO_CHECK: list[FILE] = [
+    ITEMS_TO_CHECK: list[FILE | FOLDER] = [
         FILE.AGENT_CONFIG,
-        FILE.LOCKING_CONFIG,
         FILE.SETTINGS,
+        FOLDER.LOCKING_CONFIGS,
     ]
 
     def __init__(
@@ -70,12 +81,14 @@ class Updater:
 
         return True
 
-    def check_for_version_update(self, stringVar: Optional[StringVar] = None) -> bool:
+    def check_for_version_update(
+        self, stringVar: Optional[StringVar] = None
+    ) -> str | None:
         """
         Checks if an update is available for the agent.
 
         Returns:
-            bool: True if an update is available, False otherwise.
+            str: The latest version if an update is available, None otherwise.
         """
         if stringVar is None:
             stringVar = StringVar()
@@ -88,34 +101,68 @@ class Updater:
         if update_available:
             self._logger.info("New version available, agent needs updating")
             stringVar.set(f"Update Available: {latest_version}")
-            return True
+            return latest_version
 
         stringVar.set("Up to date")
-        return False
+        return None
 
     def check_for_config_update(
-        self, file: FILE, stringVar: Optional[StringVar] = None
+        self,
+        item: FILE | FOLDER | LOCKING_CONFIG,
+        stringVar: Optional[StringVar] = None,
     ) -> None:
         if stringVar is None:
-            stringVar = StringVar()
+            stringVar = DummyStringVar()
 
-        self._logger.info(f"Checking {file.name} for updates")
-        stringVar.set("Checking")
+        # If checking a single file
+        if type(item) is FILE or type(item) is LOCKING_CONFIG:
+            # Use a dummy stringvar if the type is LOCKING_CONFIG so that it doesn't
+            # override the FOLDER stringvar text
+            innerStringVar = stringVar if type(item) is FILE else DummyStringVar()
+            
+            self._logger.info(f"Checking {item.name} for updates")
+            innerStringVar.set("Checking")
+            update_available = self.compare_yaml_configs(item)
 
-        update_available = self.compare_yaml_configs(file)
+            if update_available:
+                self._logger.info(f"{item.name} configuration needs updating")
+                innerStringVar.set("Downloading update...")
+                self._file_manager.update_file(item)
+                innerStringVar.set("Updated")
+            else:
+                self._logger.info(f"{item.name} is up to date")
+                innerStringVar.set("Up to date")
+        # If checking an entire folder
+        elif type(item) is FOLDER:
 
-        if update_available:
-            self._logger.info(f"{file.name} configuration needs updating")
-            stringVar.set("Downloading update...")
-            self._file_manager.update_file(file)
-            stringVar.set(f"Updated")
-        else:
-            self._logger.info(f"{file.name} is up to date")
-            stringVar.set(f"Up to date")
+            self._logger.info(f"Checking folder {item.name} for updates")
+
+            files = self._file_manager.get_files_in_folder(item)
+
+            total_files = len(files)
+
+            for checking, config_file in enumerate(files):
+                config_enum = LOCKING_CONFIG(config_file)
+                self._logger.info(f"Checking {config_enum.name} for updates")
+                stringVar.set(f"({checking+1}/{total_files}) Checking")
+
+                time.sleep(1)
+                update_available = self.compare_yaml_configs(config_enum)
+
+                if update_available:
+                    self._logger.info(
+                        f"{config_enum.name} configuration needs updating"
+                    )
+                    self._file_manager.update_file(item)
+                else:
+                    self._logger.info(f"{config_enum.name} is up to date")
+                    stringVar.set(f"({checking + 1}/{total_files}) Up to date")
+
+                # self.
 
     # region: YAML Config Versions
 
-    def compare_yaml_configs(self, config_file: FILE) -> bool:
+    def compare_yaml_configs(self, config_file: FILE | LOCKING_CONFIG) -> bool:
         """
         Compares the version of the current agent configuration with the latest version available.
 
@@ -234,6 +281,9 @@ class Updater:
         """
 
         if current_version is None or latest_version is None:
+            self._logger.warning(
+                "Failed to retrieve version information, unable to compare versions"
+            )
             return False
 
         current_version = current_version.replace("v", "").split(
@@ -267,6 +317,6 @@ if __name__ == "__main__":
     file_manager = FileManager()
     file_manager.setup()
     updater = Updater("v1.0.0", file_manager)
-    updater.check_for_config_updates()
+    updater.check_for_config_update(FOLDER.LOCKING_CONFIGS)
     # updater.check_for_version_update()
     # updater.update_last_checked()
