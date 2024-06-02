@@ -10,7 +10,7 @@ from customtkinter import BooleanVar, IntVar
 
 # Instalocker specific
 import pynput.mouse as pynmouse
-import pynput.keyboard as pynkeyboard
+# import pynput.keyboard as pynkeyboard
 import dxcam
 import numpy as np
 
@@ -21,8 +21,6 @@ from Constants import Region, LOCKING_CONFIG
 
 class Instalocker:
     logger = CustomLogger("Instalocker").get_logger()
-
-    stop_flag = False
 
     # Parent
     parent: "VALocker"
@@ -57,8 +55,8 @@ class Instalocker:
     cam: dxcam.DXCamera
 
     # Controllers
-    mouse: pynmouse.Controller
-    keyboard: pynkeyboard.Controller
+    mouse: pynmouse.Controller = pynmouse.Controller()
+    # keyboard: pynkeyboard.Controller = pynkeyboard.Controller()
 
     # Thread
     thread: Optional[threading.Thread] = None
@@ -67,26 +65,33 @@ class Instalocker:
         self.parent = parent
         self.file_manager = parent.file_manager
 
+        # Instalocker state
         self.state = parent.instalocker_status
-        self.hover = parent.hover
 
+        # Unlock and random status of each agent
         self.agent_states = parent.agent_states
 
+        # Timing settings (i.e. Safe Mode)
         self.fast_mode_timings = parent.fast_mode_timings
-
+        
         self.safe_mode_enabled = parent.safe_mode_enabled
         self.safe_mode_strength = parent.safe_mode_strength
         self.safe_mode_timings = parent.safe_mode_timings
 
+        # Additional options
+        self.hover = parent.hover
         self.random_select = parent.random_select
         self.exclusiselect = parent.exclusiselect
         self.map_specific = parent.map_specific
+
+        # Current Selected Agent
         self.agent_index = parent.agent_index
-
+        
+        # Screen Recorder
         self.cam = dxcam.create()
-
-        self.mouse = pynmouse.Controller()
-        self.keyboard = pynkeyboard.Controller()
+        
+        # Threading
+        self.stop_event = threading.Event()
         
         self.set_locking_config(locking_config)
 
@@ -250,16 +255,17 @@ class Instalocker:
 
     def main(self):
         self.cam.start(target_fps=144)
-        while not self.stop_flag:
+        self.logger.info("Thread started")
+        while not self.stopped():
             if self.state.get():
                 self.locking()
             else:
                 self.waiting()
         self.cam.stop()
-        self.logger.debug("Thread reached end of main")
+        self.logger.info("Thread stopped")
 
     def locking(self) -> None:
-        while not self.stop_flag and self.state.get():
+        while not self.stopped() and self.state.get():
             frame = self.get_latest_frame()
             if self.frame_matches(frame, self.lock_region):
                 start = time.time()
@@ -278,7 +284,7 @@ class Instalocker:
                 return
 
     def waiting(self) -> None:
-        while not self.stop_flag and not self.state.get():
+        while not self.stopped() and not self.state.get():
             print("Waiting")
             frame = self.get_latest_frame()
             for region in self.waiting_regions:
@@ -286,7 +292,7 @@ class Instalocker:
                     self.toggle_state(True)
                     self.logger.info(f"Matched waiting region:\n{region}")
                     return
-            time.sleep(0.3)
+            self.stop_event.wait(3)
 
     def lock_agent(self, agent_index: int) -> None:
         # Sets timings based on safe mode
@@ -294,18 +300,18 @@ class Instalocker:
             timing = self.safe_mode_timings[self.safe_mode_strength.get()]
             min_timing, max_timing = timing[0] / 4, timing[1] / 4
             timings = [random.uniform(min_timing, max_timing) for _ in range(4)]
-            time.sleep(timings[-1])
+            self.stop_event.wait(timings[-1])
         else:
             timings = self.fast_mode_timings
 
         self.mouse.position = self.location_in_agent_button(
             self.box_coords[agent_index]
         )
-        time.sleep(timings[0])
+        self.stop_event.wait(timings[0])
         self.mouse.click(pynmouse.Button.left, 1)
-        time.sleep(timings[1])
+        self.stop_event.wait(timings[1])
         self.mouse.position = self.location_in_lock_button()
-        time.sleep(timings[2])
+        self.stop_event.wait(timings[2])
         self.mouse.click(pynmouse.Button.left, 1)
 
     def toggle_state(self, value: Optional[bool] = None):
@@ -314,14 +320,8 @@ class Instalocker:
         self.state.set(value)
 
     def start(self):
-        # Check if thread is already running, if so return
-        if self.thread is not None and self.thread.is_alive():
-            self.logger.warning("Thread already running")
-            return
-
         # Start thread
-        self.stop_flag = False
-        self.logger.info("Thread started")
+        self.stop_event.clear()
         self.thread = threading.Thread(target=self.main, daemon=True)
         self.thread.start()
 
@@ -331,14 +331,15 @@ class Instalocker:
             self.logger.info("Thread not started")
             return
         
-        # If thread is not alive, thread is already stopped
-        if not self.thread.is_alive():
-            self.logger.warning("Thread already stopped")
+        if threading.current_thread() is self.thread:
+            self.logger.info("Cannot stop from within the thread itself")
             return
-
+            
         # Stop thread
-        self.stop_flag = True
-        self.logger.info("Thread stopped")
+        self.stop_event.set()
+        
+    def stopped(self):
+        return self.stop_event.is_set()
 
     # endregion
 
