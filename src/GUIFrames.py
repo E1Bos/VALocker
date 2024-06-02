@@ -271,8 +271,10 @@ class OverviewFrame(SideFrame):
             text="Map Specific",
             variable=self.parent.map_specific,
             command=lambda: self.parent.toggle_boolean(self.parent.map_specific),
+            state=ctk.DISABLED,
         )
         map_specific_button.grid(row=5, column=0, sticky="nsew", padx=10)
+        
 
         tools_button = ThemedButton(
             middle_frame,
