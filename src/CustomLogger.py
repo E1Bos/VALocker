@@ -1,5 +1,6 @@
 from logging import Logger, FileHandler, StreamHandler, Formatter, INFO, getLogger
 import os
+import sys
 from Constants import FOLDER, GET_WORKING_DIR
 
 
@@ -41,6 +42,28 @@ class CustomLogger(Logger):
         stream_handler: StreamHandler = StreamHandler()
         stream_handler.setFormatter(formatter)
         self.addHandler(stream_handler)
+
+        # sys.exc_info = self.attach_hook(self.log_exception, sys.exc_info)
+        sys.excepthook = self.attach_hook(self.log_exception, sys.excepthook)
+
+    def log_exception(self, exc_type, exc_value, exc_traceback):
+        if issubclass(exc_type, KeyboardInterrupt):
+            sys.__excepthook__(exc_type, exc_value, exc_traceback)
+            return
+
+        self.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
+
+    def attach_hook(self, hook_func, run_func):
+        def inner(*args, **kwargs):
+            if not (args or kwargs):
+                # This condition is for sys.exc_info
+                local_args = run_func()
+                hook_func(*local_args)
+            else:
+                # This condition is for sys.excepthook
+                hook_func(*args, **kwargs)
+            return run_func(*args, **kwargs)
+        return inner
 
     def get_logger(self) -> "CustomLogger":
         """
