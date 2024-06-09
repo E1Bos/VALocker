@@ -18,7 +18,6 @@ import numpy as np
 from CustomLogger import CustomLogger
 from Constants import Region, LOCKING_CONFIG
 
-
 class Instalocker:
     logger = CustomLogger("Instalocker").get_logger()
 
@@ -26,7 +25,7 @@ class Instalocker:
     parent: "VALocker"
 
     # Lock Confog
-    locking_config: dict
+    locking_config: dict = dict()
 
     # Locking Variables
     lock_region: Region
@@ -61,7 +60,7 @@ class Instalocker:
     # Thread
     thread: Optional[threading.Thread] = None
 
-    def __init__(self, parent: "VALocker", locking_config: LOCKING_CONFIG | str) -> None:
+    def __init__(self, parent: "VALocker") -> None:
         self.parent = parent
         self.file_manager = parent.file_manager
 
@@ -92,8 +91,6 @@ class Instalocker:
         
         # Threading
         self.stop_event = threading.Event()
-        
-        self.set_locking_config(locking_config)
 
     # region: Pre-Processing
 
@@ -122,6 +119,7 @@ class Instalocker:
                 )
                 + agent_buttons["size"] // 2
             )
+            
             y_position = (
                 agent_buttons["start"][1]
                 + (

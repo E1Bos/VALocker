@@ -219,8 +219,8 @@ class VALocker(ctk.CTk):
     def load_threads(self) -> None:
         # Initialize Instalocker
         self.logger.info("Initializing Instalocker")
-        self.instalocker = Instalocker(
-            self,
+        self.instalocker = Instalocker(self)
+        self.change_locking_config(
             self.file_manager.get_locking_config_by_file_name(
                 self.file_manager.get_value(FILE.SETTINGS, "lockingConfig"))
         )
@@ -258,16 +258,17 @@ class VALocker(ctk.CTk):
     def check_for_updates(self) -> None:
         """
         Checks for updates and performs necessary actions if updates are available.
-
-        This method checks if the frequency for update checks is met. If it is, it proceeds to check for
-        config updates and version updates. If a version update is available, it logs the update and
-        provides a placeholder for implementing the update code.
         """
         self.logger.info("Checking for config updates")
 
+        # Creates update frame as a popup if it is being run manually
+        if not hasattr(self, "update_frame"):
+            self.update_frame = UpdateFrame(self)
+            self.initUI()
+
         for file in self.updater.ITEMS_TO_CHECK:
             self.updater.check_for_config_update(
-                file, self.update_frame.status_variables[file]
+                file, self.update_frame.status_variables[file] 
             )
 
         # Checks for version updates
@@ -560,7 +561,7 @@ class VALocker(ctk.CTk):
 
             save_data["agents"][agent_name] = [values[0].get(), values[1].get()]
 
-        # TODO: SAVE MAP SPECIFIC AGENTS
+        # SAVE MAP SPECIFIC AGENTS (when functionality is added, not sure when)
         for map_name in self.file_manager.get_value(FILE.AGENT_CONFIG, "maps"):
             save_data["mapSpecificAgents"][map_name] = None
 
@@ -704,8 +705,15 @@ class SettingsFrame(SideFrame):
         scrollable_frame = ThemedScrollableFrame(self, label_text="Settings")
         scrollable_frame.pack(fill="both", expand=True, pady=10)
 
-        locking_configs = self.parent.file_manager.get_locking_configs()
+        # region: Update
+        
+        self.update_button = ThemedButton(scrollable_frame, text="Check for Updates", command=self.parent.check_for_updates)
+        self.update_button.pack(padx=5, pady=5, fill=ctk.X)
 
+        # endregion
+
+        # region: Locking Config
+        locking_configs = self.parent.file_manager.get_locking_configs()
         self.locking_config_var = ctk.StringVar(
             value=self.parent.file_manager.get_locking_config_by_file_name(
                 self.parent.file_manager.get_value(FILE.SETTINGS, "lockingConfig"),
@@ -713,14 +721,24 @@ class SettingsFrame(SideFrame):
             )
         )
 
+        locking_config_frame = ThemedFrame(scrollable_frame, fg_color = self.parent.theme["foreground-highlight"])
+        locking_config_frame.pack(fill=ctk.X, pady=10)
+
+        locking_config_label = ThemedLabel(
+            locking_config_frame, text="Locking Config:"
+        )
+        locking_config_label.pack(padx=10, pady=5, side=ctk.LEFT)
+
         self.locking_config_dropdown = ThemedDropdown(
-            scrollable_frame,
+            locking_config_frame,
             variable=self.locking_config_var,
             values=list(locking_configs.keys()),
         )
-        self.locking_config_dropdown.pack(fill="x", pady=5)
-
+        self.locking_config_dropdown.pack(fill=ctk.X, padx=10, pady=5)
         self.locking_config_var.trace_add("write", self.change_locking_config)
+
+        # endregion
+
 
     def change_locking_config(self, *_) -> None:
         config_title = self.locking_config_dropdown.get()
