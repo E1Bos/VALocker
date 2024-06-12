@@ -1,13 +1,14 @@
 import customtkinter as ctk
+import traceback
 from typing import TYPE_CHECKING
-
 
 if TYPE_CHECKING:
     from VALocker import VALocker
 
-
-from Constants import BRIGHTEN_COLOR, FILE, FRAME, profile
+# Custom Imports
+from Constants import BRIGHTEN_COLOR, FILE, FRAME
 from CustomElements import *
+
 
 # region: Navigation Frame
 
@@ -127,6 +128,7 @@ class NavigationFrame(ctk.CTkFrame):
 
 
 # endregion
+
 
 # region: Overview Frame
 
@@ -274,7 +276,6 @@ class OverviewFrame(SideFrame):
             state=ctk.DISABLED,
         )
         map_specific_button.grid(row=5, column=0, sticky="nsew", padx=10)
-        
 
         tools_button = ThemedButton(
             middle_frame,
@@ -357,6 +358,7 @@ class OverviewFrame(SideFrame):
 
 
 # endregion
+
 
 # region: Agent Toggle Frame
 
@@ -518,6 +520,7 @@ class AgentToggleFrame(SideFrame):
 
 
 # endregion
+
 
 # region: Random Select Frame
 
@@ -745,6 +748,7 @@ class RandomSelectFrame(SideFrame):
 
 
 # endregion
+
 
 # region: Save Files Frame
 
@@ -1011,6 +1015,160 @@ class SaveFilesFrame(SideFrame):
 
 # endregion
 
+
+# region: Tools Frame
+
+
+class ToolsFrame(SideFrame):
+    parent: "VALocker"
+
+    # Status of tools thread
+    tool_status: ctk.BooleanVar
+
+    # Dict of tool button names and their corresponding button
+    tool_buttons: dict[str, ThemedButton] = dict()
+
+    def __init__(self, parent: "VALocker") -> None:
+        super().__init__(parent)
+
+        tools: dict[str, ctk.BooleanVar] = {"Anti-AFK": self.parent.anti_afk}
+
+        self.tool_status = self.parent.tools_thread_running
+
+        toggle_tool_status = IndependentButton(
+            self,
+            text=["Tools: Enabled", "Tools: Disabled"],
+            variable=self.tool_status,
+            command=lambda: self.parent.toggle_boolean(self.tool_status),
+            corner_radius=10,
+        )
+        toggle_tool_status.pack(side=ctk.TOP, fill=ctk.X, pady=(10, 0), padx=0)
+
+        scrollable_tools_frame = ThemedScrollableFrame(self)
+        scrollable_tools_frame.pack(fill=ctk.BOTH, expand=True, pady=10)
+
+        scrollable_tools_frame.columnconfigure(0, weight=1)
+
+        # Scrollable frame items
+        for index, tool in enumerate(tools):
+            var = tools[tool]
+
+            button = IndependentButton(
+                scrollable_tools_frame,
+                text=tool,
+                variable=var,
+                command=lambda tool=var: self.parent.toggle_boolean(tool),
+            )
+            button.grid(row=index, column=0, padx=10, pady=10, sticky=ctk.NSEW)
+
+            self.tool_buttons[tool] = button
+
+    def on_raise(self) -> None:
+        pass
+
+
+# endregion
+
+
+# region: Settings Frame
+
+
+class SettingsFrame(SideFrame):
+    # TODO: Finish settings frame
+    current_locking_config: ctk.StringVar
+    backup_locking_config: str = None
+
+    def __init__(self, parent: "VALocker"):
+        super().__init__(parent)
+
+        scrollable_frame = ThemedScrollableFrame(self, label_text="Settings")
+        scrollable_frame.pack(fill="both", expand=True, pady=10)
+
+        # region: Update
+
+        self.update_button = ThemedButton(
+            scrollable_frame,
+            text="Check for Updates",
+            command=self.manual_update,
+        )
+        self.update_button.pack(padx=5, pady=5, fill=ctk.X)
+
+        # endregion
+
+        # region: Locking Config
+        locking_configs = self.parent.file_manager.get_locking_configs()
+        self.current_locking_config = ctk.StringVar(
+            value=self.parent.file_manager.get_locking_config_by_file_name(
+                self.parent.file_manager.get_value(FILE.SETTINGS, "lockingConfig"),
+                get_title=True,
+            )
+        )
+        self.backup_locking_config = self.current_locking_config.get()
+
+        locking_config_frame = ThemedFrame(
+            scrollable_frame, fg_color=self.parent.theme["foreground-highlight"]
+        )
+        locking_config_frame.pack(fill=ctk.X, pady=10)
+
+        locking_config_label = ThemedLabel(locking_config_frame, text="Locking Config:")
+        locking_config_label.pack(padx=10, pady=5, side=ctk.LEFT)
+
+        self.locking_config_dropdown = ThemedDropdown(
+            locking_config_frame,
+            variable=self.current_locking_config,
+            values=list(locking_configs.keys()),
+        )
+        self.locking_config_dropdown.pack(fill=ctk.X, padx=10, pady=5)
+        self.current_locking_config.trace_add("write", self.change_locking_config)
+
+        # endregion
+
+        # on_startup_frame = ThemedFrame(
+        #     scrollable_frame, fg_color=self.parent.theme["foreground-highlight"]
+        # )
+        # on_startup_frame.pack(fill=ctk.X, pady=10)
+
+        # on_startup_label = ThemedLabel(on_startup_frame, text="On Startup:")
+        # on_startup_label.pack(padx=10, pady=5, side=ctk.TOP)
+
+    def change_locking_config(self, *_, backup: bool = False) -> None:
+        if backup:
+            config_title = self.backup_locking_config
+        else:
+            config_title = self.locking_config_dropdown.get()
+
+        locking_configs = self.parent.file_manager.get_locking_configs()
+        config_file = locking_configs.get(config_title)
+
+        self.parent.logger.info(f'Changing locking config to "{config_title}"')
+
+        try:
+            self.parent.change_locking_config(config_file)
+            self.backup_locking_config = config_title
+        except Exception:
+            self.parent.logger.error(
+                f'Error loading locking config "{config_title}":\n{traceback.format_exc()}'
+            )
+            self.change_locking_config(backup=True)
+            self.locking_config_dropdown.set(self.backup_locking_config)
+            ErrorPopup(
+                self.parent,
+                message=f'Error loading config "{config_title}"\nCheck the logs for more information',
+            )
+
+    def change_setting(self, setting: str, value: Any) -> None:
+        self.parent.file_manager.set_value(FILE.SETTINGS, setting, value)
+
+    def manual_update(self) -> None:
+        self.parent.initUI(force_check_update=True)
+
+    def on_raise(self) -> None:
+        pass
+
+
+# endregion
+
+
 # region: Update Frame
 
 
@@ -1105,59 +1263,6 @@ class UpdateFrame(ctk.CTkFrame):
 
     def finished_checking_updates(self):
         self.update_label.configure(text="Loading VALocker")
-
-
-# endregion
-
-# region: Tools Frame
-
-
-class ToolsFrame(SideFrame):
-    parent: "VALocker"
-
-    # Status of tools thread
-    tool_status: ctk.BooleanVar
-
-    # Dict of tool button names and their corresponding button
-    tool_buttons: dict[str, ThemedButton] = dict()
-
-    def __init__(self, parent: "VALocker") -> None:
-        super().__init__(parent)
-
-        tools: dict[str, ctk.BooleanVar] = {"Anti-AFK": self.parent.anti_afk}
-
-        self.tool_status = self.parent.tools_thread_running
-
-        toggle_tool_status = IndependentButton(
-            self,
-            text=["Tools: Enabled", "Tools: Disabled"],
-            variable=self.tool_status,
-            command=lambda: self.parent.toggle_boolean(self.tool_status),
-            corner_radius=10,
-        )
-        toggle_tool_status.pack(side=ctk.TOP, fill=ctk.X, pady=(10, 0), padx=0)
-
-        scrollable_tools_frame = ThemedScrollableFrame(self)
-        scrollable_tools_frame.pack(fill=ctk.BOTH, expand=True, pady=10)
-
-        scrollable_tools_frame.columnconfigure(0, weight=1)
-
-        # Scrollable frame items
-        for index, tool in enumerate(tools):
-            var = tools[tool]
-
-            button = IndependentButton(
-                scrollable_tools_frame,
-                text=tool,
-                variable=var,
-                command=lambda tool=var: self.parent.toggle_boolean(tool),
-            )
-            button.grid(row=index, column=0, padx=10, pady=10, sticky=ctk.NSEW)
-
-            self.tool_buttons[tool] = button
-
-    def on_raise(self) -> None:
-        pass
 
 
 # endregion
