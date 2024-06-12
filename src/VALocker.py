@@ -1,10 +1,7 @@
 import customtkinter as ctk
 from typing import Optional
 import sys
-import time
-import traceback
-from PIL import Image
-from threading import Thread
+
 import webbrowser
 import threading
 import ctypes
@@ -19,8 +16,8 @@ from Instalocker import Instalocker
 from Tools import Tools
 from ThemeManager import ThemeManager
 
-# UI Imports
-from CustomElements import *
+# # UI Imports
+# from CustomElements import *
 from GUIFrames import *
 
 
@@ -257,16 +254,11 @@ class VALocker(ctk.CTk):
         self.destroy()
         sys.exit()
 
-    def check_for_updates(self) -> None:
+    def check_for_updates(self, force_check_update: bool = False) -> None:
         """
         Checks for updates and performs necessary actions if updates are available.
         """
         self.logger.info("Checking for config updates")
-
-        # Creates update frame as a popup if it is being run manually
-        if not hasattr(self, "update_frame"):
-            self.update_frame = UpdateFrame(self)
-            self.initUI()
 
         for file in self.updater.ITEMS_TO_CHECK:
             self.updater.check_for_config_update(
@@ -308,8 +300,12 @@ class VALocker(ctk.CTk):
 
         self.updater.update_last_checked()
         self.update_frame.finished_checking_updates()
-        self.after(1000, self.initMainUI)
-
+        
+        if force_check_update:
+            self.after(1000, lambda x=FRAME.SETTINGS: self.initMainUI(x))
+        else:
+            self.after(1000, self.initMainUI)
+            
     def update_stats(self, *_) -> None:
         """
         Gets the current stats of the program.
@@ -397,7 +393,7 @@ class VALocker(ctk.CTk):
 
     # region: UI
 
-    def initUI(self) -> None:
+    def initUI(self, force_check_update:bool = False) -> None:
         """
         Initializes the user interface.
 
@@ -413,16 +409,19 @@ class VALocker(ctk.CTk):
 
         self.update_frame = UpdateFrame(self)
 
-        if self.updater.check_frequency_met():
-            self.logger.info("Check frequency met, checking for updates")
+        if self.updater.check_frequency_met() or force_check_update:
+            if not force_check_update:
+                self.logger.info("Check frequency met, checking for updates")
+            else:
+                self.logger.info("Manually checking for updates")
             self.update_frame.pack(fill="both", expand=True)
             self.update()
-            thread = threading.Thread(target=self.check_for_updates, daemon=True)
+            thread = threading.Thread(target=lambda x=force_check_update: self.check_for_updates(force_check_update=x), daemon=True)
             thread.start()
         else:
             self.initMainUI()
 
-    def initMainUI(self) -> None:
+    def initMainUI(self, open_to_frame: FRAME = FRAME.OVERVIEW) -> None:
         """
         Initializes the main user interface.
 
@@ -457,7 +456,7 @@ class VALocker(ctk.CTk):
             frame.grid(row=0, column=1, sticky="nswe", padx=(10, 10))
 
         self.agent_unlock_status_changed()
-        self.select_frame(FRAME.SETTINGS)
+        self.select_frame(open_to_frame)
 
     def select_frame(self, frame: FRAME) -> None:
         """
@@ -495,13 +494,13 @@ class VALocker(ctk.CTk):
         """
 
         if not self.instalocker_thread_running.get():
-            self.iconbitmap(ICON.DISABLED.value)
+            self.wm_iconbitmap(ICON.DISABLED.value)
             self.title("VALocker")
         elif self.instalocker_status.get():
-            self.iconbitmap(ICON.LOCKING.value)
+            self.wm_iconbitmap(ICON.LOCKING.value)
             self.title("VALocker - Locking")
         else:
-            self.iconbitmap(ICON.WAITING.value)
+            self.wm_iconbitmap(ICON.WAITING.value)
             self.title("VALocker - Waiting")
 
     # endregion
@@ -697,86 +696,7 @@ class VALocker(ctk.CTk):
         self.file_manager.set_value(FILE.SETTINGS, "lockingConfig", file)
 
 
-class SettingsFrame(SideFrame):
-    # TODO: FINISH SETTINGS FRAME
-    current_locking_config: ctk.StringVar
-    backup_locking_config: str = None
 
-    def __init__(self, parent: "VALocker"):
-        super().__init__(parent)
-
-        scrollable_frame = ThemedScrollableFrame(self, label_text="Settings")
-        scrollable_frame.pack(fill="both", expand=True, pady=10)
-
-        # region: Update
-
-        self.update_button = ThemedButton(
-            scrollable_frame,
-            text="Check for Updates",
-            command=self.parent.check_for_updates,
-        )
-        self.update_button.pack(padx=5, pady=5, fill=ctk.X)
-
-        # endregion
-
-        # region: Locking Config
-        locking_configs = self.parent.file_manager.get_locking_configs()
-        self.current_locking_config = ctk.StringVar(
-            value=self.parent.file_manager.get_locking_config_by_file_name(
-                self.parent.file_manager.get_value(FILE.SETTINGS, "lockingConfig"),
-                get_title=True,
-            )
-        )
-        self.backup_locking_config = self.current_locking_config.get()
-
-        locking_config_frame = ThemedFrame(
-            scrollable_frame, fg_color=self.parent.theme["foreground-highlight"]
-        )
-        locking_config_frame.pack(fill=ctk.X, pady=10)
-
-        locking_config_label = ThemedLabel(locking_config_frame, text="Locking Config:")
-        locking_config_label.pack(padx=10, pady=5, side=ctk.LEFT)
-
-        self.locking_config_dropdown = ThemedDropdown(
-            locking_config_frame,
-            variable=self.current_locking_config,
-            values=list(locking_configs.keys()),
-        )
-        self.locking_config_dropdown.pack(fill=ctk.X, padx=10, pady=5)
-        self.current_locking_config.trace_add("write", self.change_locking_config)
-
-        # endregion
-
-    def change_locking_config(self, *_, backup: bool = False) -> None:
-        if backup:
-            config_title = self.backup_locking_config
-        else:
-            config_title = self.locking_config_dropdown.get()
-
-        locking_configs = self.parent.file_manager.get_locking_configs()
-        config_file = locking_configs.get(config_title)
-
-        self.parent.logger.info(f'Changing locking config to "{config_title}"')
-
-        try:
-            self.parent.change_locking_config(config_file)
-            self.backup_locking_config = config_title
-        except Exception:
-            self.parent.logger.error(
-                f'Error loading locking config "{config_title}":\n{traceback.format_exc()}'
-            )
-            self.change_locking_config(backup=True)
-            self.locking_config_dropdown.set(self.backup_locking_config)
-            ErrorPopup(
-                self.parent,
-                message=f"Error loading config \"{config_title}\"\nCheck the logs for more information",
-            )
-
-    def revert_locking_config(self) -> None:
-        pass
-
-    def on_raise(self) -> None:
-        pass
 
 
 if __name__ == "__main__":
