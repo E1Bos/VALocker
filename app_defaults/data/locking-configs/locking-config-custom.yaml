@@ -1,5 +1,4 @@
-# Version of the confguration and if the configuration is custom
-# version: 1.0.0
+# If the configuration is custom
 custom: True
 # --------------------------------------------------
 # Title of the configuration
