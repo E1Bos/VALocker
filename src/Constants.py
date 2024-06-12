@@ -3,12 +3,6 @@ import os
 import sys
 from typing import Optional
 
-# Profile Imports
-from cProfile import Profile
-from pstats import Stats
-from functools import wraps
-
-
 def RESOURCE_PATH(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
     try:
@@ -224,26 +218,5 @@ class Save():
     def __str__(self) -> str:
         return f"{self.name}"
 '''
-
-# region: Profiler
-
-
-def profile(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        profiler = Profile()
-        profiler.enable()
-        result = func(*args, **kwargs)
-        profiler.disable()
-
-        print(f"\n\nStats for {func.__name__}:")
-        stats = Stats(profiler)
-        stats.strip_dirs()
-        stats.sort_stats("cumulative")
-        stats.print_stats()
-        return result
-
-    return wrapper
-
 
 # endregion
