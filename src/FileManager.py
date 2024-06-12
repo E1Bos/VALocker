@@ -27,6 +27,7 @@ class FileManager:
         FOLDER.LOGS,
         FOLDER.SETTINGS,
         FOLDER.THEMES,
+        FOLDER.LOCKING_CONFIGS,
     ]
 
     _REQUIRED_FILES: list[FILE | LOCKING_CONFIG] = [
