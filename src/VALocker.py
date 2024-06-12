@@ -2,6 +2,7 @@ import customtkinter as ctk
 from typing import Optional
 import sys
 import time
+import traceback
 from PIL import Image
 from threading import Thread
 import webbrowser
@@ -222,7 +223,8 @@ class VALocker(ctk.CTk):
         self.instalocker = Instalocker(self)
         self.change_locking_config(
             self.file_manager.get_locking_config_by_file_name(
-                self.file_manager.get_value(FILE.SETTINGS, "lockingConfig"))
+                self.file_manager.get_value(FILE.SETTINGS, "lockingConfig")
+            )
         )
 
         self.logger.info("Managing Instalocker thread")
@@ -268,7 +270,7 @@ class VALocker(ctk.CTk):
 
         for file in self.updater.ITEMS_TO_CHECK:
             self.updater.check_for_config_update(
-                file, self.update_frame.status_variables[file] 
+                file, self.update_frame.status_variables[file]
             )
 
         # Checks for version updates
@@ -697,7 +699,8 @@ class VALocker(ctk.CTk):
 
 class SettingsFrame(SideFrame):
     # TODO: FINISH SETTINGS FRAME
-    locking_config_var = ctk.StringVar
+    current_locking_config: ctk.StringVar
+    backup_locking_config: str = None
 
     def __init__(self, parent: "VALocker"):
         super().__init__(parent)
@@ -706,48 +709,71 @@ class SettingsFrame(SideFrame):
         scrollable_frame.pack(fill="both", expand=True, pady=10)
 
         # region: Update
-        
-        self.update_button = ThemedButton(scrollable_frame, text="Check for Updates", command=self.parent.check_for_updates)
+
+        self.update_button = ThemedButton(
+            scrollable_frame,
+            text="Check for Updates",
+            command=self.parent.check_for_updates,
+        )
         self.update_button.pack(padx=5, pady=5, fill=ctk.X)
 
         # endregion
 
         # region: Locking Config
         locking_configs = self.parent.file_manager.get_locking_configs()
-        self.locking_config_var = ctk.StringVar(
+        self.current_locking_config = ctk.StringVar(
             value=self.parent.file_manager.get_locking_config_by_file_name(
                 self.parent.file_manager.get_value(FILE.SETTINGS, "lockingConfig"),
                 get_title=True,
             )
         )
+        self.backup_locking_config = self.current_locking_config.get()
 
-        locking_config_frame = ThemedFrame(scrollable_frame, fg_color = self.parent.theme["foreground-highlight"])
+        locking_config_frame = ThemedFrame(
+            scrollable_frame, fg_color=self.parent.theme["foreground-highlight"]
+        )
         locking_config_frame.pack(fill=ctk.X, pady=10)
 
-        locking_config_label = ThemedLabel(
-            locking_config_frame, text="Locking Config:"
-        )
+        locking_config_label = ThemedLabel(locking_config_frame, text="Locking Config:")
         locking_config_label.pack(padx=10, pady=5, side=ctk.LEFT)
 
         self.locking_config_dropdown = ThemedDropdown(
             locking_config_frame,
-            variable=self.locking_config_var,
+            variable=self.current_locking_config,
             values=list(locking_configs.keys()),
         )
         self.locking_config_dropdown.pack(fill=ctk.X, padx=10, pady=5)
-        self.locking_config_var.trace_add("write", self.change_locking_config)
+        self.current_locking_config.trace_add("write", self.change_locking_config)
 
         # endregion
 
+    def change_locking_config(self, *_, backup: bool = False) -> None:
+        if backup:
+            config_title = self.backup_locking_config
+        else:
+            config_title = self.locking_config_dropdown.get()
 
-    def change_locking_config(self, *_) -> None:
-        config_title = self.locking_config_dropdown.get()
         locking_configs = self.parent.file_manager.get_locking_configs()
         config_file = locking_configs.get(config_title)
 
         self.parent.logger.info(f'Changing locking config to "{config_title}"')
 
-        self.parent.change_locking_config(config_file)
+        try:
+            self.parent.change_locking_config(config_file)
+            self.backup_locking_config = config_title
+        except Exception:
+            self.parent.logger.error(
+                f'Error loading locking config "{config_title}":\n{traceback.format_exc()}'
+            )
+            self.change_locking_config(backup=True)
+            self.locking_config_dropdown.set(self.backup_locking_config)
+            ErrorPopup(
+                self.parent,
+                message=f"Error loading config \"{config_title}\"\nCheck the logs for more information",
+            )
+
+    def revert_locking_config(self) -> None:
+        pass
 
     def on_raise(self) -> None:
         pass
