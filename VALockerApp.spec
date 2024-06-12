@@ -4,7 +4,7 @@
 block_cipher = None
 
 a = Analysis(
-    ['VALockerApp.py'],
+    ['VALockerApp.pyw'],
     pathex=['.'],  # Ensure the current directory is in the path
     binaries=[],
     datas=[
