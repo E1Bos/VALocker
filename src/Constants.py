@@ -1,5 +1,6 @@
 from enum import Enum
 import os
+import sys
 from typing import Optional
 
 # Profile Imports
@@ -8,10 +9,15 @@ from pstats import Stats
 from functools import wraps
 
 
-def RESOURCE_PATH(relative_path: str) -> str:
-    return os.path.join(
-        os.environ.get("_MEIPASS2", os.path.abspath(".")), relative_path
-    )
+def RESOURCE_PATH(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 
 class URL(Enum):
@@ -30,8 +36,8 @@ class FOLDER(Enum):
     """
 
     # Specific folder to use (None for AppData/roaming)
-    STORAGE_FOLDER: str = "app_defaults"
-    # STORAGE_FOLDER: str = None
+    # STORAGE_FOLDER: str = "app_defaults"
+    STORAGE_FOLDER: str = None
 
     # Where default files are stored
     DEFAULTS: str = "app_defaults"
@@ -86,6 +92,7 @@ class FRAME(Enum):
 
 
 class ICON(Enum):
+    DEFAULT: str = "valocker.ico"
     DISABLED: str = "valocker-disabled.ico"
     LOCKING: str = "valocker-locking.ico"
     WAITING: str = "valocker-waiting.ico"
