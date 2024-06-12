@@ -157,18 +157,18 @@ class Updater:
                         self._file_manager.update_file(item)
                     else:
                         self._logger.info(f"{config_enum.name} is up to date")
-                        stringVar.set(f"({checking + 1}/{total_files}) Up to date")
-                        
+                    
+
                 except ValueError:
                     data = self._file_manager.get_config(config_file)
                     
                     if data.get("custom", False):
                         self._logger.info(f"Found custom config \"{data.get('title')}\", skipping")
-                        continue
                     else:
                         self._logger.error(f"Failed to parse config file {config_file}")
                         stringVar.set(f"({checking + 1}/{total_files}) Error")
-                        continue
+                    
+                stringVar.set(f"({checking + 1}/{total_files}) Up to date")
 
     # region: YAML Config Versions
 
