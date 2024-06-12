@@ -19,9 +19,7 @@ favoritedSaveFiles: []
 # --------------------------------------------------
 # Settings on startup
 enableOnStartup: false
-minimizeToTray: false
-startMinimized: false
-safeModeOnStartup: true
+safeModeOnStartup: false
 safeModeStrengthOnStartup: 0
 # --------------------------------------------------
 # Timings for fast mode, in seconds
