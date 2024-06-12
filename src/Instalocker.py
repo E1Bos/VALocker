@@ -102,10 +102,11 @@ class Instalocker:
         else:
             config_name = self.locking_config.get('title')
         
-        self.logger.info(f"Locking config \"{config_name}\" loaded")
         
         self.calculate_box_locations(self.parent.total_agents)
         self.load_config()
+        
+        self.logger.info(f"Locking config \"{config_name}\" loaded")
 
     def calculate_box_locations(self, total_agents: int) -> None:
         agent_buttons = self.locking_config["agentButtons"]
@@ -129,8 +130,6 @@ class Instalocker:
                 + agent_buttons["size"] // 2
             )
             self.box_coords.append((x_position, y_position))
-
-        self.logger.info("Locking box locations calculated")
 
     def load_config(self) -> None:
 
