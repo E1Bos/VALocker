@@ -1109,7 +1109,7 @@ class ThemedPopup(ctk.CTkToplevel):
 
         super().__init__(**config)
         self.geometry(geometry)
-
+        self.after(200, lambda: self.wm_iconbitmap(ICON.DEFAULT.value))
         self.title(title)
         self.lift()  # lift window on top
         self.attributes("-topmost", True)  # stay on top
@@ -1162,7 +1162,7 @@ class ThemedPopup(ctk.CTkToplevel):
 
 class InputDialog(ThemedPopup):
     """
-    A popup that asks the user for input.
+    A popup that asks the user for a text input.
 
     Modified version of the InputDialog class from the customtkinter library to use the active theme.
     See https://github.com/TomSchimansky/CustomTkinter for the original class.
