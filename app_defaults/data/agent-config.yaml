@@ -44,6 +44,7 @@ sentinel:
 # --------------------------------------------------
 # All the maps in game
 maps:
+  - abyss
   - ascent
   - bind
   - breeze
