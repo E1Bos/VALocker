@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Optional
 if TYPE_CHECKING:
     from VALocker import VALocker
 
-from customtkinter import BooleanVar, IntVar
+from customtkinter import BooleanVar
 # import pynput.mouse as pynmouse
 import pynput.keyboard as pynkeyboard
 

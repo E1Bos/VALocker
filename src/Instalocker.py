@@ -282,7 +282,6 @@ class Instalocker:
 
     def waiting(self) -> None:
         while not self.stopped() and not self.state.get():
-            print("Waiting")
             frame = self.get_latest_frame()
             for region in self.waiting_regions:
                 if self.frame_matches(frame, region):

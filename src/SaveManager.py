@@ -1,5 +1,4 @@
 import os
-from ruamel.yaml import YAML
 
 from typing import Optional
 
