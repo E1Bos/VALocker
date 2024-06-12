@@ -4,6 +4,7 @@ selectedAgent: brimstone
 # --------------------------------------------------
 # Maps and their designated agent, null by default
 mapSpecificAgents:
+  abyss:
   ascent:
   bind:
   breeze:
