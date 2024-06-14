@@ -36,8 +36,9 @@ class FileManager:
         FILE.SETTINGS,
         FILE.DEFAULT_SAVE,
         FILE.DEFAULT_THEME,
-        LOCKING_CONFIG.CONFIG_1920_1080_16_9,
+        # All locking configs
     ]
+    
 
     _WORKING_DIR: str = GET_WORKING_DIR()
 
@@ -51,6 +52,9 @@ class FileManager:
 
     def __init__(self) -> None:
         self.yaml.indent(mapping=2, sequence=4, offset=2)
+        
+        for locking_config in LOCKING_CONFIG:
+            self._REQUIRED_FILES.append(locking_config)
 
     # Start Function
     def setup(self) -> None:
