@@ -35,7 +35,7 @@ lockButton:
 lockRegion:
   xCoord: <x Coordinate, [x]>
   yCoord: <y Coordinate, [x]>
-  width: <Width, [x]>
+  width: 1 # Default value, may be different
   height: 1 # Default value, may be different
   color: [234, 238, 178] # Default value, may be different
 # --------------------------------------------------
