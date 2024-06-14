@@ -1,0 +1,74 @@
+# If the configuration is custom, do NOT change
+# VALocker will attempt to update the configuration file
+# if the configuration is not custom, this may crash the program
+custom: True
+# --------------------------------------------------
+# Title of the configuration
+title: <Title>
+# --------------------------------------------------
+# The location of the agent buttons
+# size: size of the agent buttons
+# columns: number of columns
+# xDistance: x distance between the columns
+# yDistance: y distance between the rows
+# start: the top left corner of the first agent button
+agentButtons:
+  size: <Size, [x]>
+  columns: 9 # Default value, may be different
+  xDistance: <x Distance, [x]>
+  yDistance: <y Distance, [x]>
+  start: <Top Left Corner, [x, y]>
+# --------------------------------------------------
+# The location of the lock button
+# size: size of the lock button
+# location: the top left corner of the lock button
+lockButton:
+  size: <Size, [x, y]>
+  location: <Top Left Corner, [x, y]>
+# --------------------------------------------------
+# Regions that are checked to see when to initiate the lock
+# xCoord: x coordinate of the top left corner of the region
+# yCoord: y coordinate of the top left corner of the region
+# width: width of the region
+# height: height of the region
+# color: color of the pixel in the region to match
+lockRegion:
+  xCoord: <x Coordinate, [x]>
+  yCoord: <y Coordinate, [x]>
+  width: 1 # Default value, may be different
+  height: 1 # Default value, may be different
+  color: [234, 238, 178] # Default value, may be different
+# --------------------------------------------------
+# Regions that are checked to see when the user is not in a game
+# xCoord: x coordinate of the top left corner of the region
+# yCoord: y coordinate of the top left corner of the region
+# width: width of the region
+# height: height of the region
+# color: color of the pixel in the region to match
+waitingRegions:
+  - xCoord: <x Coordinate, [x]>
+    yCoord: <y Coordinate, [x]>
+    width: <Width, [x]>
+    height: <Height, [x]>
+    color: <Color, [r, g, b]>
+  # - xCoord: <x Coordinate, [x]>
+  #   yCoord: <y Coordinate, [x]>
+  #   width: <Width, [x]>
+  #   height: <Height, [x]>
+  #   color: <Color, [r, g, b]>
+  # - xCoord: <x Coordinate, [x]>
+  #   yCoord: <y Coordinate, [x]>
+  #   width: <Width, [x]>
+  #   height: <Height, [x]>
+  #   color: <Color, [r, g, b]>
+  # - xCoord: <x Coordinate, [x]>
+  #   yCoord: <y Coordinate, [x]>
+  #   width: <Width, [x]>
+  #   height: <Height, [x]>
+  #   color: <Color, [r, g, b]>
+  # - xCoord: <x Coordinate, [x]>
+  #   yCoord: <y Coordinate, [x]>
+  #   width: <Width, [x]>
+  #   height: <Height, [x]>
+  #   color: <Color, [r, g, b]>
+# --------------------------------------------------

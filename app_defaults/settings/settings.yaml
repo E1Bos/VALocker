@@ -1,0 +1,45 @@
+# --------------------------------------------------
+# Version of the settings config
+version: 1.0.0
+# --------------------------------------------------
+# Time since the last check for updates, in epoch time
+lastChecked: 0
+# --------------------------------------------------
+# The theme of the application
+theme: default-theme.yaml
+# --------------------------------------------------
+# Current Locking Config
+lockingConfig: locking-config-1920-1080-16-9.yaml
+# --------------------------------------------------
+# The active save file, including the extension
+activeSaveFile: default.yaml
+# --------------------------------------------------
+# The save files that are favorited
+favoritedSaveFiles: []
+# --------------------------------------------------
+# Settings on startup
+enableOnStartup: false
+safeModeOnStartup: false
+safeModeStrengthOnStartup: 0
+# --------------------------------------------------
+# Timings for fast mode, in seconds
+fastModeTimings:
+  - 0.02
+  - 0.02
+  - 0.02
+# --------------------------------------------------
+# Timings for safe mode, in seconds
+safeModeTimings:
+  - [0.4, 0.6]
+  - [0.7, 0.9]
+  - [1.0, 1.2]
+# --------------------------------------------------
+# Whether to show the default save file
+hideDefaultSave: false
+# --------------------------------------------------
+# The anti-afk mode
+antiAfkMode: forward
+# --------------------------------------------------
+# Whether files have already been migrated
+alreadyMigrated: false
+# --------------------------------------------------

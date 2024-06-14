@@ -1,0 +1,23 @@
+# Font family and Color
+font: "Roboto"
+text: "#FFFFFF"
+
+# Color of the background
+background: "#1a1a1a"
+
+# Color of the foreground and the upper elements
+foreground: "#212121"
+foreground-highlight: "#333333"
+
+# Accent color, used for certain buttons
+accent: "#1f538d"
+
+# Button Colors
+button-enabled: "#2e8b57"
+button-disabled: "#b52d3b"
+
+# Color for each role
+controller: "#d68909"
+duelist: "#bf124d"
+initiator: "#0a7ad3"
+sentinel: "#3c8c40"

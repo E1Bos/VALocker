@@ -1,0 +1,89 @@
+# --------------------------------------------------
+# Current selected agent
+selectedAgent: brimstone
+# --------------------------------------------------
+# Maps and their designated agent, null by default
+mapSpecificAgents:
+  abyss:
+  ascent:
+  bind:
+  breeze:
+  fracture:
+  haven:
+  icebox:
+  lotus:
+  pearl:
+  split:
+  sunset:
+# --------------------------------------------------
+# State of each agent
+# [unlocked, random], with default values of [false, false]
+# Default agents are always unlocked, so they are stored as [random] with the default value of [false]
+agents:
+  astra:
+    - false
+    - false
+  breach:
+    - false
+    - false
+  brimstone:
+    - false
+  chamber:
+    - false
+    - false
+  clove:
+    - false
+    - false
+  cypher:
+    - false
+    - false
+  deadlock:
+    - false
+    - false
+  fade:
+    - false
+    - false
+  gekko:
+    - false
+    - false
+  harbor:
+    - false
+    - false
+  iso:
+    - false
+    - false
+  jett:
+    - false
+  kayo:
+    - false
+    - false
+  killjoy:
+    - false
+    - false
+  neon:
+    - false
+    - false
+  omen:
+    - false
+    - false
+  phoenix:
+    - false
+  raze:
+    - false
+    - false
+  reyna:
+    - false
+    - false
+  sage:
+    - false
+  skye:
+    - false
+    - false
+  sova:
+    - false
+  viper:
+    - false
+    - false
+  yoru:
+    - false
+    - false
