@@ -1154,6 +1154,7 @@ class SettingsFrame(SideFrame):
             ErrorPopup(
                 self.parent,
                 message=f'Error loading config "{config_title}"\nCheck the logs for more information',
+                size="400x100"
             )
 
     def change_setting(self, setting: str, value: Any) -> None:
