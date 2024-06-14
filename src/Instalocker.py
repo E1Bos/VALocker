@@ -149,16 +149,17 @@ class Instalocker:
 
         # Wating Config
         self.waiting_regions = []
-        for region in self.locking_config["waitingRegions"]:
-            self.waiting_regions.append(
-                Region(
-                    x=region["xCoord"],
-                    y=region["yCoord"],
-                    width=region["width"],
-                    height=region["height"],
-                    color=region["color"],
+        if self.locking_config["waitingRegions"] is not None:
+            for region in self.locking_config["waitingRegions"]:
+                self.waiting_regions.append(
+                    Region(
+                        x=region["xCoord"],
+                        y=region["yCoord"],
+                        width=region["width"],
+                        height=region["height"],
+                        color=region["color"],
+                    )
                 )
-            )
 
         # Box Size
         self.box_size = self.locking_config["agentButtons"]["size"]
