@@ -142,11 +142,13 @@ class Updater:
             total_files = len(files)
 
             for checking, config_file in enumerate(files):
+                current_file_num = checking + 1
+                
                 try:
                     config_enum = LOCKING_CONFIG(config_file)
                     
                     self._logger.info(f"Checking {config_enum.name} for updates")
-                    stringVar.set(f"({checking+1}/{total_files}) Checking")
+                    stringVar.set(f"({current_file_num}/{total_files}) Checking")
 
                     update_available = self.compare_yaml_configs(config_enum)
 
@@ -162,13 +164,13 @@ class Updater:
                 except ValueError:
                     data = self._file_manager.get_config(config_file)
                     
-                    if data.get("custom", False):
+                    if data.get("custom", False) or data.get("version", None) is None:
                         self._logger.info(f"Found custom config \"{data.get('title')}\", skipping")
                     else:
                         self._logger.error(f"Failed to parse config file {config_file}")
-                        stringVar.set(f"({checking + 1}/{total_files}) Error")
+                        stringVar.set(f"({current_file_num}/{total_files}) Error")
                     
-                stringVar.set(f"({checking + 1}/{total_files}) Up to date")
+                stringVar.set(f"({current_file_num}/{total_files}) Up to date")
 
     # region: YAML Config Versions
 
