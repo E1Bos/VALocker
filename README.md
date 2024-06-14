@@ -11,9 +11,7 @@
 </div>
 <br>
 
-VALocker is a program written in Python that allows you to automatically lock any VALORANT agent quickly and reliably. It helps you secure your favorite agent during the agent selection phase, saving you time and ensuring you don't miss out on playing your preferred character.
-
-**Regarding Updates**: Don't expect many updates to VALocker in the coming months. I am now studying full-time at university and don't know if I will have the time to play Valorant or/and work on VALocker. I intend to release VALocker V2 soon, with a more intuitive GUI, an easier-to-maintain file structure, auto-update capability, and the ability to play on other window resolutions.
+VALocker is a program written in Python that automatically locks any VALORANT agent quickly and reliably. It helps you secure your favorite agent, saving you time, effort, and ensuring you don't miss out on playing who you want to play.
 
 📋 **Changelog:** For a detailed list of changes, improvements, and bug fixes, refer to the [Changelog](changelog.md) file.
 
@@ -22,10 +20,24 @@ VALocker is a program written in Python that allows you to automatically lock an
 
 ## 📰 New in v2.0.0
 
-- Overhauled the entire UI, making it more responsivem consistent, and adding support for custom themes.
-- All data files are now stored in `%APPDATA%\VALocker`, making the location of the executable irrelevant, and allowing for easy updates.
+### Support for different resolutions and aspect ratios!
+- VALocker can now be used at different resolutions, and with different settings, without needing to modify the code. Custom files can be created if the your resolution and aspect ratio is not supported by default.
+- Currently supported resolutions and aspect ratios are:
+  - 1920x1080 [16:9] (Measured on a 1920x1080 monitor)
+  - 1650x1050 [16:10] (Measured on a 1920x1080 monitor)
+  - 1280x1024 [5:4] (Measured on a 1920x1080 monitor)
+  <!-- - 1024x768 [4:3] (Measured on a 1920x1080 monitor) -->
+- Custom files can be created for other resolutions and aspect ratios. See the [wiki page](https://github.com/E1Bos/VALocker/wiki/Custom-Configs) for more information.
+### Overhauled UI!
+- Overhauled the entire UI, making it more responsive, consistent, and adding support for custom themes.
+- All elements are dynamically rendered, meaning resizing the window is possible (while not recommended, due to the lag of tkinter).
+### Improved performance!
+- The mss library has been replaced with betterDXcam, a fork of [DXcam](https://github.com/ra1nty/DXcam), which is [much faster](https://github.com/E1Bos/betterDXcam#benchmarks).
+- BetterDXcam allows for changing resolutions and aspect ratios, making it easier to support different setups, this is the reason DXcam was forked in the first place.
+### Improved storage and updates!
+- All data is now stored in `%APPDATA%\VALocker`, making the location of the executable irrelevant, and allowing for easy updates.
 - Over-the-air updates for all config files. No need to redownload the project zip file and replace all files.
-- All elements are dynamically rendered, meaning resizing the window (while not recommended, due to the lag of tkinter) is possible.
+### Improved error handling!
 - Added loggers for all functions, making diagnosing issues easier.
 
 ## 📚 Features
@@ -52,49 +64,49 @@ VALocker is a program written in Python that allows you to automatically lock an
   - Medium 500-800ms
   - High 800-1000ms
 - Works irrespective of how many agents you have unlocked (See [guide](#guide) for more information).
-- **_(PLANNED, NOT IMPLEMENTED YET)_** Support for map-specific agent locking.
+- **_(PLANNED, NOT IMPLEMENTED YET)_** ~~Support for map-specific agent locking.~~
 
 ### 🕵️‍♂️ Anti-Detection
 
-- Selects random part of agent and locking button so movement can't be predicted.
-- Analyzes screenshots, taken hundreds of times per second to determine what is going on within the game, a safer approach which reduces the risk of bans significantly compared to other aggressive methods such as direct memory reading or API abuse.
+- Selects random part of agent and locking button making every lock unpredictable.
+- Analyzes screenshots, taken hundreds of times per second to determine what is going on within the game, a safer approach which reduces the risk of bans significantly compared to other aggressive methods such as direct memory reading or abusing the API.
+- The mouse only moves once the agent selection screen is detected, making it safer than macros or other methods that move the mouse constantly.
 
 ### 🎲 Random Agent Selection
 
-- Random agent mode allows random agent selection from a pool, for when you get bored of playing the same agent.
-- ExclusiSelect (ES) mode disables random agents after they're picked, ensuring you don't get the same agent twice.
+- Random agent mode allows random agent selection from a pool of possible agents, when you get bored of playing the same agent in swiftplay, or when you want to have some fun.
+- ExclusiSelect (ES) mode disables random agents after they're picked, ensuring you don't get the same randomly-selected agent twice.
   - When ES is disabled, it refreshes random agent selections to what they were prior to ES being enabled.
 
 ### 📊 Stats
 
-- Tracks the time to lock, total locks, and times locking a specific agent.
+- Tracks the time to lock, and total times used.
 - Displays all stats in real time.
 
 ### 💾 Saves
 
 - Allows for multiple save files for different accounts and/or configurations.
 - Each save has its own selected agent, toggled agents, and random agents, allowing for more flexibility.
+- Saves can be favorited, renamed, or deleted, without needing to dig through your file explorer.
 
 ### 🔧 Tools
 
 - Features non-instalocking related tools to improve quality of life. Tools only work when the instalocker is disabled, when the status says "In Game".
-- Auto Drop Spike automatically drops the spike when you are holding it.
+- **_(PLANNED, NOT IMPLEMENTED YET)_** ~~Auto Drop Spike automatically drops the spike when you are holding it.~~
 - Anti-AFK moves you around a random amount with a random delay.
   - Anti-AFK can be enabled with the instalocker functionality while queuing, allowing you to take a break from your computer and return without being kicked for inactivity or failing to pick an agent in time.
-  - Anti-AFK automatically disables if your movement keys are pressed. Or, if "GRAB_KEYBINDS" is set to false in the user settings file, if "WASD" are pressed, ensuring it doesn't interefere with your game while you play.
-- Automatically grabs your keybinds to ensure that the correct keys are pressed when using tools (can be disabled).
+  - Anti-AFK automatically disables if your keyboard is being used, ensuring no interference with your gameplay.
 
 > Tools are still a work in progress. Feel free to suggest any tools you would like to see implemented.
 
 ## ⚙️ Installation
 
-VALocker automatically downloads all config files and places them in the %APPDATA% folder, this makes the location of the executable irrelevant. The executable can be placed anywhere on your computer, and it will still function correctly.
+VALocker automatically downloads all config files and places them in `%APPDATA%/VALocker` folder, this makes the location of the executable irrelevant. The executable can be placed anywhere on your computer, and it will still function correctly.
 
 ### 💻 Executable
 
-1. Download `VALocker.zip` from the [releases](https://github.com/E1Bos/VALocker/releases) page.
-2. Extract `VALocker.exe` to a location of your choice.
-3. Run `VALocker.exe` to launch the application.
+1. Download `VALocker.exe` from the [releases](https://github.com/E1Bos/VALocker/releases) page.
+2. Run `VALocker.exe` to launch the application. It may take a few seconds to start up as it downloads all necessary files.
 
 ### 🐍 Python
 
@@ -107,20 +119,19 @@ VALocker automatically downloads all config files and places them in the %APPDAT
 
 ### 🔄 Updating
 
-VALocker automatically checks for updates when it is opened and it's been at least an hour since it last checked for updates. All config files are automatically downloaded.
+VALocker automatically checks for updates when it is opened and it's been at least an hour since it last checked for updates. All config files are automatically downloaded. You can also manually check for updates by clicking on the `Check for Updates` button in the `Settings` tab.
 
 When a new release is available
 
 1. Download the latest version from the [releases](https://github.com/E1Bos/VALocker/releases) page.
 2. Close VALocker if it is currently running.
-3. Extract `VALocker.exe` from the zip file.
-4. Run `VALocker.exe` to launch the updated application, all config files are stored in the %APPDATA%.
+3. Run `VALocker.exe` to launch the updated application.
 
-## 🚀 Guide
+## 🚀 Guide - Getting Started
 
 1. Run `VALocker.exe` to launch the application. Allow the program to download all necessary files.
-2. Head to the `Agent Toggle tab` on the left and select all agents that you have unlocked.
-3. Head to the `Overview tab`, and select your desired agent from the dropdown menu.
+2. Head to the `Agent Toggle` tab on the left and select all agents that you have unlocked.
+3. Head to the `Overview` tab, and select your desired agent from the dropdown menu.
 4. Choose any additional options or settings based on your preference, such as the Hover mode or Safe mode by clicking their corresponding button.
 5. Turn the instalocker on by clicking on the button under the label `Instalocker`. When the button says `Stopped` VALocker will not attempt to lock any agent. When the button says `Running`, VALocker will try to determine when you are queuing for a game.
 6. The button labeled `Status` shows which task the instalocker is trying to complete. When it shows `Locking`, it will attempt to lock your agent if it detects the agent selection screen. When it says `Waiting`, it will try to determine when you are done with your current game. If the button shows `None`, the instalocker is stopped. Click on this button to swap the task.
@@ -129,52 +140,59 @@ When a new release is available
 
 ### Other Functions
 
-#### Random Agents
+#### - Random Agents
 
-The `Random Agents tab` allows VALocker to select a random agent from a group of agents you select.
+The `Random Agents` tab allows VALocker to select a random agent from a group of agents you select.
 
-VALocker will only randomize its selection if at least 1 agent is selected in the `Random Agent tab` and `Random Agent` is enabled in the `Overview tab`.
+VALocker will only randomize its selection if at least 1 agent is selected in the `Random Agent` tab and `Random Agent` is enabled in the `Overview` tab.
 
 ExclusiSelect (ES) mode disables random agents after they're picked, ensuring you don't get the same random agent twice. When an agent is locked while ES is enabled, its checkbox will be unselected. This shows which agents are still in the pool. When ES is disabled, it refreshes random agent selections to what they were prior to ES being enabled.
 
-#### Save Files
+#### - Save Files
 
-The `Save Files tab` is used to change which save is active.
+The `Save Files` tab is used to change which save is active.
 
 Add a new save using the `+` on the bottom right. Saves can be favorited, bringing them to the top, renamed, or deleted. The default save file can only be favorited.
 
-Adding a new save file will require reconfiguring the `Agent Toggle tab`. Clicking on the name of your save file in the `Overview tab` will also direct you to the Save Files tab.
+Adding a new save file will require reconfiguring the `Agent Toggle` tab. Clicking on the name of your save file in the `Overview` tab will also direct you to the `Save Files` tab.
 
-#### Tools
+#### - Tools
 
-The `Tools tab` is used to enabled and disable the various QOL (Quality of Life) addons VALocker supports. Tools only work when the instalocker status is "Waiting" or "None".
+The `Tools` tab is used to enabled and disable the various QOL (Quality of Life) addons VALocker supports. Tools only work when the instalocker status is "Waiting" or "None".
 
 Tools can be enabled and disabled, but are only active when the button above shows `Tools: Enabled` (the very long button).
 
 Tools will automatically become active if the `Activate Tools Automatically` setting is enabled (default).
 
-#### Settings
+#### - Settings
 
-The `Settings tab` can be used to modify the various settings VALocker has.
+The `Settings` tab can be used to modify the various settings VALocker has. Currently, the settings tab only allows you to manually check for updates, and change the locking configuration.
 
 ## ❗ Important Information
+
 - Without configuring VALocker, it will **ONLY** work if VALORANT is running at `1920x1080`.
 - VALocker will not work if your framerate is uncapped. An uncapped framerate leads to the VALORANT UI not rendering properly.
 - Programs like AMD Radeon Image Sharpening or Nvidia Freestyle that modify the game's visuals should be disabled as they can alter the VALORANT UI and interfere with VALockers screenshot detection.
 
 ## 🔧 Configuration
 
-<!-- TODO: REWRITE -->
+VALocker provides multiple ways to configure the program to your liking outside of the GUI. The `settings.yaml` file in `%APPDATA%/VALocker/settings` contains all the settings that can be changed. Settings include:
 
-VALocker provides a `user_settings.yaml` file in the data directory where you can customize certain aspects of the program. The `user_settings.json` file is created when running the program for the first time.
+- `theme: str`: The file containing the theme to use.
+- `enableOnStartup: bool`: Whether VALocker should start enabled or not.
+- `safeModeOnStartup: bool`: Whether safe mode should be enabled on startup.
+- `safeModeStrengthOnStartup: int`: The strength of safe mode by default.
+- `fastModeTimings: list[int]`: The timings for fast mode, between moving the mouse and selecting the agent, selecting the agent and moving over the lock button, and clicking the lock buttonm in seconds.
+- `safeModeTimings: list[list[int]]`: The timings are the same as the fast mode timings, but for each strength of safe mode.
+- `alreadyMigrated: bool`: Whether the user has already migrated their settings to the new location. This is automatically set to `True` after first running the program.
 
-Settings should be changed via the settings tab. There are 3 settings that can only be changed in the `user_settings.json` file:
+> The settings file contains other settings that are not recommended to be changed or not yet implemented. Please only edit these values if you know what you are doing.
 
-- `"LOCKING_CONFIRMATIONS`: Defaulted to `3`. This determines how many times VALocker needs to detect the agent selection screen before locking the agent. This is to prevent false positives.
-- `"MENU_CONFIRMATIONS"`: Defaulted to `3`. This provides the same functionality as locking_confirmations but for the main menu.
-- `"FAST_MODE_TIMINGS"`: Defaulted to `[0.02, 0.02, 0.02]`. When safe mode is disabled, this determines the time between `[0]`: moving the mouse and selecting the agent, `[1]`: selecting the agent and moving over the lock button, and `[2]`: clicking the lock button. Making these values any smaller may lead to VALORANT not registering the mouse input. These values are in seconds.
+## 🎨 Themes
 
-Please only edit these values if you know what you are doing.
+VALocker supports custom themes, allowing you to change the look of the program to your liking. Themes are stored in the `themes` folder in the root directory of the project. The `default-theme.yaml` file in the `themes` folder contains all the settings for the theme. Colors must be provided in hexadecimal format.
+
+To create a new theme, copy the `default-theme.yaml` file and modify the colors to your liking. The `theme` setting in the `settings.yaml` file must be set to the name of the theme file with the `.yaml` extension.
 
 ## 📏 Display Size Compatibility
 
@@ -182,12 +200,50 @@ I plan to add support for other display sizes in the future, but for now, VALock
 
 ## 🖼️ Images
 
-<!-- TODO: UPDATE IMAGES -->
-
-| ![overview_tab](images/readme_images/overview_tab.png)         | ![agent_toggle_tab](images/readme_images/agent_toggle_tab.png) | ![random_agent_tab](images/readme_images/random_agent_tab.png) |
-| -------------------------------------------------------------- | -------------------------------------------------------------- | -------------------------------------------------------------- |
-| ![map_specific_tab](images/readme_images/map_specific_tab.png) | ![save_file_tab](images/readme_images/save_file_tab.png)       | ![tools_tab](images/readme_images/tools_tab.png)               |
-| ![settings_tab](images/readme_images/settings_tab.png)         |
+<!-- TODO: UPDATE OVERVIEW IMAGE -->
+<table>
+  <tr>
+    <td align="center">
+      <img src="images/readme_images/overview_tab.png" alt="Overview Tab" width="400px">
+      <br>
+      <b>Overview Tab</b>
+    </td>
+    <td align="center">
+      <img src="images/readme_images/agent_toggle_tab.png" alt="Agent Toggle Tab" width="400px">
+      <br>
+      <b>Agent Toggle Tab</b>
+    </td>
+    <td align="center">
+      <img src="images/readme_images/random_agent_tab.png" alt="Random Agent Tab" width="400px">
+      <br>
+      <b>Random Agent Tab</b>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="images/readme_images/save_file_tab.png" alt="Save Files Tab" width="400px">
+      <br>
+      <b>Save Files Tab</b>
+    </td>
+    <td align="center">
+      <img src="images/readme_images/settings_tab.png" alt="Settings Tab" width="400px">
+      <br>
+      <b>Settings Tab</b>
+    </td>
+    <td align="center">
+      <img src="images/readme_images/tools_tab.png" alt="Tools Tab" width="400px">
+      <br>
+      <b>Tools Tab</b>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="images/readme_images/updating_window.png" alt="Updating Window" width="400px">
+      <br>
+      <b>Updating Window</b>
+    </td>
+  </tr>
+</table>
 
 ## 🎥 Video Demo
 
@@ -212,9 +268,11 @@ I appreciate your interest in this project!
 VALocker utilizes the following libraries:
 
 - [customtkinter](https://github.com/TomSchimansky/CustomTkinter) - Customized version of the tkinter library.
-- [PIL](https://python-pillow.org/) - Python Imaging Library for image manipulation.
-- [pystray](https://github.com/moses-palmer/pystray) - Library for creating system tray icons.
-- [pynput](https://pypi.org/project/pynput/) - Library for controlling and monitoring input devices.
+- [requests](https://pypi.org/project/requests/) - Used for checking for updates.
+- [PIL](https://python-pillow.org/) - Used for image manipulation.
+- [pynput](https://pypi.org/project/pynput/) - Used for controlling and monitoring input devices.
+- [bettercam](https://github.com/RootKit-Org/BetterCam) - A fork of [DXcam](https://pypi.org/project/DXcam/) used for capturing screenshots. The fork supports changing resolutions among other things.
+- [ruamel.yaml](https://pypi.org/project/ruamel.yaml/) - Used for reading and writing YAML files.
 
 ## 📧 Contact
 
