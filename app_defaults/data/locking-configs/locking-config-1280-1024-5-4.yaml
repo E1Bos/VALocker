@@ -1,0 +1,68 @@
+# Version of the confguration
+# If the configuration is custom, uncomment the custom line and comment out the version line
+version: 1.0.0
+# custom: True
+# --------------------------------------------------
+# Title of the configuration
+title: 1280x1024 5:4
+# --------------------------------------------------
+# The location of the agent buttons
+# only the selectable portion of the buttons should be used
+# The selectable area is the area that changes color when an agent is hovered over
+# size: size of the agent buttons
+# columns: number of columns
+# xDistance: x distance between the columns
+# yDistance: y distance between the rows
+# start: the top left most corner of the first agent button
+agentButtons:
+  size: 69
+  columns: 9
+  xDistance: 11
+  yDistance: 11
+  start: [287, 763]
+# --------------------------------------------------
+# The location of the lock button
+# Only the selectable portion of the lock button should be added
+# size: size of the lock button
+# location: the top left most pixel of the lock button
+lockButton:
+  size: [222, 55]
+  location: [529, 666]
+# --------------------------------------------------
+# Region that is checked to see when the game is in the agent selection screen
+# xCoord: x coordinate of the top left corner of the region
+# yCoord: y coordinate of the top left corner of the region
+# width: width of the region
+# height: height of the region
+# color: color of the pixel in the region to match
+lockRegion:
+  xCoord: 626
+  yCoord: 741
+  width: 1
+  height: 1
+  color: [234, 238, 178]
+# --------------------------------------------------
+# Regions that are checked to see when the user is not in a game
+# in the form of a list, all these regions are checked every 3 or so seconds
+# xCoord: x coordinate of the top left corner of the region
+# yCoord: y coordinate of the top left corner of the region
+# width: width of the region
+# height: height of the region
+# color: color of the pixel in the region to match
+waitingRegions:
+  - xCoord: 500
+    yCoord: 230
+    width: 5
+    height: 1
+    color: [245, 244, 240]
+  - xCoord: 496
+    yCoord: 616
+    width: 5
+    height: 1
+    color: [235, 238, 178]
+  - xCoord: 517
+    yCoord: 40
+    width: 10
+    height: 3
+    color: [216, 57, 70]
+# --------------------------------------------------
