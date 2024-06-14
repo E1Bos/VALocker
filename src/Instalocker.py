@@ -6,18 +6,20 @@ if TYPE_CHECKING:
 import time
 import threading
 import random
+import traceback
 from customtkinter import BooleanVar, IntVar
 
 # Instalocker specific
 import pynput.mouse as pynmouse
 
 # import pynput.keyboard as pynkeyboard
-import dxcam
+import betterdxcam
 import numpy as np
 
 # Custom Imports
 from CustomLogger import CustomLogger
 from Constants import Region, LOCKING_CONFIG
+from GUIFrames import ErrorPopup
 
 
 class Instalocker:
@@ -53,7 +55,7 @@ class Instalocker:
     safe_mode_timings = list[tuple[int, int]]
 
     # Screen Recorder
-    cam: dxcam.DXCamera
+    cam: betterdxcam.betterDXCamera
 
     # Controllers
     mouse: pynmouse.Controller = pynmouse.Controller()
@@ -67,6 +69,7 @@ class Instalocker:
         self.file_manager = parent.file_manager
 
         # Instalocker state
+        self.running = parent.instalocker_thread_running
         self.state = parent.instalocker_status
 
         # Unlock and random status of each agent
@@ -89,7 +92,7 @@ class Instalocker:
         self.agent_index = parent.agent_index
 
         # Screen Recorder
-        self.cam = dxcam.create()
+        self.cam = betterdxcam.create(print_capture_fps=False)
 
         # Threading
         self.stop_event = threading.Event()
@@ -111,7 +114,8 @@ class Instalocker:
 
     def calculate_box_locations(self, total_agents: int) -> None:
         agent_buttons = self.locking_config["agentButtons"]
-
+        self.box_coords = []
+        
         for index in range(total_agents):
             x_position = (
                 agent_buttons["start"][0]
@@ -119,7 +123,6 @@ class Instalocker:
                     (index % agent_buttons["columns"])
                     * (agent_buttons["size"] + agent_buttons["xDistance"])
                 )
-                + agent_buttons["size"] // 2
             )
 
             y_position = (
@@ -128,7 +131,6 @@ class Instalocker:
                     (index // agent_buttons["columns"])
                     * (agent_buttons["size"] + agent_buttons["yDistance"])
                 )
-                + agent_buttons["size"] // 2
             )
             self.box_coords.append((x_position, y_position))
 
@@ -159,7 +161,7 @@ class Instalocker:
             )
 
         # Box Size
-        self.box_size = self.locking_config["agentButtons"]["size"] // 2
+        self.box_size = self.locking_config["agentButtons"]["size"]
 
         # Top left location
         lock_button_location = self.locking_config["lockButton"]["location"]
@@ -174,11 +176,11 @@ class Instalocker:
 
     # endregion
 
-    def location_in_agent_button(self, center: tuple[int, int]) -> tuple[int, int]:
+    def location_in_agent_button(self, top_left: tuple[int, int]) -> tuple[int, int]:
         """ """
 
-        x = center[0] + random.randint(-(self.box_size - 5), (self.box_size - 5))
-        y = center[1] + random.randint(-(self.box_size - 5), (self.box_size - 5))
+        x = top_left[0] + random.randint(5, (self.box_size - 5))
+        y = top_left[1] + random.randint(5, (self.box_size - 5))
 
         return x, y
 
@@ -254,15 +256,21 @@ class Instalocker:
     # region: Threading
 
     def main(self):
-        self.cam.start(target_fps=144)
-        self.logger.info("Thread started")
-        while not self.stopped():
-            if self.state.get():
-                self.locking()
-            else:
-                self.waiting()
-        self.cam.stop()
-        self.logger.info("Thread stopped")
+        try:
+            self.cam.start(target_fps=144)
+            self.logger.info("Thread started")
+            while not self.stopped():
+                if self.state.get():
+                    self.locking()
+                else:
+                    self.waiting()
+        except OSError:
+            self.logger.error(f"Error in thread: {traceback.format_exc()}")
+            self.running.set(False)
+            self.stop_event.set()
+        finally:
+            self.cam.stop()
+            self.logger.info("Thread stopped")
 
     def locking(self) -> None:
         while not self.stopped() and self.state.get():
@@ -296,7 +304,7 @@ class Instalocker:
                     self.toggle_state(True)
                     self.logger.info(f"Matched waiting region:\n{region}")
                     return
-            self.stop_event.wait(3)
+            self.stop_event.wait(2)
 
     def lock_agent(self, agent_index: int) -> None:
         # Sets timings based on safe mode
@@ -314,9 +322,11 @@ class Instalocker:
         self.stop_event.wait(timings[0])
         self.mouse.click(pynmouse.Button.left, 1)
         self.stop_event.wait(timings[1])
-        self.mouse.position = self.location_in_lock_button()
-        self.stop_event.wait(timings[2])
-        self.mouse.click(pynmouse.Button.left, 1)
+        
+        if not self.hover.get():
+            self.mouse.position = self.location_in_lock_button()
+            self.stop_event.wait(timings[2])
+            self.mouse.click(pynmouse.Button.left, 1)
 
     def toggle_state(self, value: Optional[bool] = None):
         if value is None:
