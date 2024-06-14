@@ -2,5 +2,5 @@ customtkinter==5.2.2
 requests==2.31.0
 pillow==10.3.0
 pynput==1.7.6
-dxcam==0.0.5
+betterdxcam==0.9.0
 ruamel.yaml==0.18.6
