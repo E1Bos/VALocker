@@ -10,6 +10,7 @@ from customtkinter import BooleanVar, IntVar
 
 # Instalocker specific
 import pynput.mouse as pynmouse
+
 # import pynput.keyboard as pynkeyboard
 import dxcam
 import numpy as np
@@ -17,6 +18,7 @@ import numpy as np
 # Custom Imports
 from CustomLogger import CustomLogger
 from Constants import Region, LOCKING_CONFIG
+
 
 class Instalocker:
     logger = CustomLogger("Instalocker").get_logger()
@@ -72,7 +74,7 @@ class Instalocker:
 
         # Timing settings (i.e. Safe Mode)
         self.fast_mode_timings = parent.fast_mode_timings
-        
+
         self.safe_mode_enabled = parent.safe_mode_enabled
         self.safe_mode_strength = parent.safe_mode_strength
         self.safe_mode_timings = parent.safe_mode_timings
@@ -85,10 +87,10 @@ class Instalocker:
 
         # Current Selected Agent
         self.agent_index = parent.agent_index
-        
+
         # Screen Recorder
         self.cam = dxcam.create()
-        
+
         # Threading
         self.stop_event = threading.Event()
 
@@ -96,17 +98,16 @@ class Instalocker:
 
     def set_locking_config(self, locking_config: LOCKING_CONFIG | str) -> None:
         self.locking_config = self.file_manager.get_config(locking_config)
-        
+
         if type(locking_config) is LOCKING_CONFIG:
             config_name = locking_config.name
         else:
-            config_name = self.locking_config.get('title')
-        
-        
+            config_name = self.locking_config.get("title")
+
         self.calculate_box_locations(self.parent.total_agents)
         self.load_config()
-        
-        self.logger.info(f"Locking config \"{config_name}\" loaded")
+
+        self.logger.info(f'Locking config "{config_name}" loaded')
 
     def calculate_box_locations(self, total_agents: int) -> None:
         agent_buttons = self.locking_config["agentButtons"]
@@ -120,7 +121,7 @@ class Instalocker:
                 )
                 + agent_buttons["size"] // 2
             )
-            
+
             y_position = (
                 agent_buttons["start"][1]
                 + (
@@ -204,41 +205,43 @@ class Instalocker:
     def calculate_random_agent(self) -> int:
         unlocked_agents = []
         random_agents = []
-        
+
         for agent, values in self.agent_states.items():
             if len(values) == 1:
                 unlocked_agents.append(agent)
-                
+
                 if values[0].get():
                     random_agents.append(agent)
-            
+
                 continue
-            
+
             if values[0].get():
                 unlocked_agents.append(agent)
-                
+
                 if values[1].get():
                     random_agents.append(agent)
-        
+
         if len(random_agents) == 0:
             self.logger.error("No random agents selected but random agent mode enabled")
             raise ValueError("No random agents selected but random agent mode enabled")
-        
+
         selected_agent = random.choice(random_agents)
-        
+
         if self.exclusiselect.get():
             agent_state = self.agent_states[selected_agent]
             if len(agent_state) == 1:
                 agent_state[0].set(False)
             else:
                 agent_state[1].set(False)
-            
+
             if len(random_agents) == 1:
-                self.logger.info(f"ExclusiSelect selected final agent, disabling exclusiselect")
+                self.logger.info(
+                    f"ExclusiSelect selected final agent, disabling exclusiselect"
+                )
                 self.exclusiselect.set(False)
-        
+
         self.parent.exclusiselect_update_gui()
-        
+
         return unlocked_agents.index(selected_agent)
 
     def get_latest_frame(self) -> np.ndarray:
@@ -273,11 +276,16 @@ class Instalocker:
                     agent_index = self.agent_index.get()
 
                 self.lock_agent(agent_index)
-                self.toggle_state(False)
 
                 end = time.time()
 
-                self.logger.info(f"Locked in {(end-start)*1000:.2f}ms")
+                self.parent.add_stat(end - start)
+
+                self.toggle_state(False)
+
+                self.logger.info(
+                    f"Locked agent in {(end-start)*1000:.2f}ms\nSafe Mode: {self.safe_mode_enabled.get()} Strength: {self.safe_mode_strength.get()}\nRandom Select: {self.random_select.get()}"
+                )
                 return
 
     def waiting(self) -> None:
@@ -326,14 +334,14 @@ class Instalocker:
         if self.thread is None:
             self.logger.info("Thread not started")
             return
-        
+
         if threading.current_thread() is self.thread:
             self.logger.info("Cannot stop from within the thread itself")
             return
-            
+
         # Stop thread
         self.stop_event.set()
-        
+
     def stopped(self):
         return self.stop_event.is_set()
 

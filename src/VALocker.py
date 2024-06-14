@@ -323,13 +323,18 @@ class VALocker(ctk.CTk):
             if time_to_lock is not None:
                 time_to_lock = time_to_lock[self.safe_mode_strength.get()]
 
+        if time_to_lock is None:
+            self.logger.error(
+                "Stats field 'timeToLock' or 'timeToLockSafe' is missing from the stats file"
+            )   
+
         if time_to_lock is None or len(time_to_lock) == 0:
             self.times_used.set("N/A")
             self.average_lock.set("N/A")
             self.last_lock.set("N/A")
 
             self.logger.info(
-                f"Could not retrieve stats for SM:{self.safe_mode_enabled.get()} and SMS:{self.safe_mode_strength.get()}. (They might be unset)"
+                "Not enough data to calculate average lock time or last lock time"
             )
             return
 
@@ -695,7 +700,38 @@ class VALocker(ctk.CTk):
 
         self.file_manager.set_value(FILE.SETTINGS, "lockingConfig", file)
 
+    def add_stat(self, time: float) -> None:
+        """
+        Adds a stat to the stats file.
+        
+        Args:
+            time (float): The time it took to lock the agent, in seconds.
+        """
+        time = round(time * 1000, 2)
+        
+        stats = self.file_manager.get_config(FILE.STATS)
 
+        time_to_lock: list[float] = []
+        if not self.safe_mode_enabled.get():
+            time_to_lock = stats["timeToLock"]
+        else:
+            time_to_lock = stats["timeToLockSafe"][self.safe_mode_strength.get()]
+
+        time_to_lock.append(time)
+
+        if len(time_to_lock) > 25:
+            time_to_lock.pop(0)
+
+        if not self.safe_mode_enabled.get():
+            stats["timeToLock"] = time_to_lock
+        else:
+            stats["timeToLockSafe"][self.safe_mode_strength.get()] = time_to_lock
+
+        stats["timesUsed"] = stats.get("timesUsed", 0) + 1
+
+        self.file_manager.set_config(FILE.STATS, stats)
+
+        self.update_stats()
 
 
 
