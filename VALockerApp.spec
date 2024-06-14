@@ -16,7 +16,7 @@ a = Analysis(
         'requests',
         'pillow',
         'pynput',
-        'dxcam',
+        'betterdxcam',
         'ruamel.yaml'
     ],
     hookspath=[],
