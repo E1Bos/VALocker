@@ -30,8 +30,8 @@ class FOLDER(Enum):
     """
 
     # Specific folder to use (None for AppData/roaming)
-    STORAGE_FOLDER: str = "app_defaults"
-    # STORAGE_FOLDER: str = None
+    # STORAGE_FOLDER: str = "app_defaults"
+    STORAGE_FOLDER: str = None
 
     # Where default files are stored
     DEFAULTS: str = "app_defaults"
