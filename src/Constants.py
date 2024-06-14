@@ -30,8 +30,8 @@ class FOLDER(Enum):
     """
 
     # Specific folder to use (None for AppData/roaming)
-    # STORAGE_FOLDER: str = "app_defaults"
-    STORAGE_FOLDER: str = None
+    STORAGE_FOLDER: str = "app_defaults"
+    # STORAGE_FOLDER: str = None
 
     # Where default files are stored
     DEFAULTS: str = "app_defaults"
@@ -63,6 +63,8 @@ class LOCKING_CONFIG(Enum):
     Enum for Locking Configs used in the project
     """
     CONFIG_1920_1080_16_9: str = "locking-config-1920-1080-16-9.yaml"
+    CONFIG_1650_1080_16_9: str = "locking-config-1680-1050-16-9.yaml"
+    CONFIG_1280_1024_5_4: str = "locking-config-1280-1024-5-4.yaml"
     
     # Sets all values to the full path
     def __getattribute__(self, name):
