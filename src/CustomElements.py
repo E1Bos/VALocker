@@ -1289,11 +1289,11 @@ class ErrorPopup(ThemedPopup):
 
     theme: dict[str, str]
 
-    def __init__(self, parent: "VALocker", message: str, **kwargs) -> None:
+    def __init__(self, parent: "VALocker", message: str, size: str = "300x100", **kwargs) -> None:
         self.theme = parent.theme
         self.message = message
 
-        super().__init__(parent, "Error", "300x100", **kwargs)
+        super().__init__(parent, "Error", size, **kwargs)
 
     def create_widgets(self) -> None:
         """
