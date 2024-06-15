@@ -1,10 +1,10 @@
-import customtkinter as ctk
+from customtkinter import CTk, BooleanVar, StringVar, IntVar
 from typing import Optional
-import sys
+from sys import exit as sys_exit
 
-import webbrowser
-import threading
-import ctypes
+from webbrowser import open as web_open
+from threading import Lock, Thread
+from ctypes import windll
 
 # Custom imports
 from CustomLogger import CustomLogger
@@ -21,7 +21,7 @@ from ThemeManager import ThemeManager
 from GUIFrames import *
 
 
-class VALocker(ctk.CTk):
+class VALocker(CTk):
     """
     VALocker is a tool that quickly locks agents for you in Valorant, along with other tools.
     @author: [E1Bos](https://www.github.com/E1Bos)
@@ -43,40 +43,40 @@ class VALocker(ctk.CTk):
     theme: dict[str, str]
 
     # Variables
-    instalocker_thread_running: ctk.BooleanVar
-    instalocker_status: ctk.BooleanVar
+    instalocker_thread_running: BooleanVar
+    instalocker_status: BooleanVar
     fast_mode_timings: tuple[int, int, int]
-    safe_mode_enabled: ctk.BooleanVar
-    safe_mode_strength: ctk.IntVar
+    safe_mode_enabled: BooleanVar
+    safe_mode_strength: IntVar
     safe_mode_timings: list[tuple[int, int]]
-    current_save_name: ctk.StringVar
-    selected_agent: ctk.StringVar
-    last_lock: ctk.StringVar
-    average_lock: ctk.StringVar
-    times_used: ctk.StringVar
-    agent_times_locked: ctk.StringVar
+    current_save_name: StringVar
+    selected_agent: StringVar
+    last_lock: StringVar
+    average_lock: StringVar
+    times_used: StringVar
+    agent_times_locked: StringVar
 
     # Instalocker Variables
-    instalocker_thread_lock: threading.Lock = threading.Lock()
+    instalocker_thread_lock: Lock = Lock()
     total_agents: int
-    hover: ctk.BooleanVar
-    random_select_available: ctk.BooleanVar
-    random_select: ctk.BooleanVar
+    hover: BooleanVar
+    random_select_available: BooleanVar
+    random_select: BooleanVar
     temp_random_agents: dict[str, bool]
-    exclusiselect: ctk.BooleanVar
-    map_specific: ctk.BooleanVar
-    agent_index: ctk.IntVar
+    exclusiselect: BooleanVar
+    map_specific: BooleanVar
+    agent_index: IntVar
 
     # Tools Variables
-    tools_thread_lock: threading.Lock = threading.Lock()
-    pause_tools_thread: ctk.BooleanVar
-    tools_thread_running: ctk.BooleanVar
-    anti_afk: ctk.BooleanVar
-    # drop_spike: ctk.BooleanVar
+    tools_thread_lock: Lock = Lock()
+    pause_tools_thread: BooleanVar
+    tools_thread_running: BooleanVar
+    anti_afk: BooleanVar
+    # drop_spike: BooleanVar
 
     # UI
     update_frame: UpdateFrame
-    agent_states: dict[str, tuple[ctk.BooleanVar, ctk.BooleanVar] | ctk.BooleanVar]
+    agent_states: dict[str, tuple[BooleanVar, BooleanVar] | BooleanVar]
     frames: Dict[
         FRAME, OverviewFrame | AgentToggleFrame | RandomSelectFrame | SaveFilesFrame
     ] = dict()
@@ -108,7 +108,7 @@ class VALocker(ctk.CTk):
 
         # Load exit handler
         self.protocol("WM_DELETE_WINDOW", self.exit)
-        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("VALocker.GUI")
+        windll.shell32.SetCurrentProcessExplicitAppUserModelID("VALocker.GUI")
 
         # Start UI and check for updates
         self.logger.info("Starting UI")
@@ -124,21 +124,21 @@ class VALocker(ctk.CTk):
         Runs at the start of the program to define all the variables used in the program.
         """
 
-        self.instalocker_thread_running = ctk.BooleanVar(
+        self.instalocker_thread_running = BooleanVar(
             value=self.file_manager.get_value(FILE.SETTINGS, "enableOnStartup")
         )
 
-        self.instalocker_status = ctk.BooleanVar(value=True)
+        self.instalocker_status = BooleanVar(value=True)
 
         self.fast_mode_timings = self.file_manager.get_value(
             FILE.SETTINGS, "fastModeTimings"
         )
 
-        self.safe_mode_enabled = ctk.BooleanVar(
+        self.safe_mode_enabled = BooleanVar(
             value=self.file_manager.get_value(FILE.SETTINGS, "safeModeOnStartup")
         )
 
-        self.safe_mode_strength = ctk.IntVar(
+        self.safe_mode_strength = IntVar(
             value=self.file_manager.get_value(
                 FILE.SETTINGS, "safeModeStrengthOnStartup"
             )
@@ -160,38 +160,38 @@ class VALocker(ctk.CTk):
         default_agents = self.file_manager.get_value(FILE.AGENT_CONFIG, "defaultAgents")
         self.agent_states = {
             agent: (
-                (ctk.BooleanVar(value=False), ctk.BooleanVar(value=False))
+                (BooleanVar(value=False), BooleanVar(value=False))
                 if agent not in default_agents
-                else (ctk.BooleanVar(value=False),)
+                else (BooleanVar(value=False),)
             )
             for agent in self.all_agents
         }
 
-        self.current_save_name = ctk.StringVar()
-        self.selected_agent = ctk.StringVar()
+        self.current_save_name = StringVar()
+        self.selected_agent = StringVar()
 
-        self.last_lock = ctk.StringVar()
-        self.average_lock = ctk.StringVar()
-        self.times_used = ctk.StringVar()
+        self.last_lock = StringVar()
+        self.average_lock = StringVar()
+        self.times_used = StringVar()
 
         self.update_stats()
 
         # Instalocker Vars
         self.total_agents = len(self.all_agents)
 
-        self.hover = ctk.BooleanVar(value=False)
-        self.random_select_available = ctk.BooleanVar(value=False)
-        self.random_select = ctk.BooleanVar(value=False)
+        self.hover = BooleanVar(value=False)
+        self.random_select_available = BooleanVar(value=False)
+        self.random_select = BooleanVar(value=False)
         self.temp_random_agents = None
-        self.exclusiselect = ctk.BooleanVar(value=False)
-        self.map_specific = ctk.BooleanVar(value=False)
-        self.agent_index = ctk.IntVar(value=0)
+        self.exclusiselect = BooleanVar(value=False)
+        self.map_specific = BooleanVar(value=False)
+        self.agent_index = IntVar(value=0)
 
         # Tools Vars
-        self.pause_tools_thread = ctk.BooleanVar(value=False)
-        self.tools_thread_running = ctk.BooleanVar(value=False)
-        self.anti_afk = ctk.BooleanVar(value=False)
-        # self.drop_spike = ctk.BooleanVar(value=False)
+        self.pause_tools_thread = BooleanVar(value=False)
+        self.tools_thread_running = BooleanVar(value=False)
+        self.anti_afk = BooleanVar(value=False)
+        # self.drop_spike = BooleanVar(value=False)
 
         # region: Traces
 
@@ -252,7 +252,7 @@ class VALocker(ctk.CTk):
 
         # Exits
         self.destroy()
-        sys.exit()
+        sys_exit()
 
     def check_for_updates(self, force_check_update: bool = False) -> None:
         """
@@ -292,11 +292,11 @@ class VALocker(ctk.CTk):
 
             if go_to_update:
                 self.logger.info("Opening update page")
-                webbrowser.open(
+                web_open(
                     "https://www.github.com/E1Bos/VALocker/releases/latest/"
                 )
                 self.exit()
-                sys.exit()
+                sys_exit()
 
         self.updater.update_last_checked()
         self.update_frame.finished_checking_updates()
@@ -421,7 +421,7 @@ class VALocker(ctk.CTk):
                 self.logger.info("Manually checking for updates")
             self.update_frame.pack(fill="both", expand=True)
             self.update()
-            thread = threading.Thread(target=lambda x=force_check_update: self.check_for_updates(force_check_update=x), daemon=True)
+            thread = Thread(target=lambda x=force_check_update: self.check_for_updates(force_check_update=x), daemon=True)
             thread.start()
         else:
             self.initMainUI()
@@ -513,13 +513,13 @@ class VALocker(ctk.CTk):
     # region: Modifying Tkinter Variables
 
     def toggle_boolean(
-        self, variable: ctk.BooleanVar, value: Optional[bool] = None
+        self, variable: BooleanVar, value: Optional[bool] = None
     ) -> None:
         """
         Toggles the value of the given boolean variable.
 
         Args:
-            var (ctk.BooleanVar): The boolean variable to toggle.
+            var (BooleanVar): The boolean variable to toggle.
             value (bool, optional): The value to set the variable to. If not provided, it will be toggled.
         """
         if value is None:
@@ -528,13 +528,13 @@ class VALocker(ctk.CTk):
         variable.set(value)
 
     def increment_int(
-        self, variable: ctk.IntVar, max: int, value: Optional[int] = None
+        self, variable: IntVar, max: int, value: Optional[int] = None
     ) -> None:
         """
         Increments the value of the given integer variable.
 
         Args:
-            variable (ctk.IntVar): The integer variable to increment.
+            variable (IntVar): The integer variable to increment.
             max (int): The maximum value the variable can reach. If the value exceeds this, it will be reset to 0.
             value (int, optional): The value to increment by. If not provided, it will be incremented by 1.
         """

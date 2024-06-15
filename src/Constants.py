@@ -19,7 +19,7 @@ class URL(Enum):
     Enum for URLs used in the project
     """
 
-    DOWNLOAD_URL: str = "https://raw.githubusercontent.com/E1Bos/VALocker/valocker-v2"
+    DOWNLOAD_URL: str = "https://raw.githubusercontent.com/E1Bos/VALocker/main"
     RELEASE_URL: str = "https://github.com/E1Bos/VALocker/releases/latest"
     API_RELEASE_URL: str = "https://api.github.com/repos/E1Bos/VALocker/releases/latest"
 

@@ -3,10 +3,10 @@ from typing import TYPE_CHECKING, Optional
 if TYPE_CHECKING:
     from VALocker import VALocker
 
-import time
+from time import time
+from random import randint, choice, uniform
 import threading
-import random
-import traceback
+from traceback import format_exc
 from customtkinter import BooleanVar, IntVar
 
 # Instalocker specific
@@ -19,7 +19,7 @@ import numpy as np
 # Custom Imports
 from CustomLogger import CustomLogger
 from Constants import Region, LOCKING_CONFIG
-from GUIFrames import ErrorPopup
+# from GUIFrames import ErrorPopup
 
 
 class Instalocker:
@@ -180,18 +180,18 @@ class Instalocker:
     def location_in_agent_button(self, top_left: tuple[int, int]) -> tuple[int, int]:
         """ """
 
-        x = top_left[0] + random.randint(5, (self.box_size - 5))
-        y = top_left[1] + random.randint(5, (self.box_size - 5))
+        x = top_left[0] + randint(5, (self.box_size - 5))
+        y = top_left[1] + randint(5, (self.box_size - 5))
 
         return x, y
 
     def location_in_lock_button(self) -> tuple[int, int]:
         """ """
 
-        x = self.lock_button_center[0] + random.randint(
+        x = self.lock_button_center[0] + randint(
             -(self.lock_button_x - 5), (self.lock_button_x - 5)
         )
-        y = self.lock_button_center[1] + random.randint(
+        y = self.lock_button_center[1] + randint(
             -(self.lock_button_y - 5), (self.lock_button_y - 5)
         )
 
@@ -228,7 +228,7 @@ class Instalocker:
             self.logger.error("No random agents selected but random agent mode enabled")
             raise ValueError("No random agents selected but random agent mode enabled")
 
-        selected_agent = random.choice(random_agents)
+        selected_agent = choice(random_agents)
 
         if self.exclusiselect.get():
             agent_state = self.agent_states[selected_agent]
@@ -266,7 +266,7 @@ class Instalocker:
                 else:
                     self.waiting()
         except OSError:
-            self.logger.error(f"Error in thread: {traceback.format_exc()}")
+            self.logger.error(f"Error in thread: {format_exc()}")
             self.running.set(False)
             self.stop_event.set()
         finally:
@@ -277,7 +277,7 @@ class Instalocker:
         while not self.stopped() and self.state.get():
             frame = self.get_latest_frame()
             if self.frame_matches(frame, self.lock_region):
-                start = time.time()
+                start = time()
 
                 if self.random_select.get():
                     agent_index = self.calculate_random_agent()
@@ -286,7 +286,7 @@ class Instalocker:
 
                 self.lock_agent(agent_index)
 
-                end = time.time()
+                end = time()
 
                 self.parent.add_stat(end - start)
 
@@ -312,7 +312,7 @@ class Instalocker:
         if self.safe_mode_enabled.get():
             timing = self.safe_mode_timings[self.safe_mode_strength.get()]
             min_timing, max_timing = timing[0] / 4, timing[1] / 4
-            timings = [random.uniform(min_timing, max_timing) for _ in range(4)]
+            timings = [uniform(min_timing, max_timing) for _ in range(4)]
             self.stop_event.wait(timings[-1])
         else:
             timings = self.fast_mode_timings
