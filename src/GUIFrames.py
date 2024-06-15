@@ -268,14 +268,14 @@ class OverviewFrame(SideFrame):
         )
         random_agent_button.grid(row=4, column=0, sticky="nsew", padx=10, pady=10)
 
-        map_specific_button = IndependentButton(
-            middle_frame,
-            text="Map Specific",
-            variable=self.parent.map_specific,
-            command=lambda: self.parent.toggle_boolean(self.parent.map_specific),
-            state=ctk.DISABLED,
-        )
-        map_specific_button.grid(row=5, column=0, sticky="nsew", padx=10)
+        # map_specific_button = IndependentButton(
+        #     middle_frame,
+        #     text="Map Specific",
+        #     variable=self.parent.map_specific,
+        #     command=lambda: self.parent.toggle_boolean(self.parent.map_specific),
+        #     state=ctk.DISABLED,
+        # )
+        # map_specific_button.grid(row=5, column=0, sticky="nsew", padx=10)
 
         tools_button = ThemedButton(
             middle_frame,
@@ -285,13 +285,13 @@ class OverviewFrame(SideFrame):
             hover_color=self.theme["foreground-highlight-hover"],
             command=self.redirect_tools_frame,
         )
-        tools_button.grid(row=6, column=0, sticky="nsew", padx=10, pady=(10, 5))
+        tools_button.grid(row=5, column=0, sticky="nsew", padx=10, pady=(10, 5))
 
         anti_afk_button = IndependentButton(
             middle_frame,
             text="Anti-AFK",
             variable=self.parent.anti_afk,
-            command=lambda: self.parent.toggle_boolean(self.parent.anti_afk),
+            command=lambda: self.parent.toggle_boolean_and_run_function(self.parent.anti_afk, self.parent.autostart_tools),
         )
         anti_afk_button.grid(row=7, column=0, sticky="nsew", padx=10)
 
