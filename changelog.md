@@ -2,6 +2,21 @@
 
 Date Format: YYYY-MM-DD
 
+## Version 2.0.0 - 2024-06-15
+
+- Rewrote the entire program from scratch
+- Added automatic over the air updates for config files
+- Added automatic downloading for files that are missing/required
+- Moved save location to `%APPDATA%/VALocker`
+- Added support for new resolutions
+- Swapped mss for betterDXcam, a fork of DXcam
+- Improved how the UI looks
+- Made GUI more responsive by adding buttin highlights
+- Added the ability to customize the theme
+- Removed Specific Map tab
+- Removed the ability to minimize to tray
+- Set tools thread to automatically start if a tool is enabled from the overview frame
+
 ## Version 1.6.0 - 2024-04-02
 
 > Modified the repo to remove any instance of my full name. License has not changed, but goes under my username (E1Bos) instead of legal name. Changelog will still have information on previous commits but the commits have been squashed and all previous releases have been removed.
