@@ -193,30 +193,13 @@ class FileManager:
             new_settings = {
                 "activeSaveFile": f"{user_settings_data.get('ACTIVE_SAVE_FILE')}.yaml",
                 "enableOnStartup": user_settings_data.get("ENABLE_ON_STARTUP"),
-                "minimizeToTray": user_settings_data.get("MINIMIZE_TO_TRAY"),
-                "startMinimized": user_settings_data.get("START_MINIMIZED"),
                 "safeModeOnStartup": user_settings_data.get("SAFE_MODE_ON_STARTUP"),
                 "safeModeStrengthOnStartup": user_settings_data.get(
                     "SAFE_MODE_STRENGTH_ON_STARTUP"
                 ),
                 "lockingConfirmations": user_settings_data.get("LOCKING_CONFIRMATIONS"),
-                "menuConfirmations": user_settings_data.get("MENU_CONFIRMATIONS"),
-                "fastModeTimings": user_settings_data.get("FAST_MODE_TIMINGS"),
-                "grabKeybinds": user_settings_data.get("GRAB_KEYBINDS"),
-                "persistentRandomAgents": user_settings_data.get(
-                    "PERSISTENT_RANDOM_AGENTS"
-                ),
                 "hideDefaultSave": user_settings_data.get("HIDE_DEFAULT_SAVE_FILE"),
                 "antiAfkMode": user_settings_data.get("ANTI_AFK_MODE"),
-                "antiAfkTogglesDropSpike": user_settings_data.get(
-                    "ANTIAFK_TOGGLES_AUTODROPSPIKE"
-                ),
-                "detectOpenChat": user_settings_data.get(
-                    "DETECT_OPEN_CHAT_THROUGH_KEYBOARD"
-                ),
-                "startToolsThreadAutomatically": user_settings_data.get(
-                    "START_TOOLS_THREAD_AUTOMATICALLY"
-                ),
             }
 
             self._update_data(new_settings, FILE.SETTINGS)
