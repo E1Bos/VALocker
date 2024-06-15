@@ -527,6 +527,18 @@ class VALocker(CTk):
 
         variable.set(value)
 
+    def toggle_boolean_and_run_function(
+        self, variable: BooleanVar, function, value: Optional[bool] = None) -> None:
+        """
+        Toggles the value of the given boolean variable and runs the given function.
+        """
+        
+        if value is None:
+            value = not variable.get()
+        
+        variable.set(value)
+        function()
+
     def increment_int(
         self, variable: IntVar, max: int, value: Optional[int] = None
     ) -> None:
@@ -733,7 +745,14 @@ class VALocker(CTk):
 
         self.update_stats()
 
-
+    def autostart_tools(self) -> None:
+        """
+        Autostarts the tools thread if the tool is activated from the overview frame.
+        """
+        if self.tools_thread_running.get():
+            return
+    
+        self.toggle_boolean(self.tools_thread_running)
 
 if __name__ == "__main__":
     root = VALocker()
