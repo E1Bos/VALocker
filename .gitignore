@@ -1,0 +1,15 @@
+# virtualenv
+venv
+
+# compiled python files
+__pycache__
+
+# build
+dist
+build
+
+# log files
+*.log
+
+# IDE
+.vscode
