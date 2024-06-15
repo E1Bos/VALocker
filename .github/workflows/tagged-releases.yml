@@ -1,11 +1,9 @@
 name: Tagged Release
 
-
 on:
   push:
     tags:
       - "v*"
-
 
 jobs:
   tagged-release:
@@ -18,7 +16,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       - name: Install requirements
         run: |
@@ -31,18 +29,7 @@ jobs:
 
       - name: Build file with PyInstaller
         run: |
-          pyinstaller --noconfirm --onefile --windowed --icon "images/icons/valocker-enabled.ico" --add-data "data;data/" --add-data "images;images/" --collect-all "customtkinter" --distpath dist/ VALocker.pyw
-
-      - name: Create ZIP file
-        run: |
-          mkdir zip_content/VALocker
-          cp dist/VALocker.exe zip_content/VALocker/
-          cp data zip_content/VALocker/ -Recurse
-          cp images zip_content/VALocker/ -Recurse
-          rm zip_content/VALocker/data/instalocker.py
-          rm zip_content/VALocker/images/readme_images/ -Recurse
-          Compress-Archive -Path zip_content/VALocker/ -DestinationPath VALocker.zip
-          rm zip_content -Recurse -Force
+          pyinstaller build.spec
 
       - name: Create Release
         uses: marvinpinto/action-automatic-releases@latest
@@ -50,5 +37,4 @@ jobs:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
           files: |
-            VALocker.zip
-          
+            dist/VALocker.exe
