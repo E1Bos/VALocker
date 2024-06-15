@@ -18,6 +18,8 @@ VALocker is a program written in Python that automatically locks any VALORANT ag
 > **Disclaimer:**
 > This program is not affiliated with or endorsed by Riot Games or VALORANT. The software is provided "as is" without any warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, and non-infringement. In no event shall the authors or copyright holders be liable for any claim, damages, or other liability, whether in an action of contract, tort, or otherwise, arising from, out of, or in connection with the software or the use or other dealings in the software.
 
+Some antivirus software may flag this program as malware, due to the nature of the program, such as windows defender. This is a false positive, and the program is safe to use. If you have any concerns, please feel free to check the source code, [compile](#-manual-compulation) the program yourself, or reach out to me for more information.
+
 ## 📰 New in v2.0.0
 
 ### Support for different resolutions and aspect ratios!
@@ -116,6 +118,15 @@ VALocker automatically downloads all config files and places them in `%APPDATA%/
 2. Make sure you have Python 3.x installed.
 3. Run `pip install -r requirements.txt` to install all necessary dependencies.
 4. Run `VALockerApp.pyw` to launch the application.
+
+### 📦 Compiling Yourself
+If you would like to compile the executable yourself, you can do so using `pyinstaller`. The `build.spec` file is included in the repository, and can be used to compile the executable.
+
+1. Clone the repository to your local machine.
+2. Make sure you have Python 3.x installed.
+3. `cd` into the repository folder.
+4. Run `pip install -r requirements.txt` to install all necessary dependencies.
+5. Run `pyinstaller build.spec` to compile the executable.
 
 ### 🔄 Updating
 
