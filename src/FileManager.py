@@ -65,6 +65,10 @@ class FileManager:
         self._ensure_files_exist()
         self._read_all_files()
         self._logger.info("File manager setup complete")
+        
+        if self.get_value(FILE.SETTINGS, "alreadyMigrated") == False:
+            self._logger.info("Files may need to be migrated, checking for old files")
+            self._migrate_old_files()
 
     # region: Creating directories and downloading files
 
@@ -89,14 +93,6 @@ class FileManager:
                 file_data = self._download_file(file)
                 with open(file_path, "w") as f:
                     self.yaml.dump(file_data, f)
-
-        settings_rel_path = FILE.SETTINGS.value
-        with open(self._absolute_file_path(settings_rel_path), "r") as f:
-            self._settings: dict = self.yaml.load(f)
-
-        if self._settings.get("alreadyMigrated", False) == False:
-            self._logger.info("Files may need to be migrated, checking for old files")
-            self._migrate_old_files()
 
     def _download_file(self, file: FILE | LOCKING_CONFIG) -> dict:
         """
@@ -293,6 +289,8 @@ class FileManager:
             "defaultAgents"
         )
 
+        print(default_agents)
+
         agent_status = {}
         for agent in old_agent_unlock:
             if agent.lower() in default_agents:
@@ -335,8 +333,7 @@ class FileManager:
             value (bool): The value to set for the 'ALREADY_MIGRATED' flag.
 
         """
-        self._settings["alreadyMigrated"] = value
-        self.set_config(FILE.SETTINGS, self._settings)
+        self.set_value(FILE.SETTINGS, "alreadyMigrated", value)
 
     # endregion
 
@@ -518,4 +515,3 @@ if __name__ == "__main__":
     # Test FileManager class
     file_manager = FileManager()
     file_manager.setup()
-    file_manager._migrate_old_files()
