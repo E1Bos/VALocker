@@ -5,8 +5,8 @@
 <br>
 <div align="center">
   <img alt="License" src="https://img.shields.io/github/license/E1Bos/VALocker?color=brightgreen">
-  <img alt="GitHub release version" src="https://img.shields.io/github/v/release/E1Bos/VALocker?color=blue">
-  <img alt="GitHub all releases" src="https://img.shields.io/github/downloads/E1Bos/VALocker/total?color=yellow">
+  <img alt="Latest Version" src="https://img.shields.io/github/v/release/E1Bos/VALocker?color=blue">
+  <img alt="Total Downloads" src="https://img.shields.io/github/downloads/E1Bos/VALocker/total?color=yellow">
   <a href="https://ko-fi.com/G2G8O67MO"><img alt="Kofi donate link" src="https://ko-fi.com/img/githubbutton_sm.svg" height=20px></a>
 </div>
 <br>
@@ -18,7 +18,7 @@ VALocker is a program written in Python that automatically locks any VALORANT ag
 > **Disclaimer:**
 > This program is not affiliated with or endorsed by Riot Games or VALORANT. The software is provided "as is" without any warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, and non-infringement. In no event shall the authors or copyright holders be liable for any claim, damages, or other liability, whether in an action of contract, tort, or otherwise, arising from, out of, or in connection with the software or the use or other dealings in the software.
 
-Some antivirus software may flag this program as malware, due to the nature of the program, such as windows defender. This is a false positive, and the program is safe to use. If you have any concerns, please feel free to check the source code, [compile](#-manual-compulation) the program yourself, or reach out to me for more information.
+Some antivirus software may flag this program as malware, due to the nature of the program, such as windows defender. This is a false positive, and the program is safe to use. If you have any concerns, please feel free to check the source code, [compile](#-compiling-yourself) the program yourself, or reach out to me for more information.
 
 ## 📰 New in v2.0.0
 
@@ -65,7 +65,7 @@ Some antivirus software may flag this program as malware, due to the nature of t
   - Low 300-500ms
   - Medium 500-800ms
   - High 800-1000ms
-- Works irrespective of how many agents you have unlocked (See [guide](#guide) for more information).
+- Works irrespective of how many agents you have unlocked (See [guide](#-guide---getting-started) for more information).
 - **_(PLANNED, NOT IMPLEMENTED YET)_** ~~Support for map-specific agent locking.~~
 
 ### 🕵️‍♂️ Anti-Detection
@@ -258,9 +258,7 @@ I plan to add support for other display sizes in the future, but for now, VALock
 
 ## 🎥 Video Demo
 
-<!-- TODO: UPDATE VIDEO -->
 
-https://github.com/E1Bos/VALocker/assets/66886116/d1567740-3efe-408d-af09-fe2d2bf87f14
 
 ## 🤝 Contributing
 
