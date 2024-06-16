@@ -20,7 +20,6 @@ from ThemeManager import ThemeManager
 # from CustomElements import *
 from GUIFrames import *
 
-
 class VALocker(CTk):
     """
     VALocker is a tool that quickly locks agents for you in Valorant, along with other tools.

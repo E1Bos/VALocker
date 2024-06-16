@@ -1,3 +1,8 @@
+"""
+Main entry point for the VALocker application.
+@author: [E1Bos](https://www.github.com/E1Bos)
+"""
+
 import sys
 import os
 

@@ -9,6 +9,12 @@ from FileManager import FileManager
 
 
 class SaveManager:
+    """
+    Manages the various save files for VALocker.
+    @author: [E1Bos](https://www.github.com/E1Bos)
+    """
+    
+    
     logger: CustomLogger = CustomLogger("Save Manager").get_logger()
 
     FOLDER_PATH: str = os.path.join(GET_WORKING_DIR(), FOLDER.SAVE_FILES.value)

@@ -1,3 +1,7 @@
+"""
+@author: [E1Bos](https://www.github.com/E1Bos)
+"""
+
 import customtkinter as ctk
 import traceback
 from typing import TYPE_CHECKING

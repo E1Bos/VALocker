@@ -23,6 +23,11 @@ from Constants import Region, LOCKING_CONFIG
 
 
 class Instalocker:
+    """
+    Responsible for instalocking agents
+    @author: [E1Bos](https://www.github.com/E1Bos)
+    """
+    
     logger = CustomLogger("Instalocker").get_logger()
 
     # Parent

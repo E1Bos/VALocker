@@ -19,6 +19,8 @@ class FileManager:
         update_file(FILE): Update a file by downloading the latest version from the repository.
         get_config(FILE): Returns the configuration dictionary for the specified file.
         set_config(FILE, dict): Sets the configuration dictionary for the specified file.
+    
+    @author: [E1Bos](https://www.github.com/E1Bos)
     """
 
     _REQUIRED_FOLDERS: list[FOLDER] = [
@@ -38,7 +40,6 @@ class FileManager:
         FILE.DEFAULT_THEME,
         # All locking configs
     ]
-    
 
     _WORKING_DIR: str = GET_WORKING_DIR()
 
@@ -52,7 +53,7 @@ class FileManager:
 
     def __init__(self) -> None:
         self.yaml.indent(mapping=2, sequence=4, offset=2)
-        
+
         for locking_config in LOCKING_CONFIG:
             self._REQUIRED_FILES.append(locking_config)
 
@@ -62,10 +63,11 @@ class FileManager:
         Sets up the FileManager by ensuring that the required files exist and reading them into memory.
         """
         self._logger.info("Setting up file manager")
+
         self._ensure_files_exist()
         self._read_all_files()
         self._logger.info("File manager setup complete")
-        
+
         if self.get_value(FILE.SETTINGS, "alreadyMigrated") == False:
             self._logger.info("Files may need to be migrated, checking for old files")
             self._migrate_old_files()
@@ -89,8 +91,11 @@ class FileManager:
         for file in self._REQUIRED_FILES:
             file_path = self._absolute_file_path(file.value)
             if not os.path.isfile(file_path):
+
                 self._logger.info(f"{file_path} not found, downloading")
+
                 file_data = self._download_file(file)
+
                 with open(file_path, "w") as f:
                     self.yaml.dump(file_data, f)
 
@@ -156,7 +161,7 @@ class FileManager:
         stats_file = os.path.join(old_dir, "stats.json")
         if os.path.exists(stats_file):
             self._logger.info("Found old stats.json file, migrating to new directory")
-
+            
             with open(stats_file, "r") as f:
                 stats_data: dict = json.load(f)
 
@@ -186,7 +191,7 @@ class FileManager:
             self._logger.info(
                 "Found old user_settings.json file, migrating to new directory"
             )
-
+            
             with open(user_settings_file, "r") as f:
                 user_settings_data: dict = json.load(f)
 
@@ -219,13 +224,13 @@ class FileManager:
             self._logger.info(
                 "Found old save_files directory, migrating to new directory"
             )
-
+            
             for file_name in os.listdir(save_files_dir):
                 full_path = os.path.join(save_files_dir, file_name)
                 self._migrate_old_save_file(full_path, file_name)
 
             self._logger.info(f"Migrated all save files in {save_files_dir}")
-
+            
             # Remove the old save_files dir
             os.rmdir(save_files_dir)
             self._logger.info(f"Deleted {save_files_dir}")
@@ -344,7 +349,9 @@ class FileManager:
                     is_custom = data.get("custom", False)
 
                     config_enum = config
-                    self._logger.info(f"Found config: {config_enum} - custom: {is_custom}")
+                    self._logger.info(
+                        f"Found config: {config_enum} - custom: {is_custom}"
+                    )
 
             self.configs[config_enum] = data
 
@@ -438,7 +445,7 @@ class FileManager:
             file_name (str): The file name of the locking config.
             get_title (bool): If True, the title of the locking config is returned.
             get_data (bool): If True, the data of the locking config is returned.
-        
+
         Returns:
             str | LOCKING_CONFIG: The locking config
         """

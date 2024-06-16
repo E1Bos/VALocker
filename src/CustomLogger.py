@@ -16,6 +16,8 @@ class CustomLogger(Logger):
     Attributes:
         logger (logging.Logger): The logger object.
 
+    @author: [E1Bos](https://www.github.com/E1Bos)
+
     """
 
     def __init__(self, name: str, log_file: str = "VALocker.log") -> None:

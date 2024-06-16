@@ -7,6 +7,7 @@ from CustomLogger import CustomLogger
 class ThemeManager:
     """
     Manages the theme for the application and provides methods to set and retrieve the theme.
+    @author: [E1Bos](https://www.github.com/E1Bos)
     """
     
     logger = CustomLogger("Theme Manager").get_logger()

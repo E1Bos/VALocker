@@ -22,6 +22,10 @@ class ANTI_AFK(Enum):
     STRAFE = auto()
 
 class Tools():
+    """
+    This class manages the tools thread that can run alongside the instalocker.
+    @author: [E1Bos](https://www.github.com/E1Bos)
+    """
     logger = CustomLogger("Tools").get_logger()
     
     stop_flag = False

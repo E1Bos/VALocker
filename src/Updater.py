@@ -22,6 +22,10 @@ class DummyStringVar:
 
 
 class Updater:
+    """
+    Updater is used to update config files automatically and check for new versions of VALocker.
+    @author: [E1Bos](https://www.github.com/E1Bos)
+    """
     _logger: CustomLogger = CustomLogger("Updater").get_logger()
     _file_manager: FileManager
     release_version: str

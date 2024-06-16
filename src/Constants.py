@@ -1,3 +1,7 @@
+"""
+@author: [E1Bos](https://www.github.com/E1Bos)
+"""
+
 from enum import Enum
 import os
 import sys
