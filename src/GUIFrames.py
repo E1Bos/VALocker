@@ -815,9 +815,12 @@ class SaveFilesFrame(SideFrame):
         self.favorite_buttons = []
         for save_file in self.parent.save_manager.get_all_save_files():
             button = SaveButton(self.scrollable_frame, save_file=save_file)
-            if button.save_file in favorite_button_names:
-                button.toggle_favorite(value=True)
             self.buttons.append(button)
+
+        for fav_button_name in favorite_button_names:
+            for button in self.buttons:
+                if button.save_file == fav_button_name:
+                    button.toggle_favorite(value=True)
 
         self.reorder_buttons()
         self.change_selected_button(self.parent.current_save_name.get())
