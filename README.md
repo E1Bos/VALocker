@@ -18,12 +18,12 @@ VALocker is a program written in Python that automatically locks any VALORANT ag
 > **Disclaimer:**
 > This program is not affiliated with or endorsed by Riot Games or VALORANT. The software is provided "as is" without any warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, and non-infringement. In no event shall the authors or copyright holders be liable for any claim, damages, or other liability, whether in an action of contract, tort, or otherwise, arising from, out of, or in connection with the software or the use or other dealings in the software.
 
-Some antivirus software may flag this program as malware, due to the nature of the program, such as windows defender. This is a false positive, and the program is safe to use. If you have any concerns, please feel free to check the source code, [compile](#-compiling-yourself) the program yourself, or reach out to me for more information.
+Some antivirus software may flag this program as malware, due to the nature of the program, such as Windows Defender. This is a false positive, and the program is safe to use. If you have any concerns, please feel free to check the source code, [compile](#-compiling-yourself) the program yourself, or reach out to me for more information.
 
 ## 📰 New in v2.0.0
 
 ### Support for different resolutions and aspect ratios!
-- VALocker can now be used at different resolutions, and with different settings, without needing to modify the code. Custom files can be created if the your resolution and aspect ratio is not supported by default.
+- VALocker can now be used at different resolutions, and with different settings, without needing to modify the code. Custom files can be created if your resolution and aspect ratio are not supported by default.
 - Currently supported resolutions and aspect ratios are:
   - 1920x1080 [16:9] (Measured on a 1920x1080 monitor)
   - 1650x1050 [16:10] (Measured on a 1920x1080 monitor)
@@ -46,7 +46,7 @@ Some antivirus software may flag this program as malware, due to the nature of t
 
 ### 🖥️ GUI
 
-- User friendly GUI for easy interaction.
+- User-friendly GUI for easy interaction.
 - Support for easy-to-modify custom themes.
 - Can be run as an executable, no Python installation required.
 
@@ -59,7 +59,7 @@ Some antivirus software may flag this program as malware, due to the nature of t
 
 - Automatically locks in your desired agent during the agent selection phase.
 - Locks an agent in ~70ms on average from when the agent selection screen first appears.
-- Automatically detects when you are no longer in game and switches to "Locking" mode.
+- Automatically detects when you are no longer in-game and switches to "Locking" mode.
 - Hover mode allows you to select an agent without locking them, great for competitive.
 - Safe mode adds random delays to the locking process:
   - Low 300-500ms
@@ -70,20 +70,20 @@ Some antivirus software may flag this program as malware, due to the nature of t
 
 ### 🕵️‍♂️ Anti-Detection
 
-- Selects random part of agent and locking button making every lock unpredictable.
-- Analyzes screenshots, taken hundreds of times per second to determine what is going on within the game, a safer approach which reduces the risk of bans significantly compared to other aggressive methods such as direct memory reading or abusing the API.
+- Selects random part of the agent and locking button making every lock unpredictable.
+- Analyzes screenshots, taken hundreds of times per second to determine what is going on within the game, a safer approach that reduces the risk of bans significantly compared to other aggressive methods such as direct memory reading or abusing the API.
 - The mouse only moves once the agent selection screen is detected, making it safer than macros or other methods that move the mouse constantly.
 
 ### 🎲 Random Agent Selection
 
 - Random agent mode allows random agent selection from a pool of possible agents, when you get bored of playing the same agent in swiftplay, or when you want to have some fun.
-- ExclusiSelect (ES) mode disables random agents after they're picked, ensuring you don't get the same randomly-selected agent twice.
+- ExclusiSelect (ES) mode disables random agents after they're picked, ensuring you don't get the same randomly selected agent twice.
   - When ES is disabled, it refreshes random agent selections to what they were prior to ES being enabled.
 
 ### 📊 Stats
 
 - Tracks the time to lock, and total times used.
-- Displays all stats in real time.
+- Displays all stats in real-time.
 
 ### 💾 Saves
 
@@ -103,7 +103,7 @@ Some antivirus software may flag this program as malware, due to the nature of t
 
 ## ⚙️ Installation
 
-VALocker automatically downloads all config files and places them in `%APPDATA%/VALocker` folder, this makes the location of the executable irrelevant. The executable can be placed anywhere on your computer, and it will still function correctly.
+VALocker automatically downloads all config files and places them in the `%APPDATA%/VALocker` folder, this makes the location of the executable irrelevant. The executable can be placed anywhere on your computer, and it will still function correctly.
 
 ### 💻 Executable
 
@@ -112,7 +112,7 @@ VALocker automatically downloads all config files and places them in `%APPDATA%/
 
 ### 🐍 Python
 
-> I strongly reccommend using the executable version of VALocker, as it is easier to use, and doesn't require Python to be installed on your machine. Files will still be automatically downloaded, even if you cloned the repository.
+> I strongly recommend using the executable version of VALocker, as it is easier to use, and doesn't require Python to be installed on your machine. Files will still be automatically downloaded, even if you cloned the repository.
 
 1. Clone the repository to your local machine.
 2. Make sure you have Python 3.x installed.
@@ -120,7 +120,7 @@ VALocker automatically downloads all config files and places them in `%APPDATA%/
 4. Run `VALockerApp.pyw` to launch the application.
 
 ### 📦 Compiling Yourself
-If you would like to compile the executable yourself, you can do so using `pyinstaller`. The `build.spec` file is included in the repository, and can be used to compile the executable.
+If you would like to compile the executable yourself, you can do so using `pyinstaller`. The `build.spec` file is included in the repository and can be used to compile the executable.
 
 1. Clone the repository to your local machine.
 2. Make sure you have Python 3.x installed.
@@ -169,7 +169,7 @@ Adding a new save file will require reconfiguring the `Agent Toggle` tab. Clicki
 
 #### - Tools
 
-The `Tools` tab is used to enabled and disable the various QOL (Quality of Life) addons VALocker supports. Tools only work when the instalocker status is "Waiting" or "None".
+The `Tools` tab is used to enable and disable the various QOL (Quality of Life) addons VALocker supports. Tools only work when the instalocker status is "Waiting" or "None".
 
 Tools can be enabled and disabled, but are only active when the button above shows `Tools: Enabled` (the very long button).
 
@@ -193,7 +193,7 @@ VALocker provides multiple ways to configure the program to your liking outside 
 - `enableOnStartup: bool`: Whether VALocker should start enabled or not.
 - `safeModeOnStartup: bool`: Whether safe mode should be enabled on startup.
 - `safeModeStrengthOnStartup: int`: The strength of safe mode by default.
-- `fastModeTimings: list[int]`: The timings for fast mode, between moving the mouse and selecting the agent, selecting the agent and moving over the lock button, and clicking the lock buttonm in seconds.
+- `fastModeTimings: list[int]`: The timings for fast mode, between moving the mouse and selecting the agent, selecting the agent and moving over the lock button, and clicking the lock button in seconds.
 - `safeModeTimings: list[list[int]]`: The timings are the same as the fast mode timings, but for each strength of safe mode.
 - `alreadyMigrated: bool`: Whether the user has already migrated their settings to the new location. This is automatically set to `True` after first running the program.
 
@@ -211,7 +211,6 @@ I plan to add support for other display sizes in the future, but for now, VALock
 
 ## 🖼️ Images
 
-<!-- TODO: UPDATE OVERVIEW IMAGE -->
 <table>
   <tr>
     <td align="center">
@@ -258,7 +257,7 @@ I plan to add support for other display sizes in the future, but for now, VALock
 
 ## 🎥 Video Demo
 
-
+https://github.com/E1Bos/VALocker/assets/66886116/36e58a7e-8223-47dd-85c7-db4ab03091e3
 
 ## 🤝 Contributing
 
@@ -289,7 +288,7 @@ If you have any questions, feedback, or general inquiries, you may contact me at
 
 Discord: `@e1bos`
 
-Feel free to reach out through the provided contact information for non-issue related matters or general discussions. However, for any project-related issues, I kindly ask that you [add an issue](https://github.com/E1Bos/VALocker/issues) to report and discuss them.
+Feel free to reach out through the provided contact information for non-issue-related matters or general discussions. However, for any project-related issues, I kindly ask that you [add an issue](https://github.com/E1Bos/VALocker/issues) to report and discuss them.
 
 ## 📜 License
 
