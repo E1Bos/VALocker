@@ -812,7 +812,6 @@ class SaveFilesFrame(SideFrame):
                 favorite_button_names.append(favorited_save)
 
         self.buttons = []
-        self.favorite_buttons = []
         for save_file in self.parent.save_manager.get_all_save_files():
             button = SaveButton(self.scrollable_frame, save_file=save_file)
             self.buttons.append(button)
