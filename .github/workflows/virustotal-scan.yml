@@ -12,6 +12,9 @@ jobs:
         uses: crazy-max/ghaction-virustotal@v4
         with:
           vt_api_key: ${{ secrets.VIRUSTOTAL_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          request_rate: 2
           update_release_body: true
+          vt_monitor: true
           files: |
             .exe$
