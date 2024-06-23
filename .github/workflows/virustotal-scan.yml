@@ -6,14 +6,24 @@ on:
   workflow_dispatch:
 
 jobs:
-  virustotal:
+  download-and-scan:
     runs-on: ubuntu-latest
     steps:
-      -
-        name: VirusTotal Scan
-        uses: crazy-max/ghaction-virustotal@v4
-        with:
-          vt_api_key: ${{ secrets.VIRUSTOTAL_API_KEY }}
-          update_release_body: true
-          files: |
-            .exe$
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Download Release Asset
+      uses: dsaltares/fetch-gh-release-asset@1.1.2
+      with:
+        repo: "E1Bos/VALocker"
+        version: "tags/${{ github.event.release.tag_name }}"
+        file: "*.exe"
+        target: "./release-assets"
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: VirusTotal Scan
+      uses: crazy-max/ghaction-virustotal@v4
+      with:
+        vt_api_key: ${{ secrets.VIRUSTOTAL_API_KEY }}
+        files: |
+          ./release-assets/*.exe
