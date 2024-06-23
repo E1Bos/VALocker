@@ -12,14 +12,16 @@ jobs:
     - uses: joutvhu/get-release@v1
       with:
         latest: true
-        # Tag name start with `v`
         pattern: '^v.*'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: List downloaded files
+      run: ls -l
 
     - name: VirusTotal Scan
       uses: crazy-max/ghaction-virustotal@v4
       with:
         vt_api_key: ${{ secrets.VIRUSTOTAL_API_KEY }}
         files: |
-          *.exe
+          .exe$
