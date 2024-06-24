@@ -205,9 +205,16 @@ VALocker supports custom themes, allowing you to change the look of the program 
 
 To create a new theme, copy the `default-theme.yaml` file and modify the colors to your liking. The `theme` setting in the `settings.yaml` file must be set to the name of the theme file with the `.yaml` extension.
 
-## 📏 Display Size Compatibility
+## 📏 Supported Resolutions
 
-I plan to add support for other display sizes in the future, but for now, VALocker only supports a resolution of 1920x1080. If you would like to see support for other display sizes, please let me know by [creating an issue](https://github.com/E1Bos/VALocker/issues).
+VALocker currently supports the following resolutions:
+- 1920x1080 [16:9] (Measured on a 1920x1080 monitor)
+- 1650x1050 [16:10] (Measured on a 1920x1080 monitor)
+- 1280x1024 [5:4] (Measured on a 1920x1080 monitor)
+
+If you'd like to use VALocker with a different resolution, you can create a custom configuration file. See the [wiki page](https://github.com/E1Bos/VALocker/wiki/Custom-Configs) for more information.
+
+I can only provide support for resolutions that I can test on my 1920x1080 monitor, however, if you'd like to see support for a specific resolution, please let me know by [creating an issue](https://github.com/E1Bos/VALocker/issues).
 
 ## 🖼️ Images
 
@@ -261,13 +268,17 @@ https://github.com/E1Bos/VALocker/assets/66886116/36e58a7e-8223-47dd-85c7-db4ab0
 
 ## 🤝 Contributing
 
-Thank you for considering contributing to this project!
+VALocker is a big project with a lot of potential for growth and improvement. However, I am only one person, and I can only do so much. Contributions are welcome and encouraged!
 
-Please note that while I am actively maintaining and updating this project, I may not actively review or accept pull requests for changes or additions.
+If you'd like to contribute to this project, you can do so by:
+1. Forking the project.
+2. Creating a new branch (`git checkout -b feature/feature-name`)
+3. Making your changes.
+4. Add and commit your changes (`git add . && git commit -m "Change description"`)
+5. Push to the branch (`git push origin feature/feature-name`)
+6. Create a new Pull Request.
 
-You are still welcome to fork this project and make your own modifications or enhancements. Feel free to experiment, customize, or extend the project based on your needs.
-
-If you encounter any issues or bugs, please [create an issue](https://github.com/E1Bos/VALocker/issues) on the GitHub repository. I will do my best to address them when possible and provide support.
+If you encounter any issues or bugs, please [create an issue](https://github.com/E1Bos/VALocker/issues). I will do my best to address them when possible and provide support.
 
 I appreciate your interest in this project!
 
