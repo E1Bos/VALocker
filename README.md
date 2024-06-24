@@ -11,7 +11,7 @@
 </div>
 <br>
 
-VALocker is a program written in Python that automatically locks any VALORANT agent quickly and reliably. It helps you secure your favorite agent, saving you time, effort, and ensuring you don't miss out on playing who you want to play.
+VALocker is a Python program that automatically locks any VALORANT agent quickly and reliably. It helps you secure your favorite agent, saving you time, effort, and ensuring you don't miss out on playing who you want to play.
 
 📋 **Changelog:** For a detailed list of changes, improvements, and bug fixes, refer to the [Changelog](changelog.md) file.
 
