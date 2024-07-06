@@ -4,9 +4,10 @@
 
 <br>
 <div align="center">
-  <img alt="License" src="https://img.shields.io/github/license/E1Bos/VALocker?color=brightgreen">
-  <img alt="Latest Version" src="https://img.shields.io/github/v/release/E1Bos/VALocker?color=blue">
-  <img alt="Total Downloads" src="https://img.shields.io/github/downloads/E1Bos/VALocker/total?color=yellow">
+  <a href="https://github.com/E1Bos/VALocker/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/github/license/E1Bos/VALocker?color=brightgreen"></a>
+  <a href="https://github.com/E1Bos/VALocker/releases/latest"><img alt="Latest Version" src="https://img.shields.io/github/v/release/E1Bos/VALocker?color=blue"></a>
+  <a href="https://github.com/E1Bos/VALocker/releases"><img alt="Total Downloads" src="https://img.shields.io/github/downloads/E1Bos/VALocker/total?color=yellow"></a>
+  <a href="https://github.com/E1Bos/VALocker/releases/latest"><img alt="Latest Release Downloads" src="https://img.shields.io/github/downloads/E1Bos/VALocker/latest/total?color=yellow"></a>
   <a href="https://ko-fi.com/G2G8O67MO"><img alt="Kofi donate link" src="https://ko-fi.com/img/githubbutton_sm.svg" height=20px></a>
 </div>
 <br>
@@ -78,12 +79,12 @@ Some antivirus software may flag this program as malware, due to the nature of t
 
 - Random agent mode allows random agent selection from a pool of possible agents, when you get bored of playing the same agent in swiftplay, or when you want to have some fun.
 - ExclusiSelect (ES) mode disables random agents after they're picked, ensuring you don't get the same randomly selected agent twice.
-  - When ES is disabled, it refreshes random agent selections to what they were prior to ES being enabled.
+  - When ES is disabled, it refreshes random agent selections to what they were before ES being enabled.
 
 ### 📊 Stats
 
 - Tracks the time to lock, and total times used.
-- Displays all stats in real-time.
+- Displays all stats in real time.
 
 ### 💾 Saves
 
