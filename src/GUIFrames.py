@@ -894,7 +894,7 @@ class SaveFilesFrame(SideFrame):
         """
         other_buttons = sorted(
             [button for button in self.buttons if not button.favorited],
-            key=lambda button: button.save_name,
+            key=lambda button: button.save_name.lower(),
         )
 
         return self.favorite_buttons + other_buttons
@@ -998,20 +998,33 @@ class SaveFilesFrame(SideFrame):
 
         self.parent.save_manager.rename_save(old_name, save_button.save_file)
 
-        file_name_with_extension = file_name if file_name.endswith('.yaml') else f"{file_name}.yaml"
+        file_name_with_extension = (
+            file_name if file_name.endswith(".yaml") else f"{file_name}.yaml"
+        )
 
         if old_name.removesuffix(".yaml") == self.parent.current_save_name.get():
             self.parent.current_save_name.set(file_name)
-            if self.parent.file_manager.get_value(FILE.SETTINGS, "activeSaveFile") == old_name:
-                self.parent.file_manager.set_value(FILE.SETTINGS, "activeSaveFile", file_name_with_extension)
-        
-        
-        if old_name in self.parent.file_manager.get_value(FILE.SETTINGS, "favoritedSaveFiles"):
+            if (
+                self.parent.file_manager.get_value(FILE.SETTINGS, "activeSaveFile")
+                == old_name
+            ):
+                self.parent.file_manager.set_value(
+                    FILE.SETTINGS, "activeSaveFile", file_name_with_extension
+                )
+
+        if old_name in self.parent.file_manager.get_value(
+            FILE.SETTINGS, "favoritedSaveFiles"
+        ):
             # Ensure the new file name has the .yaml extension
             self.parent.file_manager.set_value(
                 FILE.SETTINGS,
                 "favoritedSaveFiles",
-                [file_name_with_extension if name == old_name else name for name in self.parent.file_manager.get_value(FILE.SETTINGS, "favoritedSaveFiles")],
+                [
+                    file_name_with_extension if name == old_name else name
+                    for name in self.parent.file_manager.get_value(
+                        FILE.SETTINGS, "favoritedSaveFiles"
+                    )
+                ],
             )
 
     def delete_save(self, save_button: SaveButton) -> None:
@@ -1101,12 +1114,12 @@ class ToolsFrame(SideFrame):
             tool_var (ctk.BooleanVar): The tool to be toggled.
         """
         self.parent.toggle_boolean(tool_var)
-        
+
         if tool_var.get():
             self.parent.num_running_tools += 1
         else:
             self.parent.num_running_tools -= 1
-        
+
         self.parent.autostart_tools()
 
     def on_raise(self) -> None:
@@ -1147,7 +1160,7 @@ class SettingsFrame(SideFrame):
         )
 
         self.start_tools_automatically = parent.start_tools_automatically
-        
+
         self.anti_afk_mode: ANTI_AFK = parent.anti_afk_mode
         self.anti_afk_mode_intvar = ctk.IntVar(value=self.anti_afk_mode.index)
 
