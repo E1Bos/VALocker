@@ -503,9 +503,6 @@ class FileManager:
         with open(self._absolute_file_path(file.value), "r") as f:
             current_data = self.yaml.load(f)
 
-        # Identify user-defined fields to preserve
-        user_defined_fields = ["field1", "field2"]  # Example fields to preserve
-
         # Prepare a copy of the current data for fields to preserve
         preserved_data = {}
 
@@ -519,6 +516,7 @@ class FileManager:
                     "enableOnStartup",
                     "safeModeOnStartup",
                     "safeModeStrengthOnStartup",
+                    "antiAfkMode"
                     "alreadyMigrated",
                 ]
                 preserved_data = {
