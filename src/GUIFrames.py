@@ -772,7 +772,7 @@ class SaveFilesFrame(SideFrame):
     parent: "VALocker"
 
     buttons: list[SaveButton]
-    favorite_buttons: list[SaveButton] = []
+    favorite_buttons: list[SaveButton] = None
 
     new_file_icon = ctk.CTkImage(Image.open(ICON.NEW_FILE.value), size=(20, 20))
 
@@ -784,6 +784,9 @@ class SaveFilesFrame(SideFrame):
         self.scrollable_frame = ThemedScrollableFrame(self, label_text="Save Files")
         self.scrollable_frame.pack(fill=ctk.BOTH, expand=True, pady=(10, 0))
         self.scrollable_frame.grid_columnconfigure(0, weight=1)
+
+        if self.favorite_buttons is None:
+            self.favorite_buttons = []
 
         self.generate_save_button_list(first_time=True)
 
@@ -997,6 +1000,15 @@ class SaveFilesFrame(SideFrame):
 
         if old_name.removesuffix(".yaml") == self.parent.current_save_name.get():
             self.parent.current_save_name.set(file_name)
+        
+        if old_name in self.parent.file_manager.get_value(FILE.SETTINGS, "favoritedSaveFiles"):
+            # Ensure the new file name has the .yaml extension
+            file_name_with_extension = file_name if file_name.endswith('.yaml') else f"{file_name}.yaml"
+            self.parent.file_manager.set_value(
+                FILE.SETTINGS,
+                "favoritedSaveFiles",
+                [file_name_with_extension if name == old_name else name for name in self.parent.file_manager.get_value(FILE.SETTINGS, "favoritedSaveFiles")],
+            )
 
     def delete_save(self, save_button: SaveButton) -> None:
         """
