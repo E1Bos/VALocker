@@ -998,12 +998,16 @@ class SaveFilesFrame(SideFrame):
 
         self.parent.save_manager.rename_save(old_name, save_button.save_file)
 
+        file_name_with_extension = file_name if file_name.endswith('.yaml') else f"{file_name}.yaml"
+
         if old_name.removesuffix(".yaml") == self.parent.current_save_name.get():
             self.parent.current_save_name.set(file_name)
+            if self.parent.file_manager.get_value(FILE.SETTINGS, "activeSaveFile") == old_name:
+                self.parent.file_manager.set_value(FILE.SETTINGS, "activeSaveFile", file_name_with_extension)
+        
         
         if old_name in self.parent.file_manager.get_value(FILE.SETTINGS, "favoritedSaveFiles"):
             # Ensure the new file name has the .yaml extension
-            file_name_with_extension = file_name if file_name.endswith('.yaml') else f"{file_name}.yaml"
             self.parent.file_manager.set_value(
                 FILE.SETTINGS,
                 "favoritedSaveFiles",
