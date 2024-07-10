@@ -201,9 +201,11 @@ class VALocker(CTk):
 
         # Settings Vars
         self.start_tools_automatically = BooleanVar(
-            value=self.file_manager.get_value(FILE.SETTINGS, "startToolsAutomatically", True)
+            value=self.file_manager.get_value(
+                FILE.SETTINGS, "startToolsAutomatically", True
+            )
         )
-        
+
         self.anti_afk_mode = ANTI_AFK.from_name(
             self.file_manager.get_value(FILE.SETTINGS, "antiAfkMode", "Random Centered")
         )
@@ -315,7 +317,12 @@ class VALocker(CTk):
         self.update_frame.finished_checking_updates()
 
         if force_check_update:
-            self.after(1000, lambda x=FRAME.SETTINGS: self.initMainUI(x))
+            self.after(
+                1000,
+                lambda go_to_frame=FRAME.SETTINGS: self.initMainUI(
+                    go_to_frame
+                ),
+            )
         else:
             self.after(1000, self.initMainUI)
 
@@ -377,7 +384,7 @@ class VALocker(CTk):
         # If no tools are running, disable tools thread
         if self.num_running_tools == 0:
             self.toggle_boolean(self.tools_thread_running, False)
-        else: # Enable tools thread
+        else:  # Enable tools thread
             self.toggle_boolean(self.tools_thread_running, True)
 
     # endregion
@@ -796,9 +803,9 @@ class VALocker(CTk):
         self.anti_afk_mode = self.anti_afk_mode.next()
         self.tools.change_movement_type(self.anti_afk_mode)
         return self.anti_afk_mode
-    
-    
+
     # endregion
+
 
 if __name__ == "__main__":
     root = VALocker()
