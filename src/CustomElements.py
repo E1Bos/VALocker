@@ -112,6 +112,7 @@ class IndependentButton(ThemedButton):
         text: Union[str, list[str]],
         variable: ctk.BooleanVar,
         command: Callable,
+        use_same_color: bool = False,
         **kwargs,
     ) -> None:
 
@@ -122,6 +123,17 @@ class IndependentButton(ThemedButton):
             text = [text, text]
 
         super().__init__(parent, **kwargs)
+
+        self.configure(
+            command=self.command,
+        )
+
+        if use_same_color:
+            self.button_colors = [self.theme["accent"], self.theme["accent"]]
+            self.hover_colors = [self.theme["accent-hover"], self.theme["accent-hover"]]
+        else:
+            self.button_colors = [self.theme["button-enabled"], self.theme["button-disabled"]]
+            self.hover_colors = [self.theme["button-enabled-hover"], self.theme["button-disabled-hover"]]
 
         self.text = text
         self.disabled = False
@@ -136,11 +148,8 @@ class IndependentButton(ThemedButton):
         is_enabled = self.variable.get()
         self.configure(
             text=self.text[0] if is_enabled else self.text[1],
-            fg_color=self.theme["button-enabled" if is_enabled else "button-disabled"],
-            hover_color=self.theme[
-                "button-enabled-hover" if is_enabled else "button-disabled-hover"
-            ],
-            command=self.command,
+            fg_color=self.button_colors[0] if is_enabled else self.button_colors[1],
+            hover_color=self.hover_colors[0] if is_enabled else self.hover_colors[1]
         )
 
     def _variable_update(self, *_):
@@ -157,12 +166,79 @@ class IndependentButton(ThemedButton):
         self.disabled = not self.disabled
         self.configure(state=ctk.NORMAL if not self.disabled else ctk.DISABLED)
 
+class MultiTextIndependentButton(ThemedButton):
+    """
+    A button that is enabled, independent of any other variable.
+    It changes its text and color based on the state of its own variable.
+    """
+
+    text: list[str]
+    variable: ctk.BooleanVar
+
+    def __init__(
+        self,
+        parent: "SideFrame",
+        text: list[str],
+        variable: ctk.IntVar,
+        command: Callable,
+        prefix: Union[str | None] = None,
+        **kwargs,
+    ) -> None:
+
+        self.command = command
+        self.variable = variable
+
+        super().__init__(parent, **kwargs)
+
+        self.configure(
+            fg_color=self.theme["accent"],
+            hover_color=self.theme[
+                "accent-hover"
+            ],
+            command=self.command,
+        )
+
+        if prefix == None:
+            self.text = text
+        else:
+            self.text = [f"{prefix}{text}" for text in text]
+            
+        self.disabled = False
+        self._update_button()
+
+        self.variable.trace_add("write", self._variable_update)
+
+    def _update_button(self) -> None:
+        """
+        Updates the button based on the variable value.
+        """
+        if self.variable.get() >= len(self.text):
+            raise ValueError("Issue occurred with the variable value.")
+        
+        text_value = self.text[self.variable.get()]
+        self.configure(
+            text=text_value,
+        )
+
+    def _variable_update(self, *_):
+        """
+        Updates the button based on the variable value.
+        Bound to the variable's trace.
+        """
+        self._update_button()
+
+    def toggle_disable(self) -> None:
+        """
+        Toggles the disabled state of the button.
+        """
+        self.disabled = not self.disabled
+        self.configure(state=ctk.NORMAL if not self.disabled else ctk.DISABLED)
 
 class DependentButton(ThemedButton):
     """
     Button that is dependent on two variables,
     one that determines if the button is enabled,
-    and the other that the button is responsable for.
+    and the other that the button is responsible for.
 
     The button will change its text based on the state of the dependent variable and the variable.
     """
@@ -245,7 +321,7 @@ class ColorDependentButton(ThemedButton):
     """
     Button that is dependent on two variables,
     one that determines if the button is enabled,
-    and the other that the button is responsable for.
+    and the other that the button is responsible for.
 
     The button will change its color based on both the state of the dependent and independent variable.
 
