@@ -1,3 +1,4 @@
+from __future__ import annotations
 from customtkinter import CTk, BooleanVar, StringVar, IntVar
 from typing import Optional
 from sys import exit as sys_exit
@@ -8,7 +9,7 @@ from ctypes import windll
 
 # Custom imports
 from CustomLogger import CustomLogger
-from Constants import FILE, FRAME, ICON, LOCKING_CONFIG, BRIGHTEN_COLOR
+from Constants import FILE, FRAME, ICON, LOCKING_CONFIG, ANTI_AFK
 from FileManager import FileManager
 from SaveManager import SaveManager
 from Updater import Updater
@@ -16,9 +17,10 @@ from Instalocker import Instalocker
 from Tools import Tools
 from ThemeManager import ThemeManager
 
-# # UI Imports
+# UI Imports
 # from CustomElements import *
 from GUIFrames import *
+
 
 class VALocker(CTk):
     """
@@ -27,7 +29,7 @@ class VALocker(CTk):
     """
 
     # VERSION
-    VERSION: str = "2.0.0"
+    VERSION: str = "2.0.5"
 
     # Custom Classes
     logger: CustomLogger = CustomLogger("VALocker").get_logger()
@@ -53,9 +55,10 @@ class VALocker(CTk):
     last_lock: StringVar
     average_lock: StringVar
     times_used: StringVar
-    agent_times_locked: StringVar
+    # agent_times_locked: StringVar
 
     # Instalocker Variables
+    agent_states: dict[str, tuple[BooleanVar, BooleanVar] | BooleanVar]
     instalocker_thread_lock: Lock = Lock()
     total_agents: int
     hover: BooleanVar
@@ -67,18 +70,22 @@ class VALocker(CTk):
     agent_index: IntVar
 
     # Tools Variables
+    num_running_tools: int = 0
     tools_thread_lock: Lock = Lock()
     pause_tools_thread: BooleanVar
     tools_thread_running: BooleanVar
     anti_afk: BooleanVar
+    anti_afk_mode = ANTI_AFK = ANTI_AFK.RANDOM_CENTERED
     # drop_spike: BooleanVar
 
     # UI
     update_frame: UpdateFrame
-    agent_states: dict[str, tuple[BooleanVar, BooleanVar] | BooleanVar]
     frames: Dict[
         FRAME, OverviewFrame | AgentToggleFrame | RandomSelectFrame | SaveFilesFrame
     ] = dict()
+
+    # Settings Frame
+    start_tools_automatically: BooleanVar
 
     def __init__(self) -> None:
         super().__init__()
@@ -124,7 +131,7 @@ class VALocker(CTk):
         """
 
         self.instalocker_thread_running = BooleanVar(
-            value=self.file_manager.get_value(FILE.SETTINGS, "enableOnStartup")
+            value=self.file_manager.get_value(FILE.SETTINGS, "enableOnStartup", False)
         )
 
         self.instalocker_status = BooleanVar(value=True)
@@ -134,12 +141,12 @@ class VALocker(CTk):
         )
 
         self.safe_mode_enabled = BooleanVar(
-            value=self.file_manager.get_value(FILE.SETTINGS, "safeModeOnStartup")
+            value=self.file_manager.get_value(FILE.SETTINGS, "safeModeOnStartup", False)
         )
 
         self.safe_mode_strength = IntVar(
             value=self.file_manager.get_value(
-                FILE.SETTINGS, "safeModeStrengthOnStartup"
+                FILE.SETTINGS, "safeModeStrengthOnStartup", 0
             )
         )
 
@@ -191,6 +198,15 @@ class VALocker(CTk):
         self.tools_thread_running = BooleanVar(value=False)
         self.anti_afk = BooleanVar(value=False)
         # self.drop_spike = BooleanVar(value=False)
+
+        # Settings Vars
+        self.start_tools_automatically = BooleanVar(
+            value=self.file_manager.get_value(FILE.SETTINGS, "startToolsAutomatically", True)
+        )
+        
+        self.anti_afk_mode = ANTI_AFK.from_name(
+            self.file_manager.get_value(FILE.SETTINGS, "antiAfkMode", "Random Centered")
+        )
 
         # region: Traces
 
@@ -291,59 +307,17 @@ class VALocker(CTk):
 
             if go_to_update:
                 self.logger.info("Opening update page")
-                web_open(
-                    "https://www.github.com/E1Bos/VALocker/releases/latest/"
-                )
+                web_open("https://www.github.com/E1Bos/VALocker/releases/latest/")
                 self.exit()
                 sys_exit()
 
         self.updater.update_last_checked()
         self.update_frame.finished_checking_updates()
-        
+
         if force_check_update:
             self.after(1000, lambda x=FRAME.SETTINGS: self.initMainUI(x))
         else:
             self.after(1000, self.initMainUI)
-            
-    def update_stats(self, *_) -> None:
-        """
-        Gets the current stats of the program.
-        """
-        stats = self.file_manager.get_config(FILE.STATS)
-
-        # Set times used
-        times_used = stats.get("timesUsed", 0)
-
-        if not self.safe_mode_enabled.get():
-            time_to_lock = stats.get("timeToLock", None)
-        else:
-            time_to_lock = stats.get("timeToLockSafe", None)
-
-            if time_to_lock is not None:
-                time_to_lock = time_to_lock[self.safe_mode_strength.get()]
-
-        if time_to_lock is None:
-            self.logger.error(
-                "Stats field 'timeToLock' or 'timeToLockSafe' is missing from the stats file"
-            )   
-
-        if time_to_lock is None or len(time_to_lock) == 0:
-            self.times_used.set("N/A")
-            self.average_lock.set("N/A")
-            self.last_lock.set("N/A")
-
-            self.logger.info(
-                "Not enough data to calculate average lock time or last lock time"
-            )
-            return
-
-        if time_to_lock is not None:
-            average_lock = sum(time_to_lock) / len(time_to_lock)
-            last_lock = time_to_lock[-1]
-
-        self.times_used.set(f"{times_used} times")
-        self.average_lock.set(f"{average_lock:.2f} ms")
-        self.last_lock.set(f"{last_lock:.2f} ms")
 
     # region: Thread Management
 
@@ -393,11 +367,24 @@ class VALocker(CTk):
             self.pause_tools_thread.set(True)
             self.tools_thread_running.set(False)
 
+    def autostart_tools(self) -> None:
+        """
+        Automatically starts the tools thread if the tool is activated from the overview frame.
+        """
+        if not self.start_tools_automatically.get():
+            return
+
+        # If no tools are running, disable tools thread
+        if self.num_running_tools == 0:
+            self.toggle_boolean(self.tools_thread_running, False)
+        else: # Enable tools thread
+            self.toggle_boolean(self.tools_thread_running, True)
+
     # endregion
 
     # region: UI
 
-    def initUI(self, force_check_update:bool = False) -> None:
+    def initUI(self, force_check_update: bool = False) -> None:
         """
         Initializes the user interface.
 
@@ -420,7 +407,12 @@ class VALocker(CTk):
                 self.logger.info("Manually checking for updates")
             self.update_frame.pack(fill="both", expand=True)
             self.update()
-            thread = Thread(target=lambda x=force_check_update: self.check_for_updates(force_check_update=x), daemon=True)
+            thread = Thread(
+                target=lambda x=force_check_update: self.check_for_updates(
+                    force_check_update=x
+                ),
+                daemon=True,
+            )
             thread.start()
         else:
             self.initMainUI()
@@ -453,11 +445,11 @@ class VALocker(CTk):
 
         nav_width = 150
         self.nav_frame = NavigationFrame(self, width=150)
-        self.nav_frame.grid(row=0, column=0, sticky="nswe")
+        self.nav_frame.grid(row=0, column=0, sticky=ctk.NSEW)
         self.grid_columnconfigure(0, minsize=nav_width)
 
         for frame in self.frames.values():
-            frame.grid(row=0, column=1, sticky="nswe", padx=(10, 10))
+            frame.grid(row=0, column=1, sticky=ctk.NSEW, padx=10)
 
         self.agent_unlock_status_changed()
         self.select_frame(open_to_frame)
@@ -527,14 +519,15 @@ class VALocker(CTk):
         variable.set(value)
 
     def toggle_boolean_and_run_function(
-        self, variable: BooleanVar, function, value: Optional[bool] = None) -> None:
+        self, variable: BooleanVar, function, value: Optional[bool] = None
+    ) -> None:
         """
         Toggles the value of the given boolean variable and runs the given function.
         """
-        
+
         if value is None:
             value = not variable.get()
-        
+
         variable.set(value)
         function()
 
@@ -625,6 +618,7 @@ class VALocker(CTk):
 
     # endregion
 
+    # region: Locking Functions
     def set_locking_agent(self, *_) -> None:
         """
         Sets the agent index to the selected agent.
@@ -645,6 +639,95 @@ class VALocker(CTk):
                 if len(values) == 1 or values[0].get()
             ]
         )
+
+    def change_locking_config(self, file: LOCKING_CONFIG | str) -> None:
+        self.instalocker.set_locking_config(file)
+
+        if type(file) is LOCKING_CONFIG:
+            file = os.path.basename(file.value)
+
+        self.file_manager.set_value(FILE.SETTINGS, "lockingConfig", file)
+
+    # endregion
+
+    # region: Stats Functions
+
+    def update_stats(self, *_) -> None:
+        """
+        Gets the current stats of the program.
+        """
+        stats = self.file_manager.get_config(FILE.STATS)
+
+        # Set times used
+        times_used = stats.get("timesUsed", 0)
+
+        if not self.safe_mode_enabled.get():
+            time_to_lock = stats.get("timeToLock", None)
+        else:
+            time_to_lock = stats.get("timeToLockSafe", None)
+
+            if time_to_lock is not None:
+                time_to_lock = time_to_lock[self.safe_mode_strength.get()]
+
+        if time_to_lock is None:
+            self.logger.error(
+                "Stats field 'timeToLock' or 'timeToLockSafe' is missing from the stats file"
+            )
+
+        if time_to_lock is None or len(time_to_lock) == 0:
+            self.times_used.set("N/A")
+            self.average_lock.set("N/A")
+            self.last_lock.set("N/A")
+
+            self.logger.info(
+                "Not enough data to calculate average lock time or last lock time"
+            )
+            return
+
+        if time_to_lock is not None:
+            average_lock = sum(time_to_lock) / len(time_to_lock)
+            last_lock = time_to_lock[-1]
+
+        self.times_used.set(f"{times_used} times")
+        self.average_lock.set(f"{average_lock:.2f} ms")
+        self.last_lock.set(f"{last_lock:.2f} ms")
+
+    def add_stat(self, time: float) -> None:
+        """
+        Adds a stat to the stats file.
+
+        Args:
+            time (float): The time it took to lock the agent, in seconds.
+        """
+        time = round(time * 1000, 2)
+
+        stats = self.file_manager.get_config(FILE.STATS)
+
+        time_to_lock: list[float] = []
+        if not self.safe_mode_enabled.get():
+            time_to_lock = stats["timeToLock"]
+        else:
+            time_to_lock = stats["timeToLockSafe"][self.safe_mode_strength.get()]
+
+        time_to_lock.append(time)
+
+        if len(time_to_lock) > 25:
+            time_to_lock.pop(0)
+
+        if not self.safe_mode_enabled.get():
+            stats["timeToLock"] = time_to_lock
+        else:
+            stats["timeToLockSafe"][self.safe_mode_strength.get()] = time_to_lock
+
+        stats["timesUsed"] = stats.get("timesUsed", 0) + 1
+
+        self.file_manager.set_config(FILE.STATS, stats)
+
+        self.update_stats()
+
+    # endregion
+
+    # region: ExclusiSelect Functions
 
     def exclusiselect_update_gui(self) -> None:
         """
@@ -677,7 +760,7 @@ class VALocker(CTk):
                 # Used for other agents
                 self.temp_random_agents[agent_name] = values[1].get()
 
-        # If exlusive select is disabled
+        # If exclusive select is disabled
         else:
             # If the temp_random_agents is None, return (error handling)
             if self.temp_random_agents is None:
@@ -703,55 +786,19 @@ class VALocker(CTk):
         # Update the random select frame to reflect the changes
         self.frames[FRAME.RANDOM_SELECT].on_raise()
 
-    def change_locking_config(self, file: LOCKING_CONFIG | str) -> None:
-        self.instalocker.set_locking_config(file)
+    # endregion
 
-        if type(file) is LOCKING_CONFIG:
-            file = os.path.basename(file.value)
-
-        self.file_manager.set_value(FILE.SETTINGS, "lockingConfig", file)
-
-    def add_stat(self, time: float) -> None:
+    # region: Tools Functions
+    def next_anti_afk_mode(self) -> ANTI_AFK:
         """
-        Adds a stat to the stats file.
-        
-        Args:
-            time (float): The time it took to lock the agent, in seconds.
+        Changes the anti-afk mode to the next mode in the list and returns the new mode.
         """
-        time = round(time * 1000, 2)
-        
-        stats = self.file_manager.get_config(FILE.STATS)
-
-        time_to_lock: list[float] = []
-        if not self.safe_mode_enabled.get():
-            time_to_lock = stats["timeToLock"]
-        else:
-            time_to_lock = stats["timeToLockSafe"][self.safe_mode_strength.get()]
-
-        time_to_lock.append(time)
-
-        if len(time_to_lock) > 25:
-            time_to_lock.pop(0)
-
-        if not self.safe_mode_enabled.get():
-            stats["timeToLock"] = time_to_lock
-        else:
-            stats["timeToLockSafe"][self.safe_mode_strength.get()] = time_to_lock
-
-        stats["timesUsed"] = stats.get("timesUsed", 0) + 1
-
-        self.file_manager.set_config(FILE.STATS, stats)
-
-        self.update_stats()
-
-    def autostart_tools(self) -> None:
-        """
-        Autostarts the tools thread if the tool is activated from the overview frame.
-        """
-        if self.tools_thread_running.get():
-            return
+        self.anti_afk_mode = self.anti_afk_mode.next()
+        self.tools.change_movement_type(self.anti_afk_mode)
+        return self.anti_afk_mode
     
-        self.toggle_boolean(self.tools_thread_running)
+    
+    # endregion
 
 if __name__ == "__main__":
     root = VALocker()
