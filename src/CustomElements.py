@@ -5,7 +5,7 @@
 import customtkinter as ctk
 from PIL import Image
 import os
-from typing import TYPE_CHECKING, Callable, List, Union, Dict, Any
+from typing import TYPE_CHECKING, Callable, List, Optional, Union, Dict, Any
 from Constants import BRIGHTEN_COLOR, RESOURCE_PATH, ICON, FILE
 from abc import abstractmethod
 
@@ -638,6 +638,8 @@ class SaveButton:
             key: kwargs.get(key, self.theme.get(value, value))
             for key, value in self.frame_config.items()
         }
+        
+        frame_config["border_color"] = self.theme["accent"]
 
         icon_config = {
             key: kwargs.get(key, self.theme.get(value, value))
@@ -717,7 +719,7 @@ class SaveButton:
 
     # region: Icon Commands
 
-    def toggle_favorite(self, value: bool = None, reorderList: bool = False) -> None:
+    def toggle_favorite(self, value: Optional[bool] = None, reorderList: Optional[bool] = False) -> None:
         """
         Toggles the favorite status of the element.
 
@@ -733,6 +735,10 @@ class SaveButton:
 
         self.favorite_icon.configure(
             image=self.favorite_on_img if self.favorited else self.favorite_off_img
+        )
+        
+        self.frame.configure(
+            border_width=1 if self.favorited else 0
         )
 
         self.side_frame.favorite_button(self, reorderList=reorderList)
