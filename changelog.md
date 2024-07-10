@@ -5,6 +5,7 @@ Date Format: YYYY-MM-DD
 ## Version 2.0.5 | 2024-07-10
 
 ### Added
+
 - Various settings to the settings tab:
   - Startup
     - Enable Instalocker on startup
@@ -12,19 +13,28 @@ Date Format: YYYY-MM-DD
     - Safe Mode strength on startup
   - General
     - Auto Start Tools (Enabled by default)
-    > Will automatically start the tools thread if a tool is enabled and the tools thread is not running, and will automatically stop the tools thread if no tools are enabled.
+      > Will automatically start the tools thread if a tool is enabled and the tools thread is not running, and will automatically stop the tools thread if no tools are enabled.
     - Anti AFK movement type
-    > The type of movement the anti-afk tool will use. Options are "Random Centered", "Random", "Circle", and "Strafe". Default is set to "Random Centered".
+      > The type of movement the anti-afk tool will use. Options are "Random Centered", "Random", "Circle", and "Strafe". Default is set to "Random Centered".
 
 ### Changes
+
 - Updated rounded corners of some GUI elements to be more consistent with the rest of the GUI.
 - Moved the `ANTI_AFK` enum to `Constants.py`
+
+### Fixed
+
+- Favorited save files would be duplicated when manually updating VALocker.
+- Renaming a favorited save file would not correctly rename it in the settings file causing it to no longer be favorited.
+- Renaming the active save file would not correctly rename it in the settings file causing it to no longer be the active save file.
+- Save files being ordered alphabetically by capital letter, then lowercase letter.
 
 > This is the first time trying out OTA config file updates, previous settings may be overwritten. If you have any issues, please let me know.
 
 ## Version 2.0.0 | 2024-06-15
 
 ### Changes
+
 - Rewrote the entire program from scratch
 - Moved save location to `%APPDATA%/VALocker`
 - Swapped mss for betterDXcam, a fork of DXcam
@@ -33,12 +43,14 @@ Date Format: YYYY-MM-DD
 - Set tools thread to automatically start if a tool is enabled from the overview frame
 
 ## Added
+
 - Automatic over the air updates for config files
 - Automatic downloading for files that are missing/required
 - Support for new resolutions
 - Ability to customize the theme
 
 ## Removed
+
 - Removed Specific Map tab
 - Removed the ability to minimize to tray
 
