@@ -1206,6 +1206,7 @@ class ThemedPopup(ctk.CTkToplevel):
         self.resizable(False, False)
         self.grab_set()  # make other windows not clickable
         self.calculate_position()
+        self.after_idle(self.update)
 
     @abstractmethod
     def create_widgets(self) -> None:
@@ -1244,7 +1245,6 @@ class ThemedPopup(ctk.CTkToplevel):
         """
         self.grab_release()
         self.destroy()
-
 
 class InputDialog(ThemedPopup):
     """
@@ -1420,7 +1420,7 @@ class ConfirmPopup(ThemedPopup):
     confirm: bool
     default_no: bool
 
-    def __init__(self, parent: "VALocker", title: str, message: str, default_no: bool = True, geometry: str = None, **kwargs) -> None:
+    def __init__(self, parent: "VALocker", title: str, message: str, default_no: bool = True, geometry: Optional[str] = None, **kwargs) -> None:
         self.theme = parent.theme
         self.message = message
         self.confirm = False
@@ -1490,11 +1490,11 @@ class ConfirmPopup(ThemedPopup):
         )
 
         if self.default_no:
-            self.bind("<Return>", lambda e: self.cancel_event())
-            self.bind("<Escape>", lambda e: self.cancel_event())
+            self.bind("<Return>", lambda _: self.cancel_event())
+            self.bind("<Escape>", lambda _: self.cancel_event())
         else:
-            self.bind("<Return>", lambda e: self.ok_event())
-            self.bind("<Escape>", lambda e: self.cancel_event())
+            self.bind("<Return>", lambda _: self.ok_event())
+            self.bind("<Escape>", lambda _: self.cancel_event())
 
     def ok_event(self) -> None:
         """
@@ -1523,7 +1523,9 @@ class ConfirmPopup(ThemedPopup):
         Returns:
             bool: The confirmation value entered by the user.
         """
-        self.master.wait_window(self)
+        
+        if self.winfo_exists():
+            self.master.wait_window(self)
         return self.confirm
 
 

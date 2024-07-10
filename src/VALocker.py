@@ -79,12 +79,13 @@ class VALocker(CTk):
     # drop_spike: BooleanVar
 
     # UI
-    update_frame: UpdateFrame
+    update_frame: UpdateFrame = None
     frames: Dict[
         FRAME, OverviewFrame | AgentToggleFrame | RandomSelectFrame | SaveFilesFrame
     ] = dict()
 
     # Settings Frame
+    update_called: bool = False
     start_tools_automatically: BooleanVar
 
     def __init__(self) -> None:
@@ -268,41 +269,30 @@ class VALocker(CTk):
         self.save_data()
 
         # Exits
-        self.destroy()
+        self.after_idle(self.destroy)
         sys_exit()
 
     def check_for_updates(self, force_check_update: bool = False) -> None:
         """
         Checks for updates and performs necessary actions if updates are available.
         """
-        self.logger.info("Checking for config updates")
-
-        for file in self.updater.ITEMS_TO_CHECK:
-            self.updater.check_for_config_update(
-                file, self.update_frame.status_variables[file]
-            )
-
         # Checks for version updates
         self.logger.info("Checking for version updates")
 
-        version_update = None
-
         version_update = self.updater.check_for_version_update(
-            self.update_frame.version_variable
+            main_window=self,
+            stringVar=self.update_frame.version_variable,
         )
 
         # If version update is available
         if version_update is not None:
             self.update_frame.stop_progress()
-
             self.logger.info("Version update available")
-
-            message = f"VALocker v{version_update} is available\nYou're currently on v{self.VERSION}.\nWould you like to be taken to the download page?"
 
             go_to_update = ConfirmPopup(
                 self,
                 title="Update Available",
-                message=message,
+                message=f"VALocker v{version_update} is available\nYou're currently on v{self.VERSION}.\nWould you like to be taken to the download page?",
                 default_no=False,
                 geometry="400x150",
             ).get_input()
@@ -311,7 +301,18 @@ class VALocker(CTk):
                 self.logger.info("Opening update page")
                 web_open("https://www.github.com/E1Bos/VALocker/releases/latest/")
                 self.exit()
-                sys_exit()
+            else:
+                self.logger.info("User chose not to update")
+                self.update_frame.resume_progress()
+
+        self.logger.info("Checking for config updates")
+
+        for file in self.updater.ITEMS_TO_CHECK:
+            self.updater.check_for_config_update(
+                item=file,
+                main_window=self,
+                stringVar=self.update_frame.status_variables[file],
+            )
 
         self.updater.update_last_checked()
         self.update_frame.finished_checking_updates()
@@ -319,12 +320,10 @@ class VALocker(CTk):
         if force_check_update:
             self.after(
                 1000,
-                lambda go_to_frame=FRAME.SETTINGS: self.initMainUI(
-                    go_to_frame
-                ),
+                lambda go_to_frame=FRAME.SETTINGS: self.initMainUI(go_to_frame),
             )
         else:
-            self.after(1000, self.initMainUI)
+            self.after(1000, lambda: self.initMainUI())
 
     # region: Thread Management
 
@@ -405,6 +404,10 @@ class VALocker(CTk):
         self.update_title_and_icon()
         self.configure(fg_color=self.theme["background"])
 
+        if self.update_frame is not None and type(self.update_frame) is UpdateFrame:
+            self.update_frame.destroy()
+            del self.update_frame
+
         self.update_frame = UpdateFrame(self)
 
         if self.updater.check_frequency_met() or force_check_update:
@@ -414,13 +417,10 @@ class VALocker(CTk):
                 self.logger.info("Manually checking for updates")
             self.update_frame.pack(fill="both", expand=True)
             self.update()
-            thread = Thread(
-                target=lambda x=force_check_update: self.check_for_updates(
-                    force_check_update=x
-                ),
-                daemon=True,
-            )
-            thread.start()
+
+            if not self.update_called:
+                self.update_called = True
+                self.check_for_updates(force_check_update=force_check_update)
         else:
             self.initMainUI()
 
@@ -433,33 +433,40 @@ class VALocker(CTk):
         Raises the "Overview" frame by default.
         """
         # self.resizable(False, False)
-        self.update_frame.destroy()
-        del self.update_frame
+        try:
+            self.update_frame.destroy()
+            del self.update_frame
+        except Exception as e:
+            self.logger.error(f"Error destroying update frame: {e}")
+            self.update_frame = None
 
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
         self.grid_propagate(False)
 
-        self.frames = {
-            FRAME.OVERVIEW: OverviewFrame(self),
-            FRAME.AGENT_TOGGLE: AgentToggleFrame(self),
-            FRAME.RANDOM_SELECT: RandomSelectFrame(self),
-            # FRAME.MAP_TOGGLE: MapToggleFrame(self),
-            FRAME.SAVE_FILES: SaveFilesFrame(self),
-            FRAME.TOOLS: ToolsFrame(self),
-            FRAME.SETTINGS: SettingsFrame(self),
-        }
+        if len(self.frames) == 0:
+            self.frames = {
+                FRAME.OVERVIEW: OverviewFrame(self),
+                FRAME.AGENT_TOGGLE: AgentToggleFrame(self),
+                FRAME.RANDOM_SELECT: RandomSelectFrame(self),
+                # FRAME.MAP_TOGGLE: MapToggleFrame(self),
+                FRAME.SAVE_FILES: SaveFilesFrame(self),
+                FRAME.TOOLS: ToolsFrame(self),
+                FRAME.SETTINGS: SettingsFrame(self),
+            }
 
-        nav_width = 150
-        self.nav_frame = NavigationFrame(self, width=150)
-        self.nav_frame.grid(row=0, column=0, sticky=ctk.NSEW)
-        self.grid_columnconfigure(0, minsize=nav_width)
+            nav_width = 150
+            self.nav_frame = NavigationFrame(self, width=150)
+            self.nav_frame.grid(row=0, column=0, sticky=ctk.NSEW)
+            self.grid_columnconfigure(0, minsize=nav_width)
 
         for frame in self.frames.values():
             frame.grid(row=0, column=1, sticky=ctk.NSEW, padx=10)
 
         self.agent_unlock_status_changed()
         self.select_frame(open_to_frame)
+
+        self.update_called = False
 
     def select_frame(self, frame: FRAME) -> None:
         """
