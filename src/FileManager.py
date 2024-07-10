@@ -68,7 +68,7 @@ class FileManager:
         self._read_all_files()
         self._logger.info("File manager setup complete")
 
-        if self.get_value(FILE.SETTINGS, "alreadyMigrated") == False:
+        if self.get_value(FILE.SETTINGS, "alreadyMigrated", False) == False:
             self._logger.info("Files may need to be migrated, checking for old files")
             self._migrate_old_files()
 
@@ -277,8 +277,6 @@ class FileManager:
             "defaultAgents"
         )
 
-        print(default_agents)
-
         agent_status = {}
         for agent in old_agent_unlock:
             if agent.lower() in default_agents:
@@ -413,18 +411,25 @@ class FileManager:
         with open(self._absolute_file_path(file.value), "w") as f:
             self.yaml.dump(self.configs[file], f)
 
-    def get_value(self, file: FILE | LOCKING_CONFIG, key: str) -> any:
+    def get_value(self, file: FILE | LOCKING_CONFIG, key: str, set_value = None) -> any:
         """
         Returns the value of the specified key from the configuration dictionary of the specified file.
 
         Args:
             file (constants.Files): The file enum for which the configuration is required.
             key (str): The key for which the value is required.
+            set_value (any): The value to set for the key if it doesn't exist.
 
         Returns:
             any: The value of the specified key.
         """
-        return self.configs[file].get(key, None)
+        value = self.configs[file].get(key, None)
+        
+        if value is None and set_value is not None:
+            self.set_value(file, key, set_value)
+            return set_value
+        
+        return value
 
     def get_locking_configs(self) -> dict[str, LOCKING_CONFIG]:
         """
