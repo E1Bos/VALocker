@@ -4,6 +4,10 @@ import time
 
 from customtkinter import StringVar
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from VALocker import VALocker
+
 # Custom imports
 from Constants import URL, FOLDER, FILE, LOCKING_CONFIG
 from CustomLogger import CustomLogger
@@ -86,7 +90,7 @@ class Updater:
         return True
 
     def check_for_version_update(
-        self, stringVar: Optional[StringVar] = None
+        self, main_window: "VALocker", stringVar: Optional[StringVar] = None,
     ) -> str | None:
         """
         Checks if an update is available for the agent.
@@ -99,20 +103,24 @@ class Updater:
 
         self._logger.info("Checking for version update")
         stringVar.set("Checking")
+        main_window.update_idletasks()
 
         update_available, latest_version = self.compare_release_versions()
 
         if update_available:
             self._logger.info("New version available, agent needs updating")
             stringVar.set(f"Update Available: {latest_version}")
+            main_window.update_idletasks()
             return latest_version
 
         stringVar.set("Up to date")
+        main_window.update_idletasks()
         return None
 
     def check_for_config_update(
         self,
         item: FILE | FOLDER | LOCKING_CONFIG,
+        main_window: "VALocker",
         stringVar: Optional[StringVar] = None,
     ) -> None:
         if stringVar is None:
@@ -126,16 +134,20 @@ class Updater:
             
             self._logger.info(f"Checking {item.name} for updates")
             innerStringVar.set("Checking")
+            main_window.update()
             update_available = self.compare_yaml_configs(item)
 
             if update_available:
                 self._logger.info(f"{item.name} configuration needs updating")
                 innerStringVar.set("Downloading update...")
+                main_window.update()
                 self._file_manager.update_file(item)
                 innerStringVar.set("Updated")
+                main_window.update()
             else:
                 self._logger.info(f"{item.name} is up to date")
                 innerStringVar.set("Up to date")
+                main_window.update()
         # If checking an entire folder
         elif type(item) is FOLDER:
 
@@ -153,6 +165,7 @@ class Updater:
                     
                     self._logger.info(f"Checking {config_enum.name} for updates")
                     stringVar.set(f"({current_file_num}/{total_files}) Checking")
+                    main_window.update()
 
                     update_available = self.compare_yaml_configs(config_enum)
 
@@ -173,8 +186,10 @@ class Updater:
                     else:
                         self._logger.error(f"Failed to parse config file {config_file}")
                         stringVar.set(f"({current_file_num}/{total_files}) Error")
+                        main_window.update()
                     
                 stringVar.set(f"({current_file_num}/{total_files}) Up to date")
+                main_window.update()
 
     # region: YAML Config Versions
 
