@@ -21,6 +21,7 @@ Date Format: YYYY-MM-DD
 
 - Updated rounded corners of some GUI elements to be more consistent with the rest of the GUI.
 - Moved the `ANTI_AFK` enum to `Constants.py`
+- Favorited save files have a thin accent border around them to make them stand out more.
 
 ### Fixed
 
@@ -28,8 +29,9 @@ Date Format: YYYY-MM-DD
 - Renaming a favorited save file would not correctly rename it in the settings file causing it to no longer be favorited.
 - Renaming the active save file would not correctly rename it in the settings file causing it to no longer be the active save file.
 - Save files being ordered alphabetically by capital letter, then lowercase letter.
+- Save files not being rendered after creating/renaming a safe file
 
-> This is the first time trying out OTA config file updates, previous settings may be overwritten. If you have any issues, please let me know.
+> This is the first time trying out OTA config file updates, previous settings will be overwritten. I have implemented a feature to prevent this is the new update. If you have any issues, please let me know.
 
 ## Version 2.0.0 | 2024-06-15
 
