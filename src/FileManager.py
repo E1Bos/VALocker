@@ -19,7 +19,7 @@ class FileManager:
         update_file(FILE): Update a file by downloading the latest version from the repository.
         get_config(FILE): Returns the configuration dictionary for the specified file.
         set_config(FILE, dict): Sets the configuration dictionary for the specified file.
-    
+
     @author: [E1Bos](https://www.github.com/E1Bos)
     """
 
@@ -161,7 +161,7 @@ class FileManager:
         stats_file = os.path.join(old_dir, "stats.json")
         if os.path.exists(stats_file):
             self._logger.info("Found old stats.json file, migrating to new directory")
-            
+
             with open(stats_file, "r") as f:
                 stats_data: dict = json.load(f)
 
@@ -191,7 +191,7 @@ class FileManager:
             self._logger.info(
                 "Found old user_settings.json file, migrating to new directory"
             )
-            
+
             with open(user_settings_file, "r") as f:
                 user_settings_data: dict = json.load(f)
 
@@ -224,13 +224,13 @@ class FileManager:
             self._logger.info(
                 "Found old save_files directory, migrating to new directory"
             )
-            
+
             for file_name in os.listdir(save_files_dir):
                 full_path = os.path.join(save_files_dir, file_name)
                 self._migrate_old_save_file(full_path, file_name)
 
             self._logger.info(f"Migrated all save files in {save_files_dir}")
-            
+
             # Remove the old save_files dir
             os.rmdir(save_files_dir)
             self._logger.info(f"Deleted {save_files_dir}")
@@ -411,7 +411,7 @@ class FileManager:
         with open(self._absolute_file_path(file.value), "w") as f:
             self.yaml.dump(self.configs[file], f)
 
-    def get_value(self, file: FILE | LOCKING_CONFIG, key: str, set_value = None) -> any:
+    def get_value(self, file: FILE | LOCKING_CONFIG, key: str, set_value=None) -> any:
         """
         Returns the value of the specified key from the configuration dictionary of the specified file.
 
@@ -424,11 +424,11 @@ class FileManager:
             any: The value of the specified key.
         """
         value = self.configs[file].get(key, None)
-        
+
         if value is None and set_value is not None:
             self.set_value(file, key, set_value)
             return set_value
-        
+
         return value
 
     def get_locking_configs(self) -> dict[str, LOCKING_CONFIG]:
@@ -486,11 +486,66 @@ class FileManager:
         # Download the latest version of the file
         data = self._download_file(file)
 
-        self._update_data(data, file)
+        self.update_config_data(file, data)
 
         self._logger.info(f"Updated {file.value} to the latest version")
 
     # endregion
+
+    def update_config_data(
+        self, file: FILE | LOCKING_CONFIG, new_data: dict[str, any]
+    ) -> None:
+        """
+        Update the configuration data in the specified file while preserving user-defined fields.
+        """
+        
+        # Load current configuration
+        with open(self._absolute_file_path(file.value), "r") as f:
+            current_data = self.yaml.load(f)
+
+        # Identify user-defined fields to preserve
+        user_defined_fields = ["field1", "field2"]  # Example fields to preserve
+
+        # Prepare a copy of the current data for fields to preserve
+        preserved_data = {}
+
+        match file:
+            case FILE.SETTINGS:
+                user_defined_fields = [
+                    "theme",
+                    "lockingConfig",
+                    "activeSaveFile",
+                    "favoritedSaveFiles",
+                    "enableOnStartup",
+                    "safeModeOnStartup",
+                    "safeModeStrengthOnStartup",
+                    "alreadyMigrated",
+                ]
+                preserved_data = {
+                    field: current_data[field]
+                    for field in user_defined_fields
+                    if field in current_data
+                }
+            case _:
+                pass
+
+        # Update current configuration with new data
+        current_data.update(new_data)
+
+        # Restore user-defined fields to ensure they are not overwritten
+        current_data.update(preserved_data)
+
+        # Save updated configuration
+        with open(self._absolute_file_path(file.value), "w") as f:
+            self.yaml.dump(current_data, f)
+
+        # Log the update
+        self._logger.info(
+            f"Updated configuration, preserving user-defined fields, in {self._absolute_file_path(file.value)}"
+        )
+
+        # Reload the configuration in memory if necessary
+        self.configs[file] = current_data
 
     def get_files_in_folder(self, folder: FOLDER) -> list[str]:
         """
