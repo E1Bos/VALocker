@@ -1138,9 +1138,13 @@ class SettingsFrame(SideFrame):
     # TODO: Add more settings
     current_locking_config: ctk.StringVar
     backup_locking_config: str = None
+    
+    initUI_called: bool
 
     def __init__(self, parent: "VALocker"):
         super().__init__(parent)
+
+        self.initUI_called = False
 
         scrollable_frame = ThemedScrollableFrame(self, label_text="Settings")
         scrollable_frame.pack(fill="both", expand=True, pady=10)
@@ -1352,7 +1356,17 @@ class SettingsFrame(SideFrame):
         self.parent.file_manager.set_value(FILE.SETTINGS, "antiAfkMode", new_mode.name)
 
     def manual_update(self) -> None:
-        self.parent.initUI(force_check_update=True)
+        if not self.initUI_called:
+            self.initUI_called = True
+            self.update_button.configure(
+                state=ctk.DISABLED
+            )
+            self.parent.initUI(force_check_update=True)
+            
+            self.initUI_called = False
+            self.after(1000, lambda: self.update_button.configure(
+                state=ctk.NORMAL
+            ))
 
     def on_raise(self) -> None:
         pass
@@ -1412,9 +1426,22 @@ class UpdateFrame(ctk.CTkFrame):
         self.progress_bar.start()
 
         self.status_variables = {}
+        
+        version_frame = ThemedFrame(self)
+        version_frame.grid(row=2, column=0, sticky=ctk.NSEW, padx=50, pady=10)
 
+        version_label = ThemedLabel(version_frame, text="Version", font=self.font_size)
+        version_label.pack(side=ctk.LEFT, padx=10, pady=10)
+
+        self.version_variable = ctk.StringVar(value="Waiting")
+        version_status = ThemedLabel(
+            version_frame, textvariable=self.version_variable, font=self.font_size
+        )
+        
+        version_status.pack(side=ctk.RIGHT, padx=10, pady=10)
+        
         for row, file_to_check in enumerate(self.parent.updater.ITEMS_TO_CHECK):
-            row += 2
+            row += 3
 
             file_frame = ThemedFrame(self)
 
@@ -1438,17 +1465,8 @@ class UpdateFrame(ctk.CTkFrame):
 
             self.status_variables[file_to_check] = text_var
 
-        version_frame = ThemedFrame(self)
-        version_frame.grid(row=row + 1, column=0, sticky=ctk.NSEW, padx=50, pady=10)
-
-        version_label = ThemedLabel(version_frame, text="Version", font=self.font_size)
-        version_label.pack(side=ctk.LEFT, padx=10, pady=10)
-
-        self.version_variable = ctk.StringVar(value="Waiting")
-        version_status = ThemedLabel(
-            version_frame, textvariable=self.version_variable, font=self.font_size
-        )
-        version_status.pack(side=ctk.RIGHT, padx=10, pady=10)
+    def resume_progress(self) -> None:
+        self.progress_bar.start()
 
     def stop_progress(self) -> None:
         self.progress_bar.stop()
