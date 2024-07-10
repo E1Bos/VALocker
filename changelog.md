@@ -19,12 +19,15 @@ Date Format: YYYY-MM-DD
 
 ### Changes
 
+- Changed update cycle so that version updates are checked first
+- Modified updater so it does not run on a separate thread
 - Updated rounded corners of some GUI elements to be more consistent with the rest of the GUI.
 - Moved the `ANTI_AFK` enum to `Constants.py`
 - Favorited save files have a thin accent border around them to make them stand out more.
 
 ### Fixed
 
+- Update popup not showing occasionally when a new update is available.
 - Favorited save files would be duplicated when manually updating VALocker.
 - Renaming a favorited save file would not correctly rename it in the settings file causing it to no longer be favorited.
 - Renaming the active save file would not correctly rename it in the settings file causing it to no longer be the active save file.
