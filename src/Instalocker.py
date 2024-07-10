@@ -33,7 +33,7 @@ class Instalocker:
     # Parent
     parent: "VALocker"
 
-    # Lock Confog
+    # Lock Config
     locking_config: dict = dict()
 
     # Locking Variables
@@ -152,7 +152,7 @@ class Instalocker:
             color=lock_config["color"],
         )
 
-        # Wating Config
+        # Waiting Config
         self.waiting_regions = []
         if self.locking_config["waitingRegions"] is not None:
             for region in self.locking_config["waitingRegions"]:
