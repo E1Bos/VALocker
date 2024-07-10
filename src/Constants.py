@@ -1,14 +1,15 @@
 """
 @author: [E1Bos](https://www.github.com/E1Bos)
 """
-
+from __future__ import annotations
 from enum import Enum
 import os
 import sys
 from typing import Optional
 
+
 def RESOURCE_PATH(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller """
+    """Get absolute path to resource, works for dev and for PyInstaller"""
     try:
         # PyInstaller creates a temp folder and stores path in _MEIPASS
         base_path = sys._MEIPASS
@@ -51,6 +52,7 @@ class FOLDER(Enum):
     SETTINGS: str = "settings"
     THEMES: str = "themes"
 
+
 class FILE(Enum):
     """
     Enum for Files used in the project
@@ -62,14 +64,16 @@ class FILE(Enum):
     DEFAULT_SAVE: str = f"{FOLDER.SAVE_FILES.value}/default.yaml"
     DEFAULT_THEME: str = f"{FOLDER.THEMES.value}/default-theme.yaml"
 
+
 class LOCKING_CONFIG(Enum):
     """
     Enum for Locking Configs used in the project
     """
+
     CONFIG_1920_1080_16_9: str = "locking-config-1920-1080-16-9.yaml"
     CONFIG_1650_1080_16_10: str = "locking-config-1680-1050-16-10.yaml"
     CONFIG_1280_1024_5_4: str = "locking-config-1280-1024-5-4.yaml"
-    
+
     # Sets all values to the full path
     def __getattribute__(self, name):
         if name == "value":
@@ -77,9 +81,10 @@ class LOCKING_CONFIG(Enum):
         else:
             return super().__getattribute__(name)
 
+
 class FRAME(Enum):
     """
-    Emum for frame names used in the project
+    Enum for frame names used in the project
     """
 
     OVERVIEW: str = "Overview"
@@ -108,6 +113,46 @@ class ICON(Enum):
             return RESOURCE_PATH(f"images/icons/{super().__getattribute__(name)}")
         else:
             return super().__getattribute__(name)
+
+
+class ANTI_AFK(Enum):
+    """
+    ### Enum for Anti-AFK movement types
+
+    RANDOM: Random key presses
+    RANDOM_CENTERED: Random key presses but end up back in the center
+    CIRCLE: Go in a circle
+    STRAFE: Go right to left
+
+    ### Methods
+    next: Returns the next movement type in the enum
+    """
+
+    RANDOM_CENTERED = "Random Centered"
+    STRAFE = "Strafe"
+    RANDOM = "Random"
+    CIRCLE = "Circle"
+
+    def next(self) -> ANTI_AFK:
+        members = list(ANTI_AFK)
+        current_index = members.index(self)
+        next_index = (current_index + 1) % len(members)
+        return members[next_index]
+
+    @property
+    def index(self) -> int:
+        return list(ANTI_AFK).index(self)
+
+    @classmethod
+    def from_name(cls, name: str) -> ANTI_AFK:
+        """
+        Returns the enum member with the name given, if not found returns the first member.
+        """
+        for member in cls:
+            if member.name == name:
+                return member
+        return next(iter(cls))
+
 
 def GET_WORKING_DIR() -> str:
     """
