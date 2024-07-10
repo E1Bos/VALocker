@@ -810,11 +810,14 @@ class SaveFilesFrame(SideFrame):
             first_time (bool, optional): Only set to true when "SaveFilesFrame" is initiated, since it reads from disk.
             Defaults to False.
         """
+        
+        favorite_button_names = [button.save_file for button in self.favorite_buttons]
+        
         if not first_time:
             for button in self.buttons:
                 button.destroy()
-
-        favorite_button_names = [button.save_file for button in self.favorite_buttons]
+            self.favorite_buttons = []
+            
         if first_time:
             for favorited_save in self.parent.file_manager.get_value(
                 FILE.SETTINGS, "favoritedSaveFiles"
@@ -904,7 +907,7 @@ class SaveFilesFrame(SideFrame):
         Reorders the buttons based on the favorited status and the save name.
         """
         for index, button in enumerate(self.get_button_order()):
-            button.grid(row=index, column=0, pady=5, padx=5, sticky=ctk.EW)
+            button.grid(row=index, column=0, pady=5, padx=5, sticky="EW")
 
     # Button functionality
 
