@@ -801,7 +801,7 @@ class SaveFilesFrame(SideFrame):
         )
         self.new_save_button.pack(side=ctk.RIGHT, pady=(5, 10), padx=0)
 
-    def generate_save_button_list(self, first_time: bool = False) -> None:
+    def generate_save_button_list(self, first_time: Optional[bool] = False) -> None:
         """
         Generates the list of save buttons, which is rendered to the user
         as a list of buttons that represent the save files.
@@ -817,8 +817,7 @@ class SaveFilesFrame(SideFrame):
             for button in self.buttons:
                 button.destroy()
             self.favorite_buttons = []
-            
-        if first_time:
+        else:
             for favorited_save in self.parent.file_manager.get_value(
                 FILE.SETTINGS, "favoritedSaveFiles"
             ):
