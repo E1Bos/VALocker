@@ -2,32 +2,57 @@
 
 Date Format: YYYY-MM-DD
 
-## Version 2.0.0 - 2024-06-15
+## Version 2.0.5 | 2024-07-10
 
+### Added
+- Various settings to the settings tab:
+  - Startup
+    - Enable Instalocker on startup
+    - Enable Safe Mode on startup
+    - Safe Mode strength on startup
+  - General
+    - Auto Start Tools (Enabled by default)
+    > Will automatically start the tools thread if a tool is enabled and the tools thread is not running, and will automatically stop the tools thread if no tools are enabled.
+    - Anti AFK movement type
+    > The type of movement the anti-afk tool will use. Options are "Random Centered", "Random", "Circle", and "Strafe". Default is set to "Random Centered".
+
+### Changes
+- Updated rounded corners of some GUI elements to be more consistent with the rest of the GUI.
+- Moved the `ANTI_AFK` enum to `Constants.py`
+
+> This is the first time trying out OTA config file updates, previous settings may be overwritten. If you have any issues, please let me know.
+
+## Version 2.0.0 | 2024-06-15
+
+### Changes
 - Rewrote the entire program from scratch
-- Added automatic over the air updates for config files
-- Added automatic downloading for files that are missing/required
 - Moved save location to `%APPDATA%/VALocker`
-- Added support for new resolutions
 - Swapped mss for betterDXcam, a fork of DXcam
 - Improved how the UI looks
-- Made GUI more responsive by adding buttin highlights
-- Added the ability to customize the theme
-- Removed Specific Map tab
-- Removed the ability to minimize to tray
+- Made GUI more responsive by adding button highlights
 - Set tools thread to automatically start if a tool is enabled from the overview frame
 
-## Version 1.6.0 - 2024-04-02
+## Added
+- Automatic over the air updates for config files
+- Automatic downloading for files that are missing/required
+- Support for new resolutions
+- Ability to customize the theme
+
+## Removed
+- Removed Specific Map tab
+- Removed the ability to minimize to tray
+
+## Version 1.6.0 | 2024-04-02
 
 > Modified the repo to remove any instance of my full name. License has not changed, but goes under my username (E1Bos) instead of legal name. Changelog will still have information on previous commits but the commits have been squashed and all previous releases have been removed.
 
-## Version 1.5.15 - 2024-04-01
+## Version 1.5.15 | 2024-04-01
 
 ### Fixed
 
 - Can detect top of banner to return to the "Locking State". The color was slightly modified.
 
-## Version 1.5.14 - 2024-03-28
+## Version 1.5.14 | 2024-03-28
 
 ### Added
 
@@ -37,13 +62,13 @@ Date Format: YYYY-MM-DD
 
 - Slightly modified UI to fix width issue with the Safe Mode button.
 
-## Version 1.5.13 - 2023-12-18
+## Version 1.5.13 | 2023-12-18
 
 ### Changed
 
 - Removed unnecessary python dependencies and updated to Python 3.11.
 
-## Version 1.5.12 - 2023-10-02
+## Version 1.5.12 | 2023-10-02
 
 ### Added
 
@@ -51,27 +76,27 @@ Date Format: YYYY-MM-DD
 
 > I am currently working on a laptop, so there is a chance that VALocker isn't functioning properly. There is nothing I can do about this.
 
-## Version 1.5.11 - 2023-09-28
+## Version 1.5.11 | 2023-09-28
 
 ### Fixed
 
 - Fixed version number. VALocker v1.5.10 was stuck asking users to update their version, even though they were on the latest version. This was due to the version number being set to 1.5.9 instead of 1.5.10. This has been fixed with this new release.
 
-## Version 1.5.10 - 2023-09-16
+## Version 1.5.10 | 2023-09-16
 
 ### Fixed
 
 - Fixed the "On" button for safe mode being red if safe mode is enabled on startup and instalocking is disabled.
 - Fixed the `user_settings.json` file not being created if it does not exist, leading to the program just crashing over and over.
 
-## Version 1.5.9 - 2023-09-01
+## Version 1.5.9 | 2023-09-01
 
 ### Added
 
 - Support for new Sunset map, old save files will automatically update themselves to include the new map without user input or data loss.
 - Sunset image added to map images.
 
-## Version 1.5.8 - 2023-08-29
+## Version 1.5.8 | 2023-08-29
 
 ### Added
 
@@ -87,17 +112,16 @@ Date Format: YYYY-MM-DD
 
 - Toggle agent tab and random agent tab would not update when loading a save file or creating a new save file. This was due to the GUI being rewritten. This has been fixed.
 
-## Version 1.5.7 - 2023-08-22
+## Version 1.5.7 | 2023-08-22
 
 ### Changed
 
 - GUI boot speeds have been improved. The GUI should now load in ~1.5 seconds (confirmed running `VALocker.pyw`), compared to the previous ~5-6 seconds. Previously, the GUI had to be updated after being created to display the correct information. The GUI creation function has been modified and the GUI is now ready-to-go after being created.
-  > This improvement is NOT seen when running `VALocker.exe`, however, when built using onedir instead of onefile, the GUI should load in ~1.5 seconds.
 - Hover mode no longer moves the mouse over the lock button. This stops you from accidentally clicking and locking your agent.
 - Uses faster screenshot method, you should lock your agent even faster.
 - Using the .get method, user settings are no longer reset to default values whenever new settings are added. All setting should persist between updates. If you are updating from a version prior to 1.5.7, your settings will be reset to default values. If you are updating from a version after 1.5.7, your settings will be preserved.
 
-## Version 1.5.6 - 2023-08-14
+## Version 1.5.6 | 2023-08-14
 
 ### Added
 
@@ -110,9 +134,9 @@ Date Format: YYYY-MM-DD
 
 ### Fixed
 
-- VALocker would not switch to "Locking" when unranked and playing comp.
+- VALocker would not switch to "Locking" when not ranked and playing comp.
 
-## Version 1.5.5 - 2023-08-08
+## Version 1.5.5 | 2023-08-08
 
 ### Added
 
@@ -123,7 +147,7 @@ Date Format: YYYY-MM-DD
 
 - VALocker would not switch back to "Locking" right after a game because the text was moved slightly. This has been fixed.
 
-## Version 1.5.4 - 2023-08-01
+## Version 1.5.4 | 2023-08-01
 
 ### Added
 
@@ -134,13 +158,13 @@ Date Format: YYYY-MM-DD
 
 - Default keybinds now stored in the config.json file instead of its own file.
 
-## Version 1.5.3 - 2023-08-01
+## Version 1.5.3 | 2023-08-01
 
 ### Added
 
 - Added settings tab, allowing the user to change most settings without having to edit the user settings file.
 
-## Version 1.5.2 - 2023-07-11
+## Version 1.5.2 | 2023-07-11
 
 ### Added
 
@@ -150,14 +174,14 @@ Date Format: YYYY-MM-DD
 
 - Default locking confirmations changed from 2 to 3.
 
-## Version 1.5.1 - 2023-07-11
+## Version 1.5.1 | 2023-07-11
 
 ### Fixed
 
 - Instalocker would select wrong agent when a new agent was unlocked. The coords were not recalculated.
 - Fixed padding on tools tab.
 
-## Version 1.5.0 - 2023-07-08
+## Version 1.5.0 | 2023-07-08
 
 ### Added
 
@@ -166,20 +190,20 @@ Date Format: YYYY-MM-DD
 - VALocker now grabs your current game resolution. At the moment, it brings up a error message if the resolution is not 1920x1080, but in the future this feature will be expanded to detect the game resolution and adjust the pixel data accordingly.
 - If the instalocker is running, tools will only run if the instalocker is in the "In Game" state. This is to prevent tools from running while attempting to lock.
 
-## Version 1.4.3 - 2023-07-05
+## Version 1.4.3 | 2023-07-05
 
 ### Changes
 
 - Updated almost all game methods (locking, waiting, tools, etc.) to compare pixel data instead of image data. This should improve performance, reduces file size, and makes implementing new tools easier. Maps are still compared using image data, as I'm not sure how to compare pixel data for maps yet.
 - Updated the layout of the tools tab to appear similar to the save file tab.
 
-## Version 1.4.2 - 2023-07-03
+## Version 1.4.2 | 2023-07-03
 
 ### Fixed
 
 - Occasionally, while flashed, the instalocker would return to "Locking", this has been fixed by requiring multiple consecutive frames to match before returning to "Locking".
 
-## Version 1.4.1 - 2023-06-29
+## Version 1.4.1 | 2023-06-29
 
 ### Added
 
@@ -187,7 +211,7 @@ Date Format: YYYY-MM-DD
 - Tools run independently of the locking thread, so you can use tools without locking agents. To enable them, go to the tools tab and ensure the button at the top of the screen says "Tools Enabled".
 - New tool, auto drop spike, automatically detects when you are the spike carrier and drops the spike. This is useful if you don't want to be the spike carrier, but don't want to drop the spike manually, or if players keep dropping you the spike. If you pick up the spike on site, or if you are planting, the spike will not be dropped. I plan to update it in the future so that it automatically disables when you are the last player alive.
 
-## Version 1.4.0 - 2023-06-28
+## Version 1.4.0 | 2023-06-28
 
 ### Added
 
@@ -199,7 +223,7 @@ Date Format: YYYY-MM-DD
 - Fixed bug where icons would not update after locking or detecting the end of a game.
 - Fixed various minor bugs.
 
-## Version 1.3.2 - 2023-06-25
+## Version 1.3.2 | 2023-06-25
 
 ### Added
 
@@ -210,7 +234,7 @@ Date Format: YYYY-MM-DD
 
 - Old icons, which were somewhat confusing when Valorant was running.
 
-## Version 1.3.0 - 2023-06-24
+## Version 1.3.0 | 2023-06-24
 
 ### Added
 
@@ -228,13 +252,13 @@ Date Format: YYYY-MM-DD
 - Fixed bug where the role checkboxes in the random agent tab would not deselect when a new agent was unlocked in the agent toggle tab.
 - Fixed bug where map dropdown would expand when an agent with a long name was selected. (i.e. Brimstone)
 
-## Version 1.2.5 - 2023-06-24
+## Version 1.2.5 | 2023-06-24
 
 ### Added
 
 - Added automatic releases and automatic compilation to exe. Releases can be found [here](https://github.com/E1Bos/VALocker/releases).
 
-## Version 1.2.2 - 2023-06-22
+## Version 1.2.2 | 2023-06-22
 
 ### Added
 
