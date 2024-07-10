@@ -531,7 +531,8 @@ class FileManager:
         current_data.update(new_data)
 
         # Restore user-defined fields to ensure they are not overwritten
-        current_data.update(preserved_data)
+        for key in preserved_data:
+            current_data[key] = preserved_data[key]
 
         # Save updated configuration
         with open(self._absolute_file_path(file.value), "w") as f:
