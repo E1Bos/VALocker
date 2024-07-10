@@ -1,6 +1,6 @@
 # --------------------------------------------------
 # Version of the settings config
-version: 1.0.0
+version: 1.0.1
 # --------------------------------------------------
 # Time since the last check for updates, in epoch time
 lastChecked: 0
@@ -37,8 +37,11 @@ safeModeTimings:
 # Whether to show the default save file
 hideDefaultSave: false
 # --------------------------------------------------
+# Whether to automatically start the tools thread
+startToolsAutomatically: true
+# --------------------------------------------------
 # The anti-afk mode
-antiAfkMode: forward
+antiAfkMode: Random Centered
 # --------------------------------------------------
 # Whether files have already been migrated
 alreadyMigrated: false
