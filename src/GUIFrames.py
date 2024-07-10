@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 # Custom Imports
 from Constants import BRIGHTEN_COLOR, FILE, FRAME
+from Tools import ANTI_AFK
 from CustomElements import *
 
 
@@ -164,7 +165,7 @@ class OverviewFrame(SideFrame):
             frame.grid(
                 row=0,
                 column=index,
-                sticky="nsew",
+                sticky=ctk.NSEW,
                 padx=10 if index == 1 else 0,
                 pady=10,
             )
@@ -176,7 +177,9 @@ class OverviewFrame(SideFrame):
             left_frame,
             text="Instalocker",
         )
-        program_status_label.grid(row=0, column=0, sticky="nsew", padx=10, pady=(10, 0))
+        program_status_label.grid(
+            row=0, column=0, sticky=ctk.NSEW, padx=10, pady=(10, 0)
+        )
 
         program_status_button = IndependentButton(
             left_frame,
@@ -188,12 +191,12 @@ class OverviewFrame(SideFrame):
         )
 
         program_status_button.grid(
-            row=1, column=0, sticky="nsew", padx=10, pady=(0, 10)
+            row=1, column=0, sticky=ctk.NSEW, padx=10, pady=(0, 10)
         )
 
         instalocker_status_label = ThemedLabel(left_frame, "Status")
         instalocker_status_label.grid(
-            row=2, column=0, sticky="nsew", padx=10, pady=(10, 0)
+            row=2, column=0, sticky=ctk.NSEW, padx=10, pady=(10, 0)
         )
 
         instalocker_status_button = DependentButton(
@@ -205,11 +208,11 @@ class OverviewFrame(SideFrame):
         )
 
         instalocker_status_button.grid(
-            row=3, column=0, sticky="nsew", padx=10, pady=(0, 10)
+            row=3, column=0, sticky=ctk.NSEW, padx=10, pady=(0, 10)
         )
 
         safe_mode_label = ThemedLabel(left_frame, "Safe Mode")
-        safe_mode_label.grid(row=4, column=0, sticky="nsew", padx=10, pady=(10, 0))
+        safe_mode_label.grid(row=4, column=0, sticky=ctk.NSEW, padx=10, pady=(10, 0))
 
         safe_mode_button = SplitButton(
             left_frame,
@@ -224,10 +227,10 @@ class OverviewFrame(SideFrame):
                 self.parent.safe_mode_strength, 3
             ),
         )
-        safe_mode_button.grid(row=5, column=0, sticky="nsew", padx=10, pady=(0, 10))
+        safe_mode_button.grid(row=5, column=0, sticky=ctk.NSEW, padx=10, pady=(0, 10))
 
         save_label = ThemedLabel(left_frame, "Current Save")
-        save_label.grid(row=6, column=0, sticky="nsew", padx=10, pady=(10, 0))
+        save_label.grid(row=6, column=0, sticky=ctk.NSEW, padx=10, pady=(10, 0))
 
         save_button = ThemedButton(
             left_frame,
@@ -236,24 +239,26 @@ class OverviewFrame(SideFrame):
             textvariable=self.parent.current_save_name,
             command=self.redirect_save_files_frame,
         )
-        save_button.grid(row=7, column=0, sticky="nsew", padx=10, pady=(0, 10))
+        save_button.grid(row=7, column=0, sticky=ctk.NSEW, padx=10, pady=(0, 10))
 
         # endregion
 
         # region: Middle Frame
 
         agent_label = ThemedLabel(middle_frame, "Selected Agent")
-        agent_label.grid(row=0, column=0, sticky="nsew", padx=10, pady=(10, 0))
+        agent_label.grid(row=0, column=0, sticky=ctk.NSEW, padx=10, pady=(10, 0))
 
         self.agent_dropdown = ThemedDropdown(
             middle_frame,
             values=[],
             variable=self.parent.selected_agent,
         )
-        self.agent_dropdown.grid(row=1, column=0, sticky="nsew", padx=10, pady=(0, 10))
+        self.agent_dropdown.grid(
+            row=1, column=0, sticky=ctk.NSEW, padx=10, pady=(0, 10)
+        )
 
         options_label = ThemedLabel(middle_frame, "Options")
-        options_label.grid(row=2, column=0, sticky="nsew", padx=10, pady=(10, 0))
+        options_label.grid(row=2, column=0, sticky=ctk.NSEW, padx=10, pady=(10, 0))
 
         hover_button = IndependentButton(
             middle_frame,
@@ -261,7 +266,7 @@ class OverviewFrame(SideFrame):
             variable=self.parent.hover,
             command=lambda: self.parent.toggle_boolean(self.parent.hover),
         )
-        hover_button.grid(row=3, column=0, sticky="nsew", padx=10)
+        hover_button.grid(row=3, column=0, sticky=ctk.NSEW, padx=10)
 
         random_agent_button = ColorDependentButton(
             middle_frame,
@@ -270,7 +275,7 @@ class OverviewFrame(SideFrame):
             dependent_variable=self.parent.random_select_available,
             command=lambda: self.parent.toggle_boolean(self.parent.random_select),
         )
-        random_agent_button.grid(row=4, column=0, sticky="nsew", padx=10, pady=10)
+        random_agent_button.grid(row=4, column=0, sticky=ctk.NSEW, padx=10, pady=10)
 
         # map_specific_button = IndependentButton(
         #     middle_frame,
@@ -279,7 +284,7 @@ class OverviewFrame(SideFrame):
         #     command=lambda: self.parent.toggle_boolean(self.parent.map_specific),
         #     state=ctk.DISABLED,
         # )
-        # map_specific_button.grid(row=5, column=0, sticky="nsew", padx=10)
+        # map_specific_button.grid(row=5, column=0, sticky=ctk.NSEW, padx=10)
 
         tools_button = ThemedButton(
             middle_frame,
@@ -289,45 +294,47 @@ class OverviewFrame(SideFrame):
             hover_color=self.theme["foreground-highlight-hover"],
             command=self.redirect_tools_frame,
         )
-        tools_button.grid(row=5, column=0, sticky="nsew", padx=10, pady=(10, 5))
+        tools_button.grid(row=5, column=0, sticky=ctk.NSEW, padx=10, pady=(10, 5))
 
         anti_afk_button = IndependentButton(
             middle_frame,
             text="Anti-AFK",
             variable=self.parent.anti_afk,
-            command=lambda: self.parent.toggle_boolean_and_run_function(self.parent.anti_afk, self.parent.autostart_tools),
+            command=lambda: self.parent.toggle_boolean_and_run_function(
+                self.parent.anti_afk, self.parent.autostart_tools
+            ),
         )
-        anti_afk_button.grid(row=7, column=0, sticky="nsew", padx=10)
+        anti_afk_button.grid(row=7, column=0, sticky=ctk.NSEW, padx=10)
 
         # endregion
 
         # region: Right Frame
         last_lock_label = ThemedLabel(right_frame, "Last Lock")
-        last_lock_label.grid(row=0, column=0, sticky="nsew", padx=10, pady=(10, 0))
+        last_lock_label.grid(row=0, column=0, sticky=ctk.NSEW, padx=10, pady=(10, 0))
 
         last_lock_stat = ThemedLabel(
             right_frame,
             variable=self.parent.last_lock,
         )
-        last_lock_stat.grid(row=1, column=0, sticky="nsew", padx=10, pady=(0, 10))
+        last_lock_stat.grid(row=1, column=0, sticky=ctk.NSEW, padx=10, pady=(0, 10))
 
         average_lock_label = ThemedLabel(right_frame, "Average Lock")
-        average_lock_label.grid(row=2, column=0, sticky="nsew", padx=10, pady=(10, 0))
+        average_lock_label.grid(row=2, column=0, sticky=ctk.NSEW, padx=10, pady=(10, 0))
 
         average_lock_stat = ThemedLabel(
             right_frame,
             variable=self.parent.average_lock,
         )
-        average_lock_stat.grid(row=3, column=0, sticky="nsew", padx=10, pady=(0, 10))
+        average_lock_stat.grid(row=3, column=0, sticky=ctk.NSEW, padx=10, pady=(0, 10))
 
         times_used_label = ThemedLabel(right_frame, "Times Used")
-        times_used_label.grid(row=4, column=0, sticky="nsew", padx=10, pady=(10, 0))
+        times_used_label.grid(row=4, column=0, sticky=ctk.NSEW, padx=10, pady=(10, 0))
 
         times_used_stat = ThemedLabel(
             right_frame,
             variable=self.parent.times_used,
         )
-        times_used_stat.grid(row=5, column=0, sticky="nsew", padx=10, pady=(0, 10))
+        times_used_stat.grid(row=5, column=0, sticky=ctk.NSEW, padx=10, pady=(0, 10))
 
         # endregion
 
@@ -434,10 +441,10 @@ class AgentToggleFrame(SideFrame):
                 command=self.toggle_single_agent,
             )
 
-            xpadding = (
+            padx = (
                 (30, 10) if col == 0 else (10, 30) if col == NUMBER_OF_COLS - 1 else 10
             )
-            ypadding = (
+            pady = (
                 (20, 5)
                 if row == 0
                 else (
@@ -451,7 +458,7 @@ class AgentToggleFrame(SideFrame):
             self.specific_agent_frame.grid_columnconfigure(col, weight=1)
 
             self.agent_checkboxes[agent_name].grid(
-                row=row, column=col, sticky="nsew", padx=xpadding, pady=ypadding
+                row=row, column=col, sticky=ctk.NSEW, padx=padx, pady=pady
             )
 
     def toggle_all(self) -> None:
@@ -653,8 +660,8 @@ class RandomSelectFrame(SideFrame):
                     command=lambda: self.toggle_agent(True),
                 )
 
-                ypad = 5 if row == 0 else (0, 5)
-                self.agent_checkboxes[role][agent_name].pack(pady=ypad)
+                pady = 5 if row == 0 else (0, 5)
+                self.agent_checkboxes[role][agent_name].pack(pady=pady)
 
         self.update_super_checkboxes()
 
@@ -1045,7 +1052,7 @@ class ToolsFrame(SideFrame):
             self,
             text=["Tools: Enabled", "Tools: Disabled"],
             variable=self.tool_status,
-            command=lambda: self.parent.toggle_boolean(self.tool_status),
+            command=lambda: self.parent.manual_toggle_tools(self.tool_status),
             corner_radius=10,
         )
         toggle_tool_status.pack(side=ctk.TOP, fill=ctk.X, pady=(10, 0), padx=0)
@@ -1063,11 +1070,28 @@ class ToolsFrame(SideFrame):
                 scrollable_tools_frame,
                 text=tool,
                 variable=var,
-                command=lambda tool=var: self.parent.toggle_boolean(tool),
+                corner_radius=10,
+                command=lambda tool_var=var: self.toggle_tool(tool_var),
             )
             button.grid(row=index, column=0, padx=10, pady=10, sticky=ctk.NSEW)
 
             self.tool_buttons[tool] = button
+
+    def toggle_tool(self, tool_var: ctk.BooleanVar) -> None:
+        """
+        Toggles the state of the specified tool.
+
+        Args:
+            tool_var (ctk.BooleanVar): The tool to be toggled.
+        """
+        self.parent.toggle_boolean(tool_var)
+        
+        if tool_var.get():
+            self.parent.num_running_tools += 1
+        else:
+            self.parent.num_running_tools -= 1
+        
+        self.parent.autostart_tools()
 
     def on_raise(self) -> None:
         pass
@@ -1080,7 +1104,7 @@ class ToolsFrame(SideFrame):
 
 
 class SettingsFrame(SideFrame):
-    # TODO: Finish settings frame
+    # TODO: Add more settings
     current_locking_config: ctk.StringVar
     backup_locking_config: str = None
 
@@ -1090,18 +1114,42 @@ class SettingsFrame(SideFrame):
         scrollable_frame = ThemedScrollableFrame(self, label_text="Settings")
         scrollable_frame.pack(fill="both", expand=True, pady=10)
 
-        # region: Update
+        # region: Variables
+
+        settings_file: dict[str, any] = self.parent.file_manager.get_config(
+            FILE.SETTINGS
+        )
+
+        self.enable_on_startup = ctk.BooleanVar(
+            value=settings_file.get("enableOnStartup")
+        )
+        self.safe_mode_on_startup = ctk.BooleanVar(
+            value=settings_file.get("safeModeOnStartup")
+        )
+        self.safe_mode_strength_on_startup = ctk.IntVar(
+            value=settings_file.get("safeModeStrengthOnStartup")
+        )
+
+        self.start_tools_automatically = parent.start_tools_automatically
+        
+        self.anti_afk_mode: ANTI_AFK = parent.anti_afk_mode
+        self.anti_afk_mode_intvar = ctk.IntVar(value=self.anti_afk_mode.index)
+
+        # endregion
+
+        # region: Update Section
 
         self.update_button = ThemedButton(
             scrollable_frame,
             text="Check for Updates",
             command=self.manual_update,
+            corner_radius=10,
         )
         self.update_button.pack(padx=5, pady=5, fill=ctk.X)
 
         # endregion
 
-        # region: Locking Config
+        # region: Locking Config Section
         locking_configs = self.parent.file_manager.get_locking_configs()
         self.current_locking_config = ctk.StringVar(
             value=self.parent.file_manager.get_locking_config_by_file_name(
@@ -1121,6 +1169,7 @@ class SettingsFrame(SideFrame):
 
         self.locking_config_dropdown = ThemedDropdown(
             locking_config_frame,
+            corner_radius=10,
             variable=self.current_locking_config,
             values=list(locking_configs.keys()),
         )
@@ -1129,13 +1178,99 @@ class SettingsFrame(SideFrame):
 
         # endregion
 
-        # on_startup_frame = ThemedFrame(
-        #     scrollable_frame, fg_color=self.parent.theme["foreground-highlight"]
-        # )
-        # on_startup_frame.pack(fill=ctk.X, pady=10)
+        # region: General Settings Section
 
-        # on_startup_label = ThemedLabel(on_startup_frame, text="On Startup:")
-        # on_startup_label.pack(padx=10, pady=5, side=ctk.TOP)
+        general_settings_frame = ThemedFrame(
+            scrollable_frame, fg_color=self.parent.theme["foreground-highlight"]
+        )
+        general_settings_frame.pack(fill=ctk.X, pady=10, ipady=5)
+
+        general_settings_frame.grid_columnconfigure((0, 1), weight=1, uniform="group1")
+
+        general_settings_label = ThemedLabel(
+            general_settings_frame, text="General Settings:"
+        )
+        general_settings_label.grid(
+            row=0, column=0, sticky=ctk.NSEW, columnspan=2, padx=10, pady=(10, 5)
+        )
+
+        self.start_tools_automatically_button = IndependentButton(
+            general_settings_frame,
+            text=["Tools Start Automatically", "Tools Start Manually"],
+            variable=self.start_tools_automatically,
+            command=lambda: self.change_setting(
+                "startToolsAutomatically", self.start_tools_automatically
+            ),
+        )
+        self.start_tools_automatically_button.grid(
+            row=1, column=0, sticky=ctk.NSEW, padx=10, pady=5
+        )
+
+        self.anti_afk_mode_button = MultiTextIndependentButton(
+            general_settings_frame,
+            prefix="Anti-AFK Mode: ",
+            text=[enum.value for enum in ANTI_AFK],
+            variable=self.anti_afk_mode_intvar,
+            command=self.next_anti_afk_mode,
+        )
+        self.anti_afk_mode_button.grid(
+            row=1, column=1, padx=10, pady=5, sticky=ctk.NSEW
+        )
+
+        # endregion
+
+        # region: On Startup Section
+
+        on_startup_frame = ThemedFrame(
+            scrollable_frame, fg_color=self.parent.theme["foreground-highlight"]
+        )
+        on_startup_frame.pack(fill=ctk.X, pady=10, ipady=5)
+
+        on_startup_frame.grid_columnconfigure((0, 1), weight=1, uniform="group1")
+
+        on_startup_label = ThemedLabel(on_startup_frame, text="On Startup:")
+        on_startup_label.grid(
+            row=0, column=0, sticky=ctk.NSEW, columnspan=2, padx=10, pady=(10, 5)
+        )
+
+        self.enable_on_startup_button = IndependentButton(
+            on_startup_frame,
+            text=["Instalocker Enabled", "Instalocker Disabled"],
+            variable=self.enable_on_startup,
+            command=lambda: self.change_setting(
+                "enableOnStartup", self.enable_on_startup
+            ),
+        )
+        self.enable_on_startup_button.grid(
+            row=1, column=0, sticky=ctk.NSEW, padx=10, pady=5
+        )
+
+        self.safe_mode_on_startup_button = IndependentButton(
+            on_startup_frame,
+            text=["Safe Mode Enabled", "Safe Mode Disabled"],
+            variable=self.safe_mode_on_startup,
+            command=lambda: self.change_setting(
+                "safeModeOnStartup", self.safe_mode_on_startup
+            ),
+        )
+        self.safe_mode_on_startup_button.grid(
+            row=1, column=1, sticky=ctk.NSEW, padx=10, pady=5
+        )
+
+        self.safe_mode_strength_on_startup_button = MultiTextIndependentButton(
+            on_startup_frame,
+            prefix="Safe Mode Strength: ",
+            text=["Low", "Medium", "High"],
+            variable=self.safe_mode_strength_on_startup,
+            command=lambda: self.increment_setting(
+                "safeModeStrengthOnStartup", self.safe_mode_strength_on_startup, 3
+            ),
+        )
+        self.safe_mode_strength_on_startup_button.grid(
+            row=2, column=0, padx=10, pady=5, sticky=ctk.NSEW
+        )
+
+        # endregion
 
     def change_locking_config(self, *_, backup: bool = False) -> None:
         if backup:
@@ -1160,11 +1295,30 @@ class SettingsFrame(SideFrame):
             ErrorPopup(
                 self.parent,
                 message=f'Error loading config "{config_title}"\nCheck the logs for more information',
-                size="400x100"
+                size="400x100",
             )
 
-    def change_setting(self, setting: str, value: Any) -> None:
-        self.parent.file_manager.set_value(FILE.SETTINGS, setting, value)
+    def change_setting(self, setting: str, variable: ctk.BooleanVar) -> None:
+        variable.set(not variable.get())
+        self.parent.file_manager.set_value(FILE.SETTINGS, setting, variable.get())
+
+    def increment_setting(
+        self, setting: str, variable: ctk.IntVar, max_value: int
+    ) -> None:
+        next_value = variable.get() + 1
+
+        if next_value == max_value:
+            variable.set(0)
+        else:
+            variable.set(next_value)
+
+        self.parent.file_manager.set_value(FILE.SETTINGS, setting, variable.get())
+
+    def next_anti_afk_mode(self) -> None:
+        new_mode = self.parent.next_anti_afk_mode()
+        self.anti_afk_mode = new_mode
+        self.anti_afk_mode_intvar.set(new_mode.index)
+        self.parent.file_manager.set_value(FILE.SETTINGS, "antiAfkMode", new_mode.name)
 
     def manual_update(self) -> None:
         self.parent.initUI(force_check_update=True)
@@ -1210,7 +1364,7 @@ class UpdateFrame(ctk.CTkFrame):
             text="Checking for Updates",
             font=(self.theme["font"], 20),
         )
-        self.update_label.grid(row=0, column=0, sticky="nsew", padx=10, pady=(20, 5))
+        self.update_label.grid(row=0, column=0, sticky=ctk.NSEW, padx=10, pady=(20, 5))
 
         self.progress_bar = ctk.CTkProgressBar(
             self,
