@@ -1,7 +1,7 @@
 import time
 import threading
-from enum import Enum, auto
 import random
+from Constants import ANTI_AFK
 
 from typing import TYPE_CHECKING, Optional
 
@@ -9,17 +9,11 @@ if TYPE_CHECKING:
     from VALocker import VALocker
 
 from customtkinter import BooleanVar
-# import pynput.mouse as pynmouse
 import pynput.keyboard as pynkeyboard
+# import pynput.mouse as pynmouse
 
 # Custom Imports
 from CustomLogger import CustomLogger
-
-class ANTI_AFK(Enum):
-    RANDOM = auto()
-    RANDOM_CENTERED = auto()
-    CIRCLE = auto()
-    STRAFE = auto()
 
 class Tools():
     """
@@ -29,7 +23,6 @@ class Tools():
     logger = CustomLogger("Tools").get_logger()
     
     stop_flag = False
-    
     tools_input: bool = False
     
     keybinds = {
@@ -39,9 +32,8 @@ class Tools():
             "MoveLeft": "a",
         }
     
-    movement_type: ANTI_AFK = ANTI_AFK.RANDOM_CENTERED
+    movement_type: ANTI_AFK
     anti_afk: BooleanVar
-    drop_spike = BooleanVar
     
     keyboard: pynkeyboard.Controller = pynkeyboard.Controller()
     keyboard_listener: pynkeyboard.Listener = None
@@ -53,6 +45,7 @@ class Tools():
     
     def __init__(self, parent:"VALocker"):
         self.anti_afk = parent.anti_afk
+        self.movement_type = parent.anti_afk_mode
         self.keyboard_listener = None
         self.stop_event = threading.Event()
         
@@ -65,7 +58,7 @@ class Tools():
         ):
             self.anti_afk.set(False)
     
-    # region: Threading
+    # region: Loops
 
     def main(self) -> None:
         self.keyboard_listener = pynkeyboard.Listener(
@@ -89,7 +82,11 @@ class Tools():
         self.logger.info("Thread stopped")
         self.keyboard_listener.stop()        
 
-    def anti_afk_main(self, movement_type: ANTI_AFK = ANTI_AFK.RANDOM_CENTERED) -> None:
+    def change_movement_type(self, movement_type: ANTI_AFK) -> None:
+        self.movement_type = movement_type
+        self.logger.info(f"Changed movement type to {movement_type}")
+
+    def anti_afk_main(self, movement_type: ANTI_AFK) -> None:
         
         queue = []
         
@@ -161,6 +158,10 @@ class Tools():
             self.keyboard.release(key)
             self.tools_input = False
             self.stop_event.wait(random.uniform(0.1, 0.3))
+
+    # endregion
+
+    # region: Threading
 
     def start(self) -> None:
         # Check if thread is already running, if so return
