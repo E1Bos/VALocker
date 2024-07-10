@@ -142,7 +142,7 @@ class SaveManager:
             self.load_save(self.save_files[0])
             raise FileNotFoundError(f'File "{file_name}" not found')
 
-    def save_file(self, save_data: Optional[dict] = None, save_name: str = None) -> None:
+    def save_file(self, save_data: Optional[dict] = None, save_name: Optional[str] = None) -> None:
         """
         Saves the current save file to disk.
         """
