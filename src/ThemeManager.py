@@ -3,6 +3,30 @@ from ruamel.yaml import YAML
 from Constants import FOLDER, GET_WORKING_DIR, BRIGHTEN_COLOR
 from CustomLogger import CustomLogger
 
+"""
+Idea for a theme that can be observed by other classes to update their appearance when the theme changes.
+This would mean valocker would not need to be restarted to apply a new theme.
+
+class ObservableTheme:
+    def __init__(self):
+        self._observers = []
+        self._theme = {}
+
+    def register_observer(self, observer):
+        self._observers.append(observer)
+
+    def notify_observers(self):
+        for observer in self._observers:
+            observer.update_theme(self._theme)
+
+    def update_theme(self, key, value):
+        self._theme[key] = value
+        self.notify_observers()
+
+    @property
+    def theme(self):
+        return self._theme
+"""
 
 class ThemeManager:
     """
