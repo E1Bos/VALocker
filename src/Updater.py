@@ -72,7 +72,7 @@ class Updater:
             bool: True if the check frequency has been met, False otherwise.
         """
         last_checked_release = int(
-            self._file_manager.get_value(FILE.SETTINGS, "lastChecked")
+            self._file_manager.get_value(FILE.SETTINGS, "lastChecked", 0)
         )
 
         time_since_last_check = int(time.time()) - last_checked_release
