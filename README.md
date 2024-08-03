@@ -12,6 +12,8 @@
 </div>
 <br>
 
+## Due to the recent VALORANT UI update, VALocker v2.0.5 and earlier versions do NOT work. Please be patient as I work on a solution. This will require a overhaul of the locking system, and may take some time. Thank you for your understanding.
+
 VALocker is a Python program that automatically locks any VALORANT agent quickly and reliably. It helps you secure your favorite agent, saving you time, effort, and ensuring you don't miss out on playing who you want to play.
 
 📋 **Changelog:** For a detailed list of changes, improvements, and bug fixes, refer to the [Changelog](changelog.md) file.
