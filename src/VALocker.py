@@ -29,7 +29,7 @@ class VALocker(CTk):
     """
 
     # VERSION
-    VERSION: str = "2.0.5"
+    VERSION: str = "2.1.0"
 
     # Custom Classes
     logger: CustomLogger = CustomLogger("VALocker").get_logger()
@@ -338,7 +338,10 @@ class VALocker(CTk):
 
         for item in self.updater.ITEMS_TO_CHECK:
             if type(item) is FOLDER:
-                for config_file in item:
+                
+                files = self.file_manager.get_files_in_folder(item)
+                
+                for config_file in files:
                     try:
                         config_enum = LOCKING_CONFIG(config_file)
 
@@ -350,17 +353,17 @@ class VALocker(CTk):
                         )
 
                     except ValueError:
-                        data = self._file_manager.get_config(config_file)
+                        data = self.file_manager.get_config(config_file)
 
                         if (
                             data.get("custom", False)
                             or data.get("version", None) is None
                         ):
-                            self._logger.info(
+                            self.logger.info(
                                 f"Found custom config \"{data.get('title')}\", skipping"
                             )
                         else:
-                            self._logger.error(
+                            self.logger.error(
                                 f"Failed to parse config file {config_file}"
                             )
             else:
