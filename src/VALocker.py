@@ -9,7 +9,7 @@ from ctypes import windll
 
 # Custom imports
 from CustomLogger import CustomLogger
-from Constants import FILE, FRAME, ICON, LOCKING_CONFIG, ANTI_AFK
+from Constants import FILE, FOLDER, FRAME, ICON, LOCKING_CONFIG, ANTI_AFK
 from FileManager import FileManager
 from SaveManager import SaveManager
 from Updater import Updater
@@ -305,6 +305,7 @@ class VALocker(CTk):
                 self.logger.info("User chose not to update")
                 self.update_frame.resume_progress()
 
+        # Checks for config updates
         self.logger.info("Checking for config updates")
 
         for file in self.updater.ITEMS_TO_CHECK:
@@ -313,6 +314,60 @@ class VALocker(CTk):
                 main_window=self,
                 stringVar=self.update_frame.status_variables[file],
             )
+
+        # Ensure config files are compatible with the current VALocker version
+        def handle_incompatible(config_enum: FILE | LOCKING_CONFIG) -> None:
+            self.update_frame.stop_progress()
+            self.logger.error(f"Config file '{config_enum.name}' is not compatible")
+
+            go_to_update = ConfirmPopup(
+                self,
+                title="Update Required",
+                message=f"Config file {config_enum.name} is not compatible with this version of VALocker.\nPlease download the latest version or you will not be able to run VALocker.",
+                default_no=False,
+                geometry="600x150",
+            ).get_input()
+
+            if go_to_update:
+                self.logger.info("Opening update page")
+                web_open("https://www.github.com/E1Bos/VALocker/releases/latest/")
+                self.exit()
+            else:
+                self.logger.info("User chose not to update")
+                self.exit()
+
+        for item in self.updater.ITEMS_TO_CHECK:
+            if type(item) is FOLDER:
+                for config_file in item:
+                    try:
+                        config_enum = LOCKING_CONFIG(config_file)
+
+                        if not self.updater.meets_required_version(config_enum):
+                            handle_incompatible(config_enum)
+
+                        self.logger.info(
+                            f"Config file '{config_enum.name}' is compatible"
+                        )
+
+                    except ValueError:
+                        data = self._file_manager.get_config(config_file)
+
+                        if (
+                            data.get("custom", False)
+                            or data.get("version", None) is None
+                        ):
+                            self._logger.info(
+                                f"Found custom config \"{data.get('title')}\", skipping"
+                            )
+                        else:
+                            self._logger.error(
+                                f"Failed to parse config file {config_file}"
+                            )
+            else:
+                if not self.updater.meets_required_version(item):
+                    handle_incompatible(item)
+
+                self.logger.info(f"Config file '{item}' is compatible")
 
         self.updater.update_last_checked()
         self.update_frame.finished_checking_updates()
