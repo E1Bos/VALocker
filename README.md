@@ -12,8 +12,6 @@
 </div>
 <br>
 
-## Due to the recent VALORANT UI update, VALocker v2.0.5 and earlier versions do NOT work. Please be patient as I work on a solution. This will require a overhaul of the locking system, and may take some time. Thank you for your understanding.
-
 VALocker is a Python program that automatically locks any VALORANT agent quickly and reliably. It helps you secure your favorite agent, saving you time, effort, and ensuring you don't miss out on playing who you want to play.
 
 📋 **Changelog:** For a detailed list of changes, improvements, and bug fixes, refer to the [Changelog](changelog.md) file.
@@ -22,6 +20,13 @@ VALocker is a Python program that automatically locks any VALORANT agent quickly
 > This program is not affiliated with or endorsed by Riot Games or VALORANT. The software is provided "as is" without any warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, and non-infringement. In no event shall the authors or copyright holders be liable for any claim, damages, or other liability, whether in an action of contract, tort, or otherwise, arising from, out of, or in connection with the software or the use or other dealings in the software.
 
 Some antivirus software may flag this program as malware, due to the nature of the program, such as Windows Defender. This is a false positive, and the program is safe to use. If you have any concerns, please feel free to check the source code, [compile](#-compiling-yourself) the program yourself, or reach out to me for more information.
+
+## 📰 New in v2.1.0
+
+### VALocker finally works with the new VALORANT UI!
+- Full support for the new UI. The new implementation uses the new role buttons instead of scrolling through all possible agents, so it is slower than v2.0.5 with the old version of the UI, but it means that no matter how many agents VALORANT adds, it will continue to work!
+- Some config files require a certain version of VALocker to be run, so VALocker should NOT crash when an incompatible file is downloaded
+- Downloading files OTA fully works
 
 ## 📰 New in v2.0.0
 
@@ -61,7 +66,7 @@ Some antivirus software may flag this program as malware, due to the nature of t
 ### 🔒 Instalocking
 
 - Automatically locks in your desired agent during the agent selection phase.
-- Locks an agent in ~70ms on average from when the agent selection screen first appears.
+- Locks an agent in ~110ms on average from when the agent selection screen first appears.
 - Automatically detects when you are no longer in-game and switches to "Locking" mode.
 - Hover mode allows you to select an agent without locking them, great for competitive.
 - Safe mode adds random delays to the locking process:
