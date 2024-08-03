@@ -5,6 +5,7 @@ import time
 from customtkinter import StringVar
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from VALocker import VALocker
 
@@ -30,6 +31,7 @@ class Updater:
     Updater is used to update config files automatically and check for new versions of VALocker.
     @author: [E1Bos](https://www.github.com/E1Bos)
     """
+
     _logger: CustomLogger = CustomLogger("Updater").get_logger()
     _file_manager: FileManager
     release_version: str
@@ -63,6 +65,7 @@ class Updater:
             compare_release_versions: Compares the version of the current agent with the latest version available.
             compare_versions: Compare two version numbers and determine if an update is required.
             update_last_checked: Updates the last checked time in the settings file.
+            meets_required_version: Check if the current version of VALocker meets the required version required by a configuration file.
         """
         self.release_version = release_version
         self.check_frequency = check_frequency
@@ -90,7 +93,9 @@ class Updater:
         return True
 
     def check_for_version_update(
-        self, main_window: "VALocker", stringVar: Optional[StringVar] = None,
+        self,
+        main_window: "VALocker",
+        stringVar: Optional[StringVar] = None,
     ) -> str | None:
         """
         Checks if an update is available for the agent.
@@ -131,7 +136,7 @@ class Updater:
             # Use a dummy stringvar if the type is LOCKING_CONFIG so that it doesn't
             # override the FOLDER stringvar text
             innerStringVar = stringVar if type(item) is FILE else DummyStringVar()
-            
+
             self._logger.info(f"Checking {item.name} for updates")
             innerStringVar.set("Checking")
             main_window.update()
@@ -159,10 +164,10 @@ class Updater:
 
             for checking, config_file in enumerate(files):
                 current_file_num = checking + 1
-                
+
                 try:
                     config_enum = LOCKING_CONFIG(config_file)
-                    
+
                     self._logger.info(f"Checking {config_enum.name} for updates")
                     stringVar.set(f"({current_file_num}/{total_files}) Checking")
                     main_window.update()
@@ -176,18 +181,19 @@ class Updater:
                         self._file_manager.update_file(item)
                     else:
                         self._logger.info(f"{config_enum.name} is up to date")
-                    
 
                 except ValueError:
                     data = self._file_manager.get_config(config_file)
-                    
+
                     if data.get("custom", False) or data.get("version", None) is None:
-                        self._logger.info(f"Found custom config \"{data.get('title')}\", skipping")
+                        self._logger.info(
+                            f"Found custom config \"{data.get('title')}\", skipping"
+                        )
                     else:
                         self._logger.error(f"Failed to parse config file {config_file}")
                         stringVar.set(f"({current_file_num}/{total_files}) Error")
                         main_window.update()
-                    
+
                 stringVar.set(f"({current_file_num}/{total_files}) Up to date")
                 main_window.update()
 
@@ -342,12 +348,61 @@ class Updater:
         settings["lastChecked"] = int(time.time())
         self._file_manager.set_config(FILE.SETTINGS, settings)
 
+    def meets_required_version(self, config_file: FILE | LOCKING_CONFIG) -> bool:
+        """
+        Check if the current version of VALocker meets the required version required by a configuration file.
+
+        If the configuration file does not have a required version, this method will return False.
+        i.e. Updating will be required
+
+        Args:
+            config_file (FILE | LOCKING_CONFIG): The file.
+
+        Returns:
+            bool: True if the agent version meets the required version, False otherwise.
+        """
+        minimum_version = (
+            self._file_manager.get_config(config_file)
+            .get("requiredVersion", None)
+            .split(".")
+        )
+
+        if minimum_version is None or len(minimum_version) == 0:
+            return False
+
+        release_version = self.release_version.replace("v", "").split(".")
+
+        self._logger.info(
+            f"Checking if {config_file.name} (version: {".".join(minimum_version)}) can be run by VALocker (version: {self.release_version})"
+        )
+
+        for release_vers_digit, minimum_version_digit in zip(
+            release_version, minimum_version
+        ):
+            match minimum_version_digit:
+                case "*" | "X" | "x":
+                    continue
+                case _:
+                    if release_vers_digit != minimum_version_digit:
+                        self._logger.warning(
+                            "VALocker version does not meet the required version"
+                        )
+                            
+                        return False
+
+        self._logger.info(
+            "VALocker version meets the required version for the configuration file"
+        )
+        
+        return True
+
 
 if __name__ == "__main__":
     # Test Updater class
     file_manager = FileManager()
     file_manager.setup()
-    updater = Updater("v1.0.0", file_manager)
-    updater.check_for_config_update(FOLDER.LOCKING_CONFIGS)
+    updater = Updater("2.0.0", file_manager)
+    updater.meets_required_version(FILE.SETTINGS)
+    # updater.check_for_config_update(FOLDER.LOCKING_CONFIGS)
     # updater.check_for_version_update()
     # updater.update_last_checked()

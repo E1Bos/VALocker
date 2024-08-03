@@ -1,6 +1,7 @@
 # --------------------------------------------------
-# Version of the settings config
+# Version of the settings config and the required version
 version: 1.0.1
+requiredVersion: 2.1.*
 # --------------------------------------------------
 # Time since the last check for updates, in epoch time
 lastChecked: 0

@@ -1,6 +1,7 @@
 # --------------------------------------------------
-# Version of the confguration
+# Version of the configuration
 version: 1.0.0
+requiredVersion: 2.1.*
 # --------------------------------------------------
 # Agents that are unlocked be default
 defaultAgents: [brimstone, jett, phoenix, sage, sova]
