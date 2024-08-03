@@ -1,5 +1,7 @@
 from ruamel.yaml import YAML
 
+import os
+
 from Constants import FOLDER, GET_WORKING_DIR, BRIGHTEN_COLOR
 from CustomLogger import CustomLogger
 
@@ -47,6 +49,10 @@ class ThemeManager:
         """
         yaml = YAML(typ='rt')
         # yaml.indent(mapping=2, sequence=4, offset=2)
+        
+        if os.path.exists(f"{self.working_dir}/{FOLDER.THEMES.value}/{theme_name}") is False:
+            self.logger.warning(f'Theme "{theme_name}" does not exist')
+            theme_name = "default-theme.yaml"
         
         with open(
             f"{self.working_dir}/{FOLDER.THEMES.value}/{theme_name}", "r"
