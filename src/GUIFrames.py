@@ -818,10 +818,13 @@ class SaveFilesFrame(SideFrame):
                 button.destroy()
             self.favorite_buttons = []
         else:
-            for favorited_save in self.parent.file_manager.get_value(
-                FILE.SETTINGS, "favoritedSaveFiles"
-            ):
-                favorite_button_names.append(favorited_save)
+            try:
+                for favorited_save in self.parent.file_manager.get_value(
+                    FILE.SETTINGS, "favoritedSaveFiles"
+                ):
+                    favorite_button_names.append(favorited_save)
+            except TypeError as e:
+                pass
 
         self.buttons = []
         for save_file in self.parent.save_manager.get_all_save_files():
