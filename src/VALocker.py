@@ -140,6 +140,13 @@ class VALocker(CTk):
         fast_mode_timings = self.file_manager.get_value(
             FILE.SETTINGS, "fastModeTimings"
         )
+        
+        if fast_mode_timings is None:
+            fast_mode_timings = {
+                "clickDelay": 0.02,
+                "moveDelay": 0.02,
+            }
+        
         self.fast_mode_timings = [
             (
                 fast_mode_timings.get("clickDelay", 0.02)
