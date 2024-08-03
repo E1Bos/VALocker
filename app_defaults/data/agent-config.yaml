@@ -31,7 +31,6 @@ duelist:
   - yoru
 initiator:
   - breach
-  - deadlock
   - fade
   - gekko
   - kayo
@@ -40,6 +39,7 @@ initiator:
 sentinel:
   - chamber
   - cypher
+  - deadlock
   - killjoy
   - sage
 # --------------------------------------------------
