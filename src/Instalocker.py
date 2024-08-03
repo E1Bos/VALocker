@@ -262,7 +262,7 @@ class Instalocker:
 
         self.parent.exclusiselect_update_gui()
 
-        role, index = self.get_agent_role_and_index(selected_agent)
+        role, index = self.parent.get_agent_role_and_index(selected_agent)
 
         return AgentIndex(role, index)
 
