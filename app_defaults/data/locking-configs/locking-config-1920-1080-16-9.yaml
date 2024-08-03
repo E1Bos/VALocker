@@ -1,78 +1,67 @@
-# Version of the confguration
+# Version of the configuration
 # If the configuration is custom, uncomment the custom line and comment out the version line
-version: 1.0.0
+version: 1.0.1
+requiredVersion: 2.1.*
 # custom: True
 # --------------------------------------------------
 # Title of the configuration
 title: 1920x1080 16:9
 # --------------------------------------------------
-# The location of the agent buttons
-# only the selectable portion of the buttons should be used
-# The selectable area is the area that changes color when an agent is hovered over
-# size: size of the agent buttons
+# The location of the role buttons
+# location: the top left most pixel of the first agent button [x, y]
+# size: size of the agent buttons, [width, height]
+# spacing: spacing between the agent buttons, [width, height]
 # columns: number of columns
-# xDistance: x distance between the columns
-# yDistance: y distance between the rows
-# start: the top left most corner of the first agent button
+roleButtons:
+  location: [41, 215]
+  size: [68, 68]
+  spacing: [11, 11]
+# --------------------------------------------------
+# The location of the agent buttons
+# location: the top left most pixel of the first agent button [x, y]
+# size: size of the agent buttons, [width, height]
+# spacing: spacing between the agent buttons, [width, height]
+# columns: number of columns
 agentButtons:
-  size: 72
-  columns: 9
-  xDistance: 12
-  yDistance: 12
-  start: [588, 805]
+  location: [40, 302]
+  size: [91, 91]
+  spacing: [8, 8]
+  columns: 4
 # --------------------------------------------------
 # The location of the lock button
-# Only the selectable portion of the lock button should be added
 # size: size of the lock button
 # location: the top left most pixel of the lock button
 lockButton:
-  size: [234, 59]
-  location: [842, 701]
+  location: [809, 719]
+  size: [292, 67]
 # --------------------------------------------------
 # Region that is checked to see when the game is in the agent selection screen
-# xCoord: x coordinate of the top left corner of the region
-# yCoord: y coordinate of the top left corner of the region
-# width: width of the region
-# height: height of the region
+# location: the top left most pixel of the region [x, y]
+# size: size of the region [width, height]
 # color: color of the pixel in the region to match
 lockRegion:
-  xCoord: 950
-  yCoord: 782
-  width: 1
-  height: 1
-  color: [234, 238, 178]
+  location: [41, 215]
+  size: [2, 3]
+  color: [236, 232, 225]
 # --------------------------------------------------
 # Regions that are checked to see when the user is not in a game
-# in the form of a list, all these regions are checked every 3 or so seconds
-# xCoord: x coordinate of the top left corner of the region
-# yCoord: y coordinate of the top left corner of the region
-# width: width of the region
-# height: height of the region
+# location: the top left most pixel of the region [x, y]
+# size: size of the region [width, height]
 # color: color of the pixel in the region to match
 waitingRegions:
-  - xCoord: 815
-    yCoord: 243
-    width: 5
-    height: 1
+  - location: [815, 243]
+    size: [5, 1]
     color: [245, 244, 240]
-  - xCoord: 815
-    yCoord: 660
-    width: 5
-    height: 1
+  - location: [815, 660]
+    size: [5, 1]
     color: [235, 238, 178]
-  - xCoord: 920
-    yCoord: 45
-    width: 10
-    height: 5
+  - location: [920, 45]
+    size: [10, 5]
     color: [216, 57, 70]
-  - xCoord: 1325
-    yCoord: 337
-    width: 2
-    height: 2
+  - location: [1325, 337]
+    size: [2, 2]
     color: [255, 255, 255]
-  - xCoord: 1477
-    yCoord: 337
-    width: 2
-    height: 2
+  - location: [1477, 337]
+    size: [2, 2]
     color: [255, 255, 255]
 # --------------------------------------------------

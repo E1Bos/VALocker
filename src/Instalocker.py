@@ -18,7 +18,8 @@ import numpy as np
 
 # Custom Imports
 from CustomLogger import CustomLogger
-from Constants import Region, LOCKING_CONFIG
+from Constants import Region, LOCKING_CONFIG, ROLE, AgentIndex
+
 # from GUIFrames import ErrorPopup
 
 
@@ -27,7 +28,7 @@ class Instalocker:
     Responsible for instalocking agents
     @author: [E1Bos](https://www.github.com/E1Bos)
     """
-    
+
     logger = CustomLogger("Instalocker").get_logger()
 
     # Parent
@@ -52,8 +53,9 @@ class Instalocker:
     random_select: BooleanVar
     exclusiselect: BooleanVar
     map_specific: BooleanVar
-    agent_index: IntVar
-    box_coords: list = []
+    agent_index: AgentIndex
+    role_coords: dict[ROLE] = {}
+    agent_coords: list = []
 
     # Timings
     fast_mode_timings: tuple[int, int, int]
@@ -118,26 +120,41 @@ class Instalocker:
         self.logger.info(f'Locking config "{config_name}" loaded')
 
     def calculate_box_locations(self, total_agents: int) -> None:
-        agent_buttons = self.locking_config["agentButtons"]
-        self.box_coords = []
-        
-        for index in range(total_agents):
-            x_position = (
-                agent_buttons["start"][0]
-                + (
-                    (index % agent_buttons["columns"])
-                    * (agent_buttons["size"] + agent_buttons["xDistance"])
-                )
+        """
+        Calculates the locations of the role and agent buttons based on the locking config
+        """
+
+        role_buttons = self.locking_config["roleButtons"]
+        roles_order = [
+            ROLE.ALL,
+            ROLE.INITIATOR,
+            ROLE.DUELIST,
+            ROLE.SENTINEL,
+            ROLE.CONTROLLER,
+        ]
+
+        self.role_coords.clear()
+        for index, role in enumerate(roles_order):
+            x_position = role_buttons["location"][0] + (
+                index * (role_buttons["size"][0] + role_buttons["spacing"][0])
             )
 
-            y_position = (
-                agent_buttons["start"][1]
-                + (
-                    (index // agent_buttons["columns"])
-                    * (agent_buttons["size"] + agent_buttons["yDistance"])
-                )
+            self.role_coords[role] = (x_position, role_buttons["location"][1])
+
+        agent_buttons = self.locking_config["agentButtons"]
+
+        for index in range(agent_buttons["columns"] * 6):
+            x_position = agent_buttons["location"][0] + (
+                (index % agent_buttons["columns"])
+                * (agent_buttons["size"][0] + agent_buttons["spacing"][0])
             )
-            self.box_coords.append((x_position, y_position))
+
+            y_position = agent_buttons["location"][1] + (
+                (index // agent_buttons["columns"])
+                * (agent_buttons["size"][1] + agent_buttons["spacing"][1])
+            )
+
+            self.agent_coords.append((x_position, y_position))
 
     def load_config(self) -> None:
 
@@ -145,10 +162,8 @@ class Instalocker:
         lock_config = self.locking_config["lockRegion"]
 
         self.lock_region = Region(
-            x=lock_config["xCoord"],
-            y=lock_config["yCoord"],
-            width=lock_config["width"],
-            height=lock_config["height"],
+            location=lock_config["location"],
+            size=lock_config["size"],
             color=lock_config["color"],
         )
 
@@ -158,47 +173,44 @@ class Instalocker:
             for region in self.locking_config["waitingRegions"]:
                 self.waiting_regions.append(
                     Region(
-                        x=region["xCoord"],
-                        y=region["yCoord"],
-                        width=region["width"],
-                        height=region["height"],
+                        location=region["location"],
+                        size=region["size"],
                         color=region["color"],
                     )
                 )
 
         # Box Size
-        self.box_size = self.locking_config["agentButtons"]["size"]
+        self.role_box_size = self.locking_config["roleButtons"]["size"]
+        self.agent_box_size = self.locking_config["agentButtons"]["size"]
 
-        # Top left location
-        lock_button_location = self.locking_config["lockButton"]["location"]
-        self.lock_button_x = self.locking_config["lockButton"]["size"][0] // 2
-        self.lock_button_y = self.locking_config["lockButton"]["size"][1] // 2
-
-        # Center
-        self.lock_button_center = (
-            lock_button_location[0] + self.lock_button_x,
-            lock_button_location[1] + self.lock_button_y,
+        # Lock button sizes
+        self.lock_button_location = self.locking_config["lockButton"]["location"]
+        self.lock_button_size = (
+            self.locking_config["lockButton"]["size"][0],
+            self.locking_config["lockButton"]["size"][1],
         )
 
     # endregion
 
-    def location_in_agent_button(self, top_left: tuple[int, int]) -> tuple[int, int]:
-        """ """
+    def location_in_role_button(self, agent_index: AgentIndex) -> tuple[int, int]:
+        role = agent_index.role
+        
+        x = self.role_coords[role][0] + randint(5, (self.role_box_size[0] - 5))
+        y = self.role_coords[role][1] + randint(5, (self.role_box_size[1] - 5))
 
-        x = top_left[0] + randint(5, (self.box_size - 5))
-        y = top_left[1] + randint(5, (self.box_size - 5))
+        return (x, y)
 
-        return x, y
+    def location_in_agent_button(self, agent_index: AgentIndex) -> tuple[int, int]:
+        top_left = self.agent_coords[agent_index.index]
+        
+        x = top_left[0] + randint(5, (self.agent_box_size[0] - 5))
+        y = top_left[1] + randint(5, (self.agent_box_size[1] - 5))
+
+        return (x, y)
 
     def location_in_lock_button(self) -> tuple[int, int]:
-        """ """
-
-        x = self.lock_button_center[0] + randint(
-            -(self.lock_button_x - 5), (self.lock_button_x - 5)
-        )
-        y = self.lock_button_center[1] + randint(
-            -(self.lock_button_y - 5), (self.lock_button_y - 5)
-        )
+        x = self.lock_button_location[0] + randint(5, (self.lock_button_size[0] - 5))
+        y = self.lock_button_location[1] + randint(5, (self.lock_button_size[1] - 5))
 
         return x, y
 
@@ -210,7 +222,7 @@ class Instalocker:
 
         return np.all(np.all(area == region.color, axis=2))
 
-    def calculate_random_agent(self) -> int:
+    def calculate_random_agent(self) -> tuple[ROLE, int]:
         unlocked_agents = []
         random_agents = []
 
@@ -250,7 +262,9 @@ class Instalocker:
 
         self.parent.exclusiselect_update_gui()
 
-        return unlocked_agents.index(selected_agent)
+        role, index = self.parent.get_agent_role_and_index(selected_agent)
+
+        return AgentIndex(role, index)
 
     def get_latest_frame(self) -> np.ndarray:
         try:
@@ -287,7 +301,7 @@ class Instalocker:
                 if self.random_select.get():
                     agent_index = self.calculate_random_agent()
                 else:
-                    agent_index = self.agent_index.get()
+                    agent_index = self.agent_index
 
                 self.lock_agent(agent_index)
 
@@ -312,26 +326,34 @@ class Instalocker:
                     return
             self.stop_event.wait(2)
 
-    def lock_agent(self, agent_index: int) -> None:
+    def lock_agent(self, agent_index: AgentIndex) -> None:
         # Sets timings based on safe mode
         if self.safe_mode_enabled.get():
             timing = self.safe_mode_timings[self.safe_mode_strength.get()]
-            min_timing, max_timing = timing[0] / 4, timing[1] / 4
-            timings = [uniform(min_timing, max_timing) for _ in range(4)]
+            min_timing, max_timing = timing[0] / 6, timing[1] / 6
+            timings = [uniform(min_timing, max_timing) for _ in range(6)]
             self.stop_event.wait(timings[-1])
         else:
             timings = self.fast_mode_timings
 
-        self.mouse.position = self.location_in_agent_button(
-            self.box_coords[agent_index]
-        )
+        # Select correct role
+        self.mouse.position = self.location_in_role_button(agent_index)
         self.stop_event.wait(timings[0])
         self.mouse.click(pynmouse.Button.left, 1)
         self.stop_event.wait(timings[1])
-        
+
+        # Select correct agent
+        self.mouse.position = self.location_in_agent_button(
+            agent_index
+        )
+        self.stop_event.wait(timings[2])
+        self.mouse.click(pynmouse.Button.left, 1)
+        self.stop_event.wait(timings[3])
+
+        # Lock in
         if not self.hover.get():
             self.mouse.position = self.location_in_lock_button()
-            self.stop_event.wait(timings[2])
+            self.stop_event.wait(timings[4])
             self.mouse.click(pynmouse.Button.left, 1)
 
     def toggle_state(self, value: Optional[bool] = None):

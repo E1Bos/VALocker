@@ -2,6 +2,21 @@
 
 Date Format: YYYY-MM-DD
 
+## Version 2.1.0 | 2024-08-03
+
+## Added
+- Some config files will require a certain version of VALocker to run, so that the program does not crash. If the config file is not compatible with the current version of VALocker, a popup will appear, telling the user to update VALocker. The user will not be able to use the program until they update VALocker. This is to prevent the program from crashing due to missing settings.
+
+## Changed
+- Changed the instalocker to work with the new VALORANT UI
+- All supported locking configs to work with the new UI
+
+## Fixed
+- Fixed a GUI alignment issue for the None button in the Agent Toggle tab
+- Deadlock being an initiator instead of a sentinel
+- Theme manager will no longer crash if the selected theme file is missing, it will use the default theme
+
+
 ## Version 2.0.5 | 2024-07-10
 
 ### Added

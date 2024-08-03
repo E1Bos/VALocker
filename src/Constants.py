@@ -52,7 +52,6 @@ class FOLDER(Enum):
     SETTINGS: str = "settings"
     THEMES: str = "themes"
 
-
 class FILE(Enum):
     """
     Enum for Files used in the project
@@ -113,6 +112,49 @@ class ICON(Enum):
             return RESOURCE_PATH(f"images/icons/{super().__getattribute__(name)}")
         else:
             return super().__getattribute__(name)
+
+class AgentIndex():
+    _role: ROLE
+    _index: int
+    
+    def __init__(self, role: ROLE, index: int) -> None:
+        self._role = role
+        self._index = index
+        
+    def set_agent(self, role: ROLE, index: int) -> None:
+        self._role = role
+        self._index = index
+    
+    def get_agent(self) -> tuple[ROLE, int]:
+        return (self._role, self._index)
+    
+    @property
+    def role(self) -> ROLE:
+        return self._role
+    
+    @property
+    def index(self) -> int:
+        return self._index
+
+class ROLE(Enum):
+    """
+    Enum for agent roles
+    """
+    ALL: str = "all"
+    DUELIST: str = "duelist"
+    CONTROLLER: str = "controller"
+    INITIATOR: str = "initiator"
+    SENTINEL: str = "sentinel"
+
+    @classmethod
+    def from_name(cls, name: str) -> ROLE:
+        """
+        Returns the enum member with the name given, if not found returns the first member.
+        """
+        for member in cls:
+            if member.name == name:
+                return member
+        return next(iter(cls))
 
 
 class ANTI_AFK(Enum):
@@ -183,51 +225,73 @@ class Region:
     Represents a region with coordinates, size, and color.
 
     Attributes:
-        x (int): The x-coordinate of the region.
-        y (int): The y-coordinate of the region.
-        width (int): The width of the region. Default is 1.
-        height (int): The height of the region. Default is 1.
+        location (tuple[int, int]): The top left corner of the region represented as an (x, y) tuple.
+        size (tuple[int, int]): The width and height of the region represented as a (width, height) tuple.
         color (tuple[int, int, int]): The color of the region represented as an RGB tuple. The entire area must be this color.
+        location_end (tuple[int, int]): The bottom right corner of the region represented as an (x, y) tuple.
 
     Raises:
         ValueError: If width or height is less than or equal to 0.
     """
 
-    x: int
-    x_end: int
-    y: int
-    y_end: int
+    location: tuple[int, int]
+    size: tuple[int, int]
     color: tuple[int, int, int]
+    location_end: tuple[int, int]
 
     def __init__(
         self,
-        x: int,
-        y: int,
+        location: tuple[int, int],
         color: tuple[int, int, int],
-        width: Optional[int] = 1,
-        height: Optional[int] = 1,
-        x_end: Optional[int] = None,
-        y_end: Optional[int] = None,
+        size: tuple[int, int] = (1, 1),
+        location_end: Optional[tuple[int, int]] = None,
     ) -> None:
 
-        if (width <= 0 or height <= 0) and (x_end is None or y_end is None):
+        if (size[0] <= 0 or size[1] <= 0) and (location_end is None):
             raise ValueError(
                 "Width and height must be greater than 0 or x_end and y_end must be provided."
             )
 
-        self.x = x
-        self.y = y
+        self.location = location
         self.color = color
 
-        self.x_end = x_end or x + width
-        self.y_end = y_end or y + height
+        self.location_end = location_end if location_end else (
+            location[0] + size[0], location[1] + size[1]
+        )
 
-        self.width = width if width else x_end - x
-        self.height = height if height else y_end - y
-
+        self.size = size
+        
     def __repr__(self) -> str:
-        return f"Region(x: {self.x} -> {self.x_end}, y: {self.y} -> {self.y_end}, w.h: {self.width} . {self.height}, color: {self.color})"
+        return f"Region(x: {self.location[0]} -> {self.location_end[0]}, y: {self.location[1]} -> {self.location_end[1]}, w.h: {self.size[0]} . {self.size[1]}, color: {self.color})"
 
+    @property
+    def x(self) -> int:
+        return self.location[0]
+    
+    @property
+    def y(self) -> int:
+        return self.location[1]
+    
+    @property
+    def x_end(self) -> int:
+        return self.location_end[0]
+    
+    @property
+    def y_end(self) -> int:
+        return self.location_end[1]
+
+    @property
+    def width(self) -> int:
+        return self.size[0]
+    
+    @property
+    def height(self) -> int:
+        return self.size[1]
+    
+    @property
+    def center(self) -> tuple[int, int]:
+        return (self.x + self.width // 2, self.y + self.height // 2)
+    
 
 '''
 class Save():

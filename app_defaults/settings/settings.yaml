@@ -1,6 +1,7 @@
 # --------------------------------------------------
-# Version of the settings config
+# Version of the settings config and the required version
 version: 1.0.1
+requiredVersion: 2.1.*
 # --------------------------------------------------
 # Time since the last check for updates, in epoch time
 lastChecked: 0
@@ -15,18 +16,18 @@ lockingConfig: locking-config-1920-1080-16-9.yaml
 activeSaveFile: default.yaml
 # --------------------------------------------------
 # The save files that are favorited
-favoritedSaveFiles: []
+favoritedSaveFiles:
 # --------------------------------------------------
 # Settings on startup
 enableOnStartup: false
 safeModeOnStartup: false
 safeModeStrengthOnStartup: 0
 # --------------------------------------------------
-# Timings for fast mode, in seconds
+# Timings for fast mode, in seconds, delays for
+# moving to a location and clicking
 fastModeTimings:
-  - 0.02
-  - 0.02
-  - 0.02
+  moveDelay: 0.04
+  clickDelay: 0.04
 # --------------------------------------------------
 # Timings for safe mode, in seconds
 safeModeTimings:

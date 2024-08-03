@@ -1,6 +1,7 @@
 # --------------------------------------------------
-# Version of the confguration
-version: 1.0.0
+# Version of the configuration
+version: 1.0.1
+requiredVersion: 2.1.*
 # --------------------------------------------------
 # Agents that are unlocked be default
 defaultAgents: [brimstone, jett, phoenix, sage, sova]
@@ -30,7 +31,6 @@ duelist:
   - yoru
 initiator:
   - breach
-  - deadlock
   - fade
   - gekko
   - kayo
@@ -39,6 +39,7 @@ initiator:
 sentinel:
   - chamber
   - cypher
+  - deadlock
   - killjoy
   - sage
 # --------------------------------------------------

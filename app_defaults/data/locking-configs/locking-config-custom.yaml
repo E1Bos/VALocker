@@ -1,74 +1,64 @@
-# If the configuration is custom, do NOT change
-# VALocker will attempt to update the configuration file
-# if the configuration is not custom, this may crash the program
+# Denoting a custom configuration file
 custom: True
 # --------------------------------------------------
 # Title of the configuration
 title: <Title>
 # --------------------------------------------------
-# The location of the agent buttons
-# size: size of the agent buttons
+# The location of the role buttons
+# location: the top left most pixel of the first agent button [x, y]
+# size: size of the agent buttons, [width, height]
+# spacing: spacing between the agent buttons, [width, height]
 # columns: number of columns
-# xDistance: x distance between the columns
-# yDistance: y distance between the rows
-# start: the top left corner of the first agent button
+roleButtons:
+  location: <x, y>
+  size: <width, height>
+  spacing: <width, height>
+# --------------------------------------------------
+# The location of the agent buttons
+# location: the top left most pixel of the first agent button [x, y]
+# size: size of the agent buttons, [width, height]
+# spacing: spacing between the agent buttons, [width, height]
+# columns: number of columns
 agentButtons:
-  size: <Size, [x]>
-  columns: 9 # Default value, may be different
-  xDistance: <x Distance, [x]>
-  yDistance: <y Distance, [x]>
-  start: <Top Left Corner, [x, y]>
+  location: <x, y>
+  size: <width, height>
+  spacing: <width, height>
+  columns: <number>
 # --------------------------------------------------
 # The location of the lock button
 # size: size of the lock button
-# location: the top left corner of the lock button
+# location: the top left most pixel of the lock button
 lockButton:
-  size: <Size, [x, y]>
-  location: <Top Left Corner, [x, y]>
+  location: <x, y>
+  size: <width, height>
 # --------------------------------------------------
-# Regions that are checked to see when to initiate the lock
-# xCoord: x coordinate of the top left corner of the region
-# yCoord: y coordinate of the top left corner of the region
-# width: width of the region
-# height: height of the region
+# Region that is checked to see when the game is in the agent selection screen
+# location: the top left most pixel of the region [x, y]
+# size: size of the region [width, height]
 # color: color of the pixel in the region to match
 lockRegion:
-  xCoord: <x Coordinate, [x]>
-  yCoord: <y Coordinate, [x]>
-  width: 1 # Default value, may be different
-  height: 1 # Default value, may be different
-  color: [234, 238, 178] # Default value, may be different
+  location: <x, y>
+  size: <width, height>
+  color: <r, g, b>
 # --------------------------------------------------
 # Regions that are checked to see when the user is not in a game
-# xCoord: x coordinate of the top left corner of the region
-# yCoord: y coordinate of the top left corner of the region
-# width: width of the region
-# height: height of the region
+# location: the top left most pixel of the region [x, y]
+# size: size of the region [width, height]
 # color: color of the pixel in the region to match
 waitingRegions:
-  - xCoord: <x Coordinate, [x]>
-    yCoord: <y Coordinate, [x]>
-    width: <Width, [x]>
-    height: <Height, [x]>
-    color: <Color, [r, g, b]>
-  # - xCoord: <x Coordinate, [x]>
-  #   yCoord: <y Coordinate, [x]>
-  #   width: <Width, [x]>
-  #   height: <Height, [x]>
-  #   color: <Color, [r, g, b]>
-  # - xCoord: <x Coordinate, [x]>
-  #   yCoord: <y Coordinate, [x]>
-  #   width: <Width, [x]>
-  #   height: <Height, [x]>
-  #   color: <Color, [r, g, b]>
-  # - xCoord: <x Coordinate, [x]>
-  #   yCoord: <y Coordinate, [x]>
-  #   width: <Width, [x]>
-  #   height: <Height, [x]>
-  #   color: <Color, [r, g, b]>
-  # - xCoord: <x Coordinate, [x]>
-  #   yCoord: <y Coordinate, [x]>
-  #   width: <Width, [x]>
-  #   height: <Height, [x]>
-  #   color: <Color, [r, g, b]>
+  - location: <x, y>
+    size: <width, height>
+    color: <r, g, b>
+  # - location: <x, y>
+  #   size: <width, height>
+  #   color: <r, g, b>
+  # - location: <x, y>
+  #   size: <width, height>
+  #   color: <r, g, b>
+  # - location: <x, y>
+  #   size: <width, height>
+  #   color: <r, g, b>
+  # - location: <x, y>
+  #   size: <width, height>
+  #   color: <r, g, b>
 # --------------------------------------------------

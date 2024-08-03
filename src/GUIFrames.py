@@ -413,7 +413,7 @@ class AgentToggleFrame(SideFrame):
             variable=self.none_variable,
             command=self.toggle_none,
         )
-        self.none_checkbox.grid(row=0, column=1, padx=10, pady=(10, 0))
+        self.none_checkbox.grid(row=0, column=1, padx=10, pady=10)
 
         self.outer_agent_frame = ThemedFrame(self)
         self.outer_agent_frame.pack(expand=True, fill=ctk.BOTH, pady=10, padx=0)
@@ -818,10 +818,13 @@ class SaveFilesFrame(SideFrame):
                 button.destroy()
             self.favorite_buttons = []
         else:
-            for favorited_save in self.parent.file_manager.get_value(
-                FILE.SETTINGS, "favoritedSaveFiles"
-            ):
-                favorite_button_names.append(favorited_save)
+            try:
+                for favorited_save in self.parent.file_manager.get_value(
+                    FILE.SETTINGS, "favoritedSaveFiles"
+                ):
+                    favorite_button_names.append(favorited_save)
+            except TypeError as e:
+                pass
 
         self.buttons = []
         for save_file in self.parent.save_manager.get_all_save_files():
