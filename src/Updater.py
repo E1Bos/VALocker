@@ -352,7 +352,7 @@ class Updater:
         """
         Check if the current version of VALocker meets the required version required by a configuration file.
 
-        If the configuration file does not have a required version, this method will return False.
+        If the configuration file does not have a required version, this method will return True.
         i.e. Updating will be required
 
         Args:
@@ -360,7 +360,8 @@ class Updater:
 
         Returns:
             bool: True if the agent version meets the required version, False otherwise.
-        """
+        """ 
+        
         minimum_version = (
             self._file_manager.get_config(config_file)
             .get("requiredVersion", None)
@@ -368,7 +369,7 @@ class Updater:
         )
 
         if minimum_version is None or len(minimum_version) == 0:
-            return False
+            return True
 
         release_version = self.release_version.replace("v", "").split(".")
 
