@@ -144,7 +144,7 @@ class VALocker(CTk):
         if fast_mode_timings is None:
             fast_mode_timings = {
                 "clickDelay": 0.02,
-                "moveDelay": 0.02,
+                "moveDelay": 0.02
             }
         
         self.fast_mode_timings = [
@@ -155,6 +155,7 @@ class VALocker(CTk):
             )
             for i in range(5)
         ]
+            
 
         self.safe_mode_enabled = BooleanVar(
             value=self.file_manager.get_value(FILE.SETTINGS, "safeModeOnStartup", False)
