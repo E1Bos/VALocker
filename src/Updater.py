@@ -178,7 +178,7 @@ class Updater:
                         self._logger.info(
                             f"{config_enum.name} configuration needs updating"
                         )
-                        self._file_manager.update_file(item)
+                        self._file_manager.update_file(config_enum)
                     else:
                         self._logger.info(f"{config_enum.name} is up to date")
 

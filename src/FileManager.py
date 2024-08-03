@@ -112,8 +112,8 @@ class FileManager:
         Raises:
             requests.exceptions.RequestException: If the request to download the file fails.
         """
-        url = f"{self._DOWNLOAD_URL}{file.value}"
-
+        url = file.download_url
+        
         self._logger.info(f"Downloading {file.value} from {url}")
 
         try:

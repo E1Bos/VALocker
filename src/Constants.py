@@ -35,8 +35,8 @@ class FOLDER(Enum):
     """
 
     # Specific folder to use (None for AppData/roaming)
-    # STORAGE_FOLDER: str = "app_defaults"
-    STORAGE_FOLDER: str = None
+    STORAGE_FOLDER: str = "app_defaults"
+    # STORAGE_FOLDER: str = None
 
     # Where default files are stored
     DEFAULTS: str = "app_defaults"
@@ -62,6 +62,10 @@ class FILE(Enum):
     SETTINGS: str = f"{FOLDER.SETTINGS.value}/settings.yaml"
     DEFAULT_SAVE: str = f"{FOLDER.SAVE_FILES.value}/default.yaml"
     DEFAULT_THEME: str = f"{FOLDER.THEMES.value}/default-theme.yaml"
+    
+    @property
+    def download_url(self) -> str:
+        return f"{URL.DOWNLOAD_URL.value}/app_defaults/{self.value}"
 
 
 class LOCKING_CONFIG(Enum):
@@ -79,6 +83,10 @@ class LOCKING_CONFIG(Enum):
             return f"{FOLDER.LOCKING_CONFIGS.value}/{super().__getattribute__(name)}"
         else:
             return super().__getattribute__(name)
+
+    @property
+    def download_url(self) -> str:
+        return f"{URL.DOWNLOAD_URL.value}/app_defaults/{self.value}"
 
 
 class FRAME(Enum):
