@@ -2,7 +2,7 @@
 custom: True
 # --------------------------------------------------
 # Title of the configuration
-title: <Title>
+title: Title
 # --------------------------------------------------
 # The location of the role buttons
 # location: the top left most pixel of the first agent button [x, y]
@@ -10,55 +10,55 @@ title: <Title>
 # spacing: spacing between the agent buttons, [width, height]
 # columns: number of columns
 roleButtons:
-  location: <x, y>
-  size: <width, height>
-  spacing: <width, height>
+  location: [x, y]
+  size: [width, height]
+  spacing: [width, height]
 # --------------------------------------------------
 # The location of the agent buttons
 # location: the top left most pixel of the first agent button [x, y]
 # size: size of the agent buttons, [width, height]
 # spacing: spacing between the agent buttons, [width, height]
-# columns: number of columns
+# grid: rows and columns, [rows, columns]
 agentButtons:
-  location: <x, y>
-  size: <width, height>
-  spacing: <width, height>
-  columns: <number>
+  location: [x, y]
+  size: [width, height]
+  spacing: [width, height]
+  grid: [rows, columns]
 # --------------------------------------------------
 # The location of the lock button
 # size: size of the lock button
 # location: the top left most pixel of the lock button
 lockButton:
-  location: <x, y>
-  size: <width, height>
+  location: [x, y]
+  size: [width, height]
 # --------------------------------------------------
 # Region that is checked to see when the game is in the agent selection screen
 # location: the top left most pixel of the region [x, y]
 # size: size of the region [width, height]
 # color: color of the pixel in the region to match
 lockRegion:
-  location: <x, y>
-  size: <width, height>
-  color: <r, g, b>
+  location: [x, y]
+  size: [width, height]
+  color: [r, g, b]
 # --------------------------------------------------
 # Regions that are checked to see when the user is not in a game
 # location: the top left most pixel of the region [x, y]
 # size: size of the region [width, height]
 # color: color of the pixel in the region to match
 waitingRegions:
-  - location: <x, y>
-    size: <width, height>
-    color: <r, g, b>
-  # - location: <x, y>
-  #   size: <width, height>
-  #   color: <r, g, b>
-  # - location: <x, y>
-  #   size: <width, height>
-  #   color: <r, g, b>
-  # - location: <x, y>
-  #   size: <width, height>
-  #   color: <r, g, b>
-  # - location: <x, y>
-  #   size: <width, height>
-  #   color: <r, g, b>
+  - location: [x, y]
+    size: [width, height]
+    color: [r, g, b]
+  # - location: [x, y]
+  #   size: [width, height]
+  #   color: [r, g, b]
+  # - location: [x, y]
+  #   size: [width, height]
+  #   color: [r, g, b]
+  # - location: [x, y]
+  #   size: [width, height]
+  #   color: [r, g, b]
+  # - location: [x, y]
+  #   size: [width, height]
+  #   color: [r, g, b]
 # --------------------------------------------------

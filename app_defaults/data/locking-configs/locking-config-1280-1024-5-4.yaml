@@ -1,6 +1,6 @@
 # Version of the configuration
 # If the configuration is custom, uncomment the custom line and comment out the version line
-version: 1.0.1
+version: 1.0.2
 requiredVersion: 2.1.*
 # custom: True
 # --------------------------------------------------
@@ -21,12 +21,12 @@ roleButtons:
 # location: the top left most pixel of the first agent button [x, y]
 # size: size of the agent buttons, [width, height]
 # spacing: spacing between the agent buttons, [width, height]
-# columns: number of columns
+# grid: rows and columns, [rows, columns]
 agentButtons:
   location: [30, 224]
   size: [66, 66]
   spacing: [6, 6]
-  columns: 4
+  grid: [6, 4]
 # --------------------------------------------------
 # The location of the lock button
 # size: size of the lock button
