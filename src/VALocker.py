@@ -9,7 +9,7 @@ from ctypes import windll
 
 # Custom imports
 from CustomLogger import CustomLogger
-from Constants import FILE, FOLDER, FRAME, ICON, LOCKING_CONFIG, ANTI_AFK, ROLE, AgentIndex
+from Constants import FILE, FOLDER, FRAME, ICON, LOCKING_CONFIG, ANTI_AFK, ROLE, AgentIndex, AgentGrid
 from FileManager import FileManager
 from SaveManager import SaveManager
 from Updater import Updater
@@ -29,7 +29,7 @@ class VALocker(CTk):
     """
 
     # VERSION
-    VERSION: str = "2.1.1"
+    VERSION: str = "2.1.3"
 
     # Custom Classes
     logger: CustomLogger = CustomLogger("VALocker").get_logger()
@@ -60,13 +60,13 @@ class VALocker(CTk):
     # Instalocker Variables
     agent_states: dict[str, tuple[BooleanVar, BooleanVar] | BooleanVar]
     instalocker_thread_lock: Lock = Lock()
-    total_agents: int
     hover: BooleanVar
     random_select_available: BooleanVar
     random_select: BooleanVar
     temp_random_agents: dict[str, bool]
     exclusiselect: BooleanVar
     map_specific: BooleanVar
+    agent_grid: AgentGrid
     agent_index: AgentIndex
 
     # Tools Variables
@@ -196,7 +196,6 @@ class VALocker(CTk):
         self.update_stats()
 
         # Instalocker Vars
-        self.total_agents = len(self.all_agents)
 
         self.hover = BooleanVar(value=False)
         self.random_select_available = BooleanVar(value=False)
@@ -205,6 +204,7 @@ class VALocker(CTk):
         self.exclusiselect = BooleanVar(value=False)
         self.map_specific = BooleanVar(value=False)
         self.agent_index = AgentIndex(ROLE.CONTROLLER, 0)
+        self.agent_grid = AgentGrid(4, 6)
 
         # Tools Vars
         self.pause_tools_thread = BooleanVar(value=False)
@@ -713,6 +713,11 @@ class VALocker(CTk):
         Returns:
             tuple[ROLE, int]: The role and index of the agent.
         """
+        unlocked_agents = self.get_unlocked_agents()
+        
+        if unlocked_agents.index(agent) < self.agent_grid.columns * self.agent_grid.rows:
+            return ROLE.DEFAULT, unlocked_agents.index(agent)
+        
         for role in self.file_manager.get_value(FILE.AGENT_CONFIG, "roles"):
             agents = self.file_manager.get_value(FILE.AGENT_CONFIG, role)
 

@@ -18,7 +18,7 @@ import numpy as np
 
 # Custom Imports
 from CustomLogger import CustomLogger
-from Constants import Region, LOCKING_CONFIG, ROLE, AgentIndex
+from Constants import Region, LOCKING_CONFIG, ROLE, AgentIndex, AgentGrid
 
 # from GUIFrames import ErrorPopup
 
@@ -54,6 +54,7 @@ class Instalocker:
     exclusiselect: BooleanVar
     map_specific: BooleanVar
     agent_index: AgentIndex
+    agent_grid: AgentGrid
     role_coords: dict[ROLE] = {}
     agent_coords: list = []
 
@@ -97,6 +98,9 @@ class Instalocker:
 
         # Current Selected Agent
         self.agent_index = parent.agent_index
+        
+        # Agent Grid
+        self.agent_grid = parent.agent_grid
 
         # Screen Recorder
         self.cam = betterdxcam.create(print_capture_fps=False)
@@ -114,19 +118,20 @@ class Instalocker:
         else:
             config_name = self.locking_config.get("title")
 
-        self.calculate_box_locations(self.parent.total_agents)
+        self.calculate_box_locations()
         self.load_config()
+        self.parent.set_locking_agent()
 
         self.logger.info(f'Locking config "{config_name}" loaded')
 
-    def calculate_box_locations(self, total_agents: int) -> None:
+    def calculate_box_locations(self) -> None:
         """
         Calculates the locations of the role and agent buttons based on the locking config
         """
 
         role_buttons = self.locking_config["roleButtons"]
         roles_order = [
-            ROLE.ALL,
+            ROLE.DEFAULT,
             ROLE.INITIATOR,
             ROLE.DUELIST,
             ROLE.SENTINEL,
@@ -143,14 +148,16 @@ class Instalocker:
 
         agent_buttons = self.locking_config["agentButtons"]
 
-        for index in range(agent_buttons["columns"] * 6):
+        self.agent_grid.set_grid(agent_buttons["grid"][0], agent_buttons["grid"][1])
+
+        for index in range(self.agent_grid.columns * self.agent_grid.rows):
             x_position = agent_buttons["location"][0] + (
-                (index % agent_buttons["columns"])
+                (index % self.agent_grid.columns)
                 * (agent_buttons["size"][0] + agent_buttons["spacing"][0])
             )
 
             y_position = agent_buttons["location"][1] + (
-                (index // agent_buttons["columns"])
+                (index // self.agent_grid.columns)
                 * (agent_buttons["size"][1] + agent_buttons["spacing"][1])
             )
 
@@ -337,10 +344,11 @@ class Instalocker:
             timings = self.fast_mode_timings
 
         # Select correct role
-        self.mouse.position = self.location_in_role_button(agent_index)
-        self.stop_event.wait(timings[0])
-        self.mouse.click(pynmouse.Button.left, 1)
-        self.stop_event.wait(timings[1])
+        if agent_index.role != ROLE.DEFAULT:
+            self.mouse.position = self.location_in_role_button(agent_index)
+            self.stop_event.wait(timings[0])
+            self.mouse.click(pynmouse.Button.left, 1)
+            self.stop_event.wait(timings[1])
 
         # Select correct agent
         self.mouse.position = self.location_in_agent_button(

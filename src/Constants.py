@@ -144,11 +144,36 @@ class AgentIndex():
     def index(self) -> int:
         return self._index
 
+class AgentGrid():
+    _rows: int
+    _columns: int
+    
+    def __init__(self, rows: int, columns: int) -> None:
+        self._rows = rows
+        self._columns = columns
+    
+    def set_grid(self, rows: int, columns: int) -> None:
+        self._rows = rows
+        self._columns = columns
+        
+    def get_grid(self) -> tuple[int, int]:
+        return (self._rows, self._columns)
+    
+    @property
+    def rows(self) -> int:
+        return self._rows
+    
+    @property
+    def columns(self) -> int:
+        return self._columns
+    
+    
+
 class ROLE(Enum):
     """
     Enum for agent roles
     """
-    ALL: str = "all"
+    DEFAULT: str = "default"
     DUELIST: str = "duelist"
     CONTROLLER: str = "controller"
     INITIATOR: str = "initiator"
