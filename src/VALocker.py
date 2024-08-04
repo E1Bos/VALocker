@@ -137,24 +137,23 @@ class VALocker(CTk):
 
         self.instalocker_status = BooleanVar(value=True)
 
-        fast_mode_timings = self.file_manager.get_value(
-            FILE.SETTINGS, "fastModeTimings"
-        )
-        
-        if fast_mode_timings is None:
-            fast_mode_timings = {
-                "clickDelay": 0.02,
-                "moveDelay": 0.02
+        fast_mode_timings = self.file_manager.get_config(FILE.SETTINGS).get(
+            "fastModeTimings", {
+                "clickDelay": 0.04,
+                "moveDelay": 0.04
             }
+        )
         
         self.fast_mode_timings = [
             (
-                fast_mode_timings.get("clickDelay", 0.02)
+                fast_mode_timings.get("clickDelay")
                 if i % 2 == 0
-                else fast_mode_timings.get("moveDelay", 0.02)
+                else fast_mode_timings.get("moveDelay")
             )
             for i in range(5)
         ]
+        
+        print(self.fast_mode_timings)
             
 
         self.safe_mode_enabled = BooleanVar(
