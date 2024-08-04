@@ -46,7 +46,7 @@ Some antivirus software may flag this program as malware, due to the nature of t
 - BetterDXcam allows for changing resolutions and aspect ratios, making it easier to support different setups, this is the reason DXcam was forked in the first place.
 ### Improved storage and updates!
 - All data is now stored in `%APPDATA%\VALocker`, making the location of the executable irrelevant, and allowing for easy updates.
-- Over-the-air updates for all config files. No need to redownload the project zip file and replace all files.
+- Over-the-air updates for all config files. No need to download the project zip file and replace all files.
 ### Improved error handling!
 - Added loggers for all functions, making diagnosing issues easier.
 
@@ -272,7 +272,10 @@ I can only provide support for resolutions that I can test on my 1920x1080 monit
 
 ## 🎥 Video Demo
 
-https://github.com/E1Bos/VALocker/assets/66886116/36e58a7e-8223-47dd-85c7-db4ab03091e3
+<video width="560" height="315" controls>
+  <source src="images/readme_images/valocker-readme-demo.mp4" type="video/mp4">
+  Your browser does not support the video tag. Watch the video [here](images/readme_images/valocker-readme-demo.mp4).
+</video>
 
 ## 🤝 Contributing
 
