@@ -8,6 +8,7 @@ Date Format: YYYY-MM-DD
 - Instalocker now takes the most efficient route to lock an agent, skipping selecting the role if the agent is already visible by default. This should speed up the locking process.
 
 ### Changed
+- Configs are checked on startup for compatibility instead of during an update. This prevents the program crashing if updates are run manually.
 - Locking configs now have a new field `grid`, which keeps track of the rows and columns of agents visible by default. This is used to determine the most efficient route to lock an agent.
 
 ## Version 2.1.1 | 2024-08-04

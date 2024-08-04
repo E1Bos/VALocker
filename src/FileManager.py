@@ -338,6 +338,7 @@ class FileManager:
                 config_enum = LOCKING_CONFIG(config)
                 with open(self._absolute_file_path(config_enum.value), "r") as f:
                     data: dict = self.yaml.load(f)
+                
             except ValueError:
                 with open(
                     self._absolute_file_path(FOLDER.LOCKING_CONFIGS.value, config), "r"

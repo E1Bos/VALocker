@@ -328,26 +328,21 @@ class VALocker(CTk):
             )
 
         # Ensure config files are compatible with the current VALocker version
-        def handle_incompatible(config_enum: FILE | LOCKING_CONFIG) -> None:
-            self.update_frame.stop_progress()
-            self.logger.error(f"Config file '{config_enum.name}' is not compatible")
+        self.handle_incompatible()
+        
+        
+        self.updater.update_last_checked()
+        self.update_frame.finished_checking_updates()
 
-            go_to_update = ConfirmPopup(
-                self,
-                title="Update Required",
-                message=f"Config file {config_enum.name} is not compatible with this version of VALocker.\nPlease download the latest version or you will not be able to run VALocker.",
-                default_no=False,
-                geometry="600x150",
-            ).get_input()
+        if force_check_update:
+            self.after(
+                1000,
+                lambda go_to_frame=FRAME.SETTINGS: self.initMainUI(go_to_frame),
+            )
+        else:
+            self.after(1000, lambda: self.initMainUI())
 
-            if go_to_update:
-                self.logger.info("Opening update page")
-                web_open("https://www.github.com/E1Bos/VALocker/releases/latest/")
-                self.exit()
-            else:
-                self.logger.info("User chose not to update")
-                self.exit()
-
+    def handle_incompatible(self) -> None:
         for item in self.updater.ITEMS_TO_CHECK:
             if type(item) is FOLDER:
 
@@ -357,12 +352,7 @@ class VALocker(CTk):
                     try:
                         config_enum = LOCKING_CONFIG(config_file)
 
-                        if not self.updater.meets_required_version(config_enum):
-                            handle_incompatible(config_enum)
-
-                        self.logger.info(
-                            f"Config file '{config_enum.name}' is compatible"
-                        )
+                        self._handle_incompatible(config_enum)
 
                     except ValueError:
                         data = self.file_manager.get_config(config_file)
@@ -379,21 +369,35 @@ class VALocker(CTk):
                                 f"Failed to parse config file {config_file}"
                             )
             else:
-                if not self.updater.meets_required_version(item):
-                    handle_incompatible(item)
+                self._handle_incompatible(item)
 
                 self.logger.info(f"Config file '{item}' is compatible")
 
-        self.updater.update_last_checked()
-        self.update_frame.finished_checking_updates()
+    def _handle_incompatible(self, config_enum: FILE | LOCKING_CONFIG) -> None:
+        if not self.updater.meets_required_version(config_enum):
+            self.update_frame.stop_progress()
+            self.logger.error(f"Config file '{config_enum.name}' is not compatible")
 
-        if force_check_update:
-            self.after(
-                1000,
-                lambda go_to_frame=FRAME.SETTINGS: self.initMainUI(go_to_frame),
-            )
-        else:
-            self.after(1000, lambda: self.initMainUI())
+            go_to_update = ConfirmPopup(
+                self,
+                title="Update Required",
+                message=f"Config file {config_enum.name} is not compatible with v{self.VERSION}.\nPlease download the latest version.\nWould you like to be taken to the download page?",
+                default_no=False,
+                geometry="500x150",
+            ).get_input()
+
+            if go_to_update:
+                self.logger.info("Opening update page")
+                web_open("https://www.github.com/E1Bos/VALocker/releases/latest/")
+                self.exit()
+            else:
+                self.logger.info("User chose not to update")
+                self.exit()
+
+        self.logger.info(
+            f"Config file '{config_enum.name}' is compatible"
+        )
+        
 
     # region: Thread Management
 
@@ -492,6 +496,7 @@ class VALocker(CTk):
                 self.update_called = True
                 self.check_for_updates(force_check_update=force_check_update)
         else:
+            self.handle_incompatible()
             self.initMainUI()
 
     def initMainUI(self, open_to_frame: FRAME = FRAME.OVERVIEW) -> None:
