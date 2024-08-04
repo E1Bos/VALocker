@@ -29,7 +29,7 @@ class VALocker(CTk):
     """
 
     # VERSION
-    VERSION: str = "2.1.0"
+    VERSION: str = "2.1.1"
 
     # Custom Classes
     logger: CustomLogger = CustomLogger("VALocker").get_logger()

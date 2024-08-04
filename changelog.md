@@ -2,6 +2,11 @@
 
 Date Format: YYYY-MM-DD
 
+## Version 2.1.1 | 2024-08-04
+
+### Fixed
+- Fixed a bug where if settings did not properly update/load, the timings in locking were set too fast by default, leading to the incorrect agent being locked.
+
 ## Version 2.1.0 | 2024-08-03
 
 ### Added
