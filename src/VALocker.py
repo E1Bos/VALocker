@@ -152,9 +152,6 @@ class VALocker(CTk):
             )
             for i in range(5)
         ]
-        
-        print(self.fast_mode_timings)
-            
 
         self.safe_mode_enabled = BooleanVar(
             value=self.file_manager.get_value(FILE.SETTINGS, "safeModeOnStartup", False)
