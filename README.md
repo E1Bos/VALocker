@@ -272,10 +272,7 @@ I can only provide support for resolutions that I can test on my 1920x1080 monit
 
 ## 🎥 Video Demo
 
-<video width="560" height="315" controls>
-  <source src="images/readme_images/valocker-readme-demo.mp4" type="video/mp4">
-  Your browser does not support the video tag. Watch the video [here](images/readme_images/valocker-readme-demo.mp4).
-</video>
+https://github.com/user-attachments/assets/a083d708-96d9-4c5c-82ea-a04841066ab2
 
 ## 🤝 Contributing
 
