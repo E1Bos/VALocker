@@ -1177,13 +1177,30 @@ class SettingsFrame(SideFrame):
 
         # region: Update Section
 
+        update_and_reset_frame = ThemedFrame(
+            scrollable_frame, fg_color="transparent")
+        update_and_reset_frame.pack(fill=ctk.X, pady=5, padx=0)
+
+        update_and_reset_frame.grid_columnconfigure(0, weight=4)
+        update_and_reset_frame.grid_columnconfigure(1, weight=1)
+
         self.update_button = ThemedButton(
-            scrollable_frame,
+            update_and_reset_frame,
             text="Check for Updates",
             command=self.manual_update,
             corner_radius=10,
         )
-        self.update_button.pack(padx=5, pady=5, fill=ctk.X)
+        self.update_button.pack(side=ctk.LEFT, fill=ctk.X, expand=True, padx=5, pady=0)
+        
+        self.reset_button = ThemedButton(
+            update_and_reset_frame,
+            text="Reset",
+            command=self.reset_settings,
+            corner_radius=10,
+            fg_color=self.theme["button-disabled"],
+            hover_color=self.theme["button-disabled-hover"],
+        )
+        self.reset_button.pack(side=ctk.LEFT, padx=(0,5), pady=0)
 
         # endregion
 
@@ -1370,6 +1387,20 @@ class SettingsFrame(SideFrame):
             self.after(1000, lambda: self.update_button.configure(
                 state=ctk.NORMAL
             ))
+
+    def reset_settings(self) -> None:
+        # TODO: Make reset settings work
+        confirm = ConfirmPopup(
+            self.parent,
+            title="Reset Settings",
+            message="Are you sure you want to reset all settings?\nThis cannot be undone.\n\nYour save files will not be affected.",
+            geometry="400x150",
+        ).get_input()
+
+        if not confirm:
+            return
+
+        print("Settings reset")
 
     def on_raise(self) -> None:
         pass
