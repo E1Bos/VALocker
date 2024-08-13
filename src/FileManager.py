@@ -427,6 +427,9 @@ class FileManager:
         value = self.configs[file].get(key, None)
 
         if value is None and set_value is not None:
+            self._logger.warning(
+                f"Value for key '{key}' not found in {file.value}, setting to {set_value}"
+            )
             self.set_value(file, key, set_value)
             return set_value
 
@@ -528,21 +531,17 @@ class FileManager:
             case _:
                 pass
 
-        # Update current configuration with new data
-        current_data.update(new_data)
+        self._logger.info(f"Preserved user-defined fields in {file.value}: {preserved_data}")
 
-        # Restore user-defined fields to ensure they are not overwritten
+        # Preserve the user defined fields
         for key in preserved_data:
-            current_data[key] = preserved_data[key]
+            new_data[key] = preserved_data[key]
 
         # Save updated configuration
         with open(self._absolute_file_path(file.value), "w") as f:
-            self.yaml.dump(current_data, f)
-
-        # Log the update
-        self._logger.info(
-            f"Updated configuration, preserving user-defined fields, in {self._absolute_file_path(file.value)}"
-        )
+            self.yaml.dump(new_data, f)
+            
+        self._logger.info(f"Updated configuration, preserved user-defined fields, in {file.value}. Fields: {new_data}")
 
         # Reload the configuration in memory if necessary
         self.configs[file] = current_data
