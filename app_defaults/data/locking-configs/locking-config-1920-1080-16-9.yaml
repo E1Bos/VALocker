@@ -32,7 +32,7 @@ agentButtons:
 # size: size of the lock button
 # location: the top left most pixel of the lock button
 lockButton:
-  location: [809, 719]
+  location: [809, 722]
   size: [292, 67]
 # --------------------------------------------------
 # Region that is checked to see when the game is in the agent selection screen
