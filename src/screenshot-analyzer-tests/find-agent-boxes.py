@@ -3,7 +3,6 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 def show_image(img, title):
     plt.figure(figsize=(10, 8))
     if len(img.shape) == 2:
@@ -14,12 +13,10 @@ def show_image(img, title):
     plt.axis("off")
     plt.show()
 
-
 def boxes_intersect(box1, box2):
     x1, y1, w1, h1 = box1
     x2, y2, w2, h2 = box2
     return not (x1 + w1 < x2 or x2 + w2 < x1 or y1 + h1 < y2 or y2 + h2 < y1)
-
 
 def calculate_magic_number(bounding_boxes):
     sizes = [w for _, _, w, h in bounding_boxes if w == h and w >= 40]
@@ -33,13 +30,16 @@ def calculate_magic_number(bounding_boxes):
 
     return closest_size
 
-
 def detect_boxes(img_path, tolerance):
     # Load the image
     img = cv2.imread(img_path)
 
     # Convert to grayscale
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    # Filter to only consider the left half of the image
+    height, width = gray.shape
+    gray = gray[:, :width // 2]
 
     # List to store bounding boxes
     bounding_boxes = []
@@ -63,28 +63,25 @@ def detect_boxes(img_path, tolerance):
     valid_boxes = [box for box in bounding_boxes if box[2] == box[3] and box[2] >= 40]
     print(f"Total valid boxes: {len(valid_boxes)}")
 
-    # Filter out intersecting boxes and keep only those on the left side of the screen
+    # Filter out intersecting boxes
     filtered_boxes = []
-    image_width = img.shape[1]
     for box in valid_boxes:
-        x, y, w, h = box
-        if x + w <= image_width // 2:  # Check if the box is on the left side
-            intersecting_boxes = [
-                valid_box
-                for valid_box in filtered_boxes
-                if boxes_intersect(box, valid_box)
+        intersecting_boxes = [
+            valid_box
+            for valid_box in filtered_boxes
+            if boxes_intersect(box, valid_box)
+        ]
+        if not intersecting_boxes:
+            filtered_boxes.append(box)
+        else:
+            # Keep the larger box
+            largest_box = max(intersecting_boxes + [box], key=lambda b: b[2] * b[3])
+            # Remove all intersecting boxes
+            filtered_boxes = [
+                b for b in filtered_boxes if b not in intersecting_boxes
             ]
-            if not intersecting_boxes:
-                filtered_boxes.append(box)
-            else:
-                # Keep the larger box
-                largest_box = max(intersecting_boxes + [box], key=lambda b: b[2] * b[3])
-                # Remove all intersecting boxes
-                filtered_boxes = [
-                    b for b in filtered_boxes if b not in intersecting_boxes
-                ]
-                # Add the largest box
-                filtered_boxes.append(largest_box)
+            # Add the largest box
+            filtered_boxes.append(largest_box)
 
     print(f"Total filtered boxes: {len(filtered_boxes)}")
 
@@ -119,7 +116,6 @@ def detect_boxes(img_path, tolerance):
 
     return final_boxes
 
-
 def calculate_top_left_and_size(boxes):
     if not boxes:
         raise ValueError("No boxes provided.")
@@ -135,7 +131,6 @@ def calculate_top_left_and_size(boxes):
 
     return (top_left_x, top_left_y), size
 
-
 def calculate_spacing(boxes):
     if not boxes:
         raise ValueError("No boxes provided.")
@@ -147,7 +142,6 @@ def calculate_spacing(boxes):
     spacing = boxes[1][0] - (boxes[0][0] + boxes[0][2])
 
     return spacing
-
 
 def infer_grid_size(boxes):
     if not boxes:
@@ -162,7 +156,7 @@ def infer_grid_size(boxes):
 
     return num_rows, num_columns
 
-def main(image_path, tolerance = 21):
+def main(image_path, tolerance=21):
     final_boxes = detect_boxes(image_path, tolerance)
 
     if not final_boxes:

@@ -45,6 +45,9 @@ def calculate_spacing(mask_dark_blue, left_box, right_box):
 def main(image_path, target_rgb):
     image_rgb = load_image(image_path)
     
+    height, width, _ = image_rgb.shape
+    image_rgb = image_rgb[:, :width // 2]
+    
     lower_dark_blue = np.array([50, 130, 180])
     upper_dark_blue = np.array([60, 140, 190])
     
