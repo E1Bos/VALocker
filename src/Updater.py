@@ -368,7 +368,7 @@ class Updater:
         )
 
         if minimum_version is None or len(minimum_version) == 0:
-            return True
+            return False
 
         release_version = self.release_version.replace("v", "").split(".")
         

@@ -9,7 +9,17 @@ from ctypes import windll
 
 # Custom imports
 from CustomLogger import CustomLogger
-from Constants import FILE, FOLDER, FRAME, ICON, LOCKING_CONFIG, ANTI_AFK, ROLE, AgentIndex, AgentGrid
+from Constants import (
+    FILE,
+    FOLDER,
+    FRAME,
+    ICON,
+    LOCKING_CONFIG,
+    ANTI_AFK,
+    ROLE,
+    AgentIndex,
+    AgentGrid,
+)
 from FileManager import FileManager
 from SaveManager import SaveManager
 from Updater import Updater
@@ -140,11 +150,10 @@ class VALocker(CTk):
         fast_mode_timings = self.file_manager.get_config(FILE.SETTINGS).get(
             "fastModeTimings", None
         )
-        
+
         if type(fast_mode_timings) is not dict:
             fast_mode_timings = {"clickDelay": 0.04, "moveDelay": 0.04}
-        
-        
+
         self.fast_mode_timings = [
             (
                 fast_mode_timings.get("clickDelay")
@@ -285,10 +294,13 @@ class VALocker(CTk):
         self.after_idle(self.destroy)
         sys_exit()
 
-    def check_for_updates(self, force_check_update: bool = False) -> None:
+    def check_for_updates(
+        self, force_check_update: bool = False, set_frame: FRAME = None
+    ) -> None:
         """
         Checks for updates and performs necessary actions if updates are available.
         """
+
         # Checks for version updates
         self.logger.info("Checking for version updates")
 
@@ -329,21 +341,20 @@ class VALocker(CTk):
             )
 
         # Ensure config files are compatible with the current VALocker version
-        self.handle_incompatible()
-        
-        
+        self.handle_incompatible(set_frame=set_frame, can_force_update=False)
+
         self.updater.update_last_checked()
         self.update_frame.finished_checking_updates()
 
         if force_check_update:
             self.after(
                 1000,
-                lambda go_to_frame=FRAME.SETTINGS: self.initMainUI(go_to_frame),
+                lambda set_frame=set_frame: self.initMainUI(set_frame),
             )
         else:
             self.after(1000, lambda: self.initMainUI())
 
-    def handle_incompatible(self) -> None:
+    def handle_incompatible(self, set_frame: FRAME, can_force_update=False) -> None:
         for item in self.updater.ITEMS_TO_CHECK:
             if type(item) is FOLDER:
 
@@ -353,7 +364,11 @@ class VALocker(CTk):
                     try:
                         config_enum = LOCKING_CONFIG(config_file)
 
-                        self._handle_incompatible(config_enum)
+                        self._handle_incompatible(
+                            config_enum,
+                            can_force_update=can_force_update,
+                            set_frame=set_frame,
+                        )
 
                     except ValueError:
                         data = self.file_manager.get_config(config_file)
@@ -370,14 +385,25 @@ class VALocker(CTk):
                                 f"Failed to parse config file {config_file}"
                             )
             else:
-                self._handle_incompatible(item)
+                self._handle_incompatible(
+                    item, can_force_update=can_force_update, set_frame=set_frame
+                )
 
                 self.logger.info(f"Config file '{item}' is compatible")
 
-    def _handle_incompatible(self, config_enum: FILE | LOCKING_CONFIG) -> None:
+    def _handle_incompatible(
+        self,
+        config_enum: FILE | LOCKING_CONFIG,
+        set_frame: FRAME,
+        can_force_update=False,
+    ) -> None:
         if not self.updater.meets_required_version(config_enum):
             self.update_frame.stop_progress()
             self.logger.error(f"Config file '{config_enum.name}' is not compatible")
+
+            if can_force_update:
+                self.initUI(force_check_update=True, set_frame=set_frame)
+                return
 
             go_to_update = ConfirmPopup(
                 self,
@@ -395,10 +421,7 @@ class VALocker(CTk):
                 self.logger.info("User chose not to update")
                 self.exit()
 
-        self.logger.info(
-            f"Config file '{config_enum.name}' is compatible"
-        )
-        
+        self.logger.info(f"Config file '{config_enum.name}' is compatible")
 
     # region: Thread Management
 
@@ -465,7 +488,7 @@ class VALocker(CTk):
 
     # region: UI
 
-    def initUI(self, force_check_update: bool = False) -> None:
+    def initUI(self, force_check_update: bool = False, set_frame=None) -> None:
         """
         Initializes the user interface.
 
@@ -495,9 +518,11 @@ class VALocker(CTk):
 
             if not self.update_called:
                 self.update_called = True
-                self.check_for_updates(force_check_update=force_check_update)
+                self.check_for_updates(
+                    force_check_update=force_check_update, set_frame=set_frame
+                )
         else:
-            self.handle_incompatible()
+            self.handle_incompatible(can_force_update=True, set_frame=set_frame)
             self.initMainUI()
 
     def initMainUI(self, open_to_frame: FRAME = FRAME.OVERVIEW) -> None:
@@ -720,10 +745,13 @@ class VALocker(CTk):
             tuple[ROLE, int]: The role and index of the agent.
         """
         unlocked_agents = self.get_unlocked_agents()
-        
-        if unlocked_agents.index(agent) < self.agent_grid.columns * self.agent_grid.rows:
+
+        if (
+            unlocked_agents.index(agent)
+            < self.agent_grid.columns * self.agent_grid.rows
+        ):
             return ROLE.DEFAULT, unlocked_agents.index(agent)
-        
+
         for role in self.file_manager.get_value(FILE.AGENT_CONFIG, "roles"):
             agents = self.file_manager.get_value(FILE.AGENT_CONFIG, role)
 
@@ -732,7 +760,6 @@ class VALocker(CTk):
                     agent for agent in agents if agent in self.get_unlocked_agents()
                 ]
 
-                
                 return ROLE(role), unlocked_role_agents.index(agent)
 
         return None
@@ -744,7 +771,7 @@ class VALocker(CTk):
         role, index = self.get_agent_role_and_index(self.selected_agent.get().lower())
 
         self.agent_index.set_agent(role, index)
-        
+
     def get_unlocked_agents(self) -> list[str]:
         """
         Returns a list of all unlocked agents, sorted alphabetically.

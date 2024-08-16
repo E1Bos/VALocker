@@ -544,7 +544,7 @@ class FileManager:
         self._logger.info(f"Updated configuration, preserved user-defined fields, in {file.value}. Fields: {new_data}")
 
         # Reload the configuration in memory if necessary
-        self.configs[file] = current_data
+        self.configs[file] = new_data
 
     def get_files_in_folder(self, folder: FOLDER) -> list[str]:
         """
