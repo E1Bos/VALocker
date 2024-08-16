@@ -1382,7 +1382,7 @@ class SettingsFrame(SideFrame):
             self.update_button.configure(
                 state=ctk.DISABLED
             )
-            self.parent.initUI(force_check_update=True)
+            self.parent.initUI(force_check_update=True, set_frame = FRAME.SETTINGS)
             
             self.initUI_called = False
             self.after(1000, lambda: self.update_button.configure(
