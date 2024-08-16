@@ -2,6 +2,15 @@
 
 Date Format: YYYY-MM-DD
 
+## Version 2.1.4 | 2024-08-15
+
+### Changed
+- If the required version on a file doesn't match the current version, VALocker will first attempt updating all files to see if that fixes the issue. If it doesn't, the user will be prompted to update VALocker. This is to prevent the program from crashing due to missing settings.
+
+### Fixed
+- Fixed contents of a file not being properly updated in the File Manager when the file is updated.
+- Fixed settings version not being correct, causing the program to crash when checking if the settings are compatible with the current version.
+
 ## Version 2.1.3 | 2024-08-04
 
 ### Added
