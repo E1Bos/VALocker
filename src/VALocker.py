@@ -29,7 +29,7 @@ class VALocker(CTk):
     """
 
     # VERSION
-    VERSION: str = "2.1.3"
+    VERSION: str = "2.1.4"
 
     # Custom Classes
     logger: CustomLogger = CustomLogger("VALocker").get_logger()
@@ -138,11 +138,12 @@ class VALocker(CTk):
         self.instalocker_status = BooleanVar(value=True)
 
         fast_mode_timings = self.file_manager.get_config(FILE.SETTINGS).get(
-            "fastModeTimings", {
-                "clickDelay": 0.04,
-                "moveDelay": 0.04
-            }
+            "fastModeTimings", None
         )
+        
+        if type(fast_mode_timings) is not dict:
+            fast_mode_timings = {"clickDelay": 0.04, "moveDelay": 0.04}
+        
         
         self.fast_mode_timings = [
             (

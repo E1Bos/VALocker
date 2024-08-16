@@ -1200,7 +1200,8 @@ class SettingsFrame(SideFrame):
             fg_color=self.theme["button-disabled"],
             hover_color=self.theme["button-disabled-hover"],
         )
-        self.reset_button.pack(side=ctk.LEFT, padx=(0,5), pady=0)
+        # TODO: UNCOMMENT AFTER RESET IMPLEMENTATION ADDED
+        # self.reset_button.pack(side=ctk.LEFT, padx=(0,5), pady=0)
 
         # endregion
 

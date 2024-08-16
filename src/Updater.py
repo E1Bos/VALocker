@@ -365,16 +365,20 @@ class Updater:
         minimum_version = (
             self._file_manager.get_config(config_file)
             .get("requiredVersion", None)
-            .split(".")
         )
 
         if minimum_version is None or len(minimum_version) == 0:
             return True
 
         release_version = self.release_version.replace("v", "").split(".")
+        
+        try: 
+            minimum_version = minimum_version.replace("v", "").split(".")
+        except AttributeError:
+            return False
 
         self._logger.info(
-            f"Checking if {config_file.name} (version: {".".join(minimum_version)}) can be run by VALocker (version: {self.release_version})"
+            f"Checking if {config_file.name} (version: {'.'.join(minimum_version)}) can be run by VALocker (version: {self.release_version})"
         )
 
         for release_vers_digit, minimum_version_digit in zip(
@@ -402,7 +406,7 @@ if __name__ == "__main__":
     # Test Updater class
     file_manager = FileManager()
     file_manager.setup()
-    updater = Updater("2.0.0", file_manager)
+    updater = Updater("2.1.3", file_manager)
     updater.meets_required_version(FILE.SETTINGS)
     # updater.check_for_config_update(FOLDER.LOCKING_CONFIGS)
     # updater.check_for_version_update()
