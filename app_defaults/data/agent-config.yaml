@@ -1,6 +1,6 @@
 # --------------------------------------------------
 # Version of the configuration
-version: 1.0.1
+version: 1.0.2
 requiredVersion: 2.1.*
 # --------------------------------------------------
 # Agents that are unlocked be default
