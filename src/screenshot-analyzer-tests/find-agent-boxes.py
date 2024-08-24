@@ -1,6 +1,6 @@
-from collections import Counter
 import cv2
 import numpy as np
+from collections import Counter
 import matplotlib.pyplot as plt
 
 def show_image(img, title):
@@ -12,6 +12,7 @@ def show_image(img, title):
     plt.title(title)
     plt.axis("off")
     plt.show()
+
 
 def boxes_intersect(box1, box2):
     x1, y1, w1, h1 = box1
@@ -30,9 +31,12 @@ def calculate_magic_number(bounding_boxes):
 
     return closest_size
 
-def detect_boxes(img_path, tolerance):
+def detect_boxes(img_path, tolerance, debug=False):
     # Load the image
     img = cv2.imread(img_path)
+    if img is None:
+        print(f"Failed to load image: {img_path}")
+        return []
 
     # Convert to grayscale
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -60,8 +64,14 @@ def detect_boxes(img_path, tolerance):
             bounding_boxes.append((x, y, w, h))
 
     # Filter bounding boxes based on size and shape
-    valid_boxes = [box for box in bounding_boxes if box[2] == box[3] and box[2] >= 40]
+    valid_boxes = [box for box in bounding_boxes if box[2] == box[3] and box[2] >= 10]
     print(f"Total valid boxes: {len(valid_boxes)}")
+
+    if debug:
+        debug_img = img.copy()
+        for x, y, w, h in valid_boxes:
+            cv2.rectangle(debug_img, (x, y), (x + w, y + h), (255, 0, 0), 1)
+        show_image(debug_img, "Valid Bounding Boxes")
 
     # Filter out intersecting boxes
     filtered_boxes = []
@@ -85,11 +95,17 @@ def detect_boxes(img_path, tolerance):
 
     print(f"Total filtered boxes: {len(filtered_boxes)}")
 
+    if debug:
+        debug_img = img.copy()
+        for x, y, w, h in filtered_boxes:
+            cv2.rectangle(debug_img, (x, y), (x + w, y + h), (0, 255, 0), 1)
+        show_image(debug_img, "Filtered Bounding Boxes")
+
     # Calculate the magic number
     magic_number = calculate_magic_number(filtered_boxes)
     if magic_number is None:
         print("No valid bounding boxes found.")
-        return
+        return []
 
     print(f"Magic number (box size): {magic_number}")
 
@@ -101,18 +117,11 @@ def detect_boxes(img_path, tolerance):
     ]
     print(f"Total boxes with magic number size: {len(final_boxes)}")
 
-    # Draw the bounding boxes on the original image
-    for x, y, w, h in final_boxes:
-        cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 1)
-
-    # Show the image with detected bounding boxes
-    # Uncomment the following line to display the image
-    # show_image(img, f"Detected Bounding Boxes with Tolerance {tolerance}")
-
-    # Print the coordinates of the bounding boxes
-    # Uncomment the following lines to print the coordinates
-    # for i, (x, y, w, h) in enumerate(final_boxes):
-    #     print(f"Box {i+1}: x={x}, y={y}, width={w}, height={h}")
+    if debug:
+        debug_img = img.copy()
+        for x, y, w, h in final_boxes:
+            cv2.rectangle(debug_img, (x, y), (x + w, y + h), (0, 0, 255), 1)
+        show_image(debug_img, "Final Bounding Boxes")
 
     return final_boxes
 
@@ -156,8 +165,8 @@ def infer_grid_size(boxes):
 
     return num_rows, num_columns
 
-def main(image_path, tolerance=21):
-    final_boxes = detect_boxes(image_path, tolerance)
+def main(image_path, tolerance=21, debug=False):
+    final_boxes = detect_boxes(image_path, tolerance, debug)
 
     if not final_boxes:
         print("No valid bounding boxes found.")
@@ -175,10 +184,14 @@ def main(image_path, tolerance=21):
             "spacing": [spacing, spacing],
             "grid": grid,
         }
+
         return output
 
 if __name__ == "__main__":
     image_path = "src/screenshot-analyzer-tests/screenshot.png"
+    # image_path = "src/screenshot-analyzer-tests/screenshot-1680.png"
     tolerance = 21
-    output = main(image_path, tolerance)
+    debug = False  # Set to True to enable debug mode
+    
+    output = main(image_path, tolerance, debug)
     print(output)
