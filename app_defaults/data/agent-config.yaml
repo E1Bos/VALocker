@@ -1,6 +1,6 @@
 # --------------------------------------------------
 # Version of the configuration
-version: 1.0.2
+version: 1.0.3
 requiredVersion: 2.1.*
 # --------------------------------------------------
 # Agents that are unlocked be default
@@ -42,6 +42,7 @@ sentinel:
   - deadlock
   - killjoy
   - sage
+  - vyse
 # --------------------------------------------------
 # All the maps in game
 maps:
