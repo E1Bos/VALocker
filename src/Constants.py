@@ -1,6 +1,7 @@
 """
 @author: [E1Bos](https://www.github.com/E1Bos)
 """
+
 from __future__ import annotations
 from enum import Enum
 import os
@@ -52,6 +53,7 @@ class FOLDER(Enum):
     SETTINGS: str = "settings"
     THEMES: str = "themes"
 
+
 class FILE(Enum):
     """
     Enum for Files used in the project
@@ -62,10 +64,14 @@ class FILE(Enum):
     SETTINGS: str = f"{FOLDER.SETTINGS.value}/settings.yaml"
     DEFAULT_SAVE: str = f"{FOLDER.SAVE_FILES.value}/default.yaml"
     DEFAULT_THEME: str = f"{FOLDER.THEMES.value}/default-theme.yaml"
-    
+
     @property
     def download_url(self) -> str:
         return f"{URL.DOWNLOAD_URL.value}/app_defaults/{self.value}"
+
+    @property
+    def file_name(self) -> str:
+        return self.value.split("/")[-1]
 
 
 class LOCKING_CONFIG(Enum):
@@ -121,58 +127,60 @@ class ICON(Enum):
         else:
             return super().__getattribute__(name)
 
-class AgentIndex():
+
+class AgentIndex:
     _role: ROLE
     _index: int
-    
+
     def __init__(self, role: ROLE, index: int) -> None:
         self._role = role
         self._index = index
-        
+
     def set_agent(self, role: ROLE, index: int) -> None:
         self._role = role
         self._index = index
-    
+
     def get_agent(self) -> tuple[ROLE, int]:
         return (self._role, self._index)
-    
+
     @property
     def role(self) -> ROLE:
         return self._role
-    
+
     @property
     def index(self) -> int:
         return self._index
 
-class AgentGrid():
+
+class AgentGrid:
     _rows: int
     _columns: int
-    
+
     def __init__(self, rows: int, columns: int) -> None:
         self._rows = rows
         self._columns = columns
-    
+
     def set_grid(self, rows: int, columns: int) -> None:
         self._rows = rows
         self._columns = columns
-        
+
     def get_grid(self) -> tuple[int, int]:
         return (self._rows, self._columns)
-    
+
     @property
     def rows(self) -> int:
         return self._rows
-    
+
     @property
     def columns(self) -> int:
         return self._columns
-    
-    
+
 
 class ROLE(Enum):
     """
     Enum for agent roles
     """
+
     DEFAULT: str = "default"
     DUELIST: str = "duelist"
     CONTROLLER: str = "controller"
@@ -194,16 +202,16 @@ class ANTI_AFK(Enum):
     """
     ### Enum for Anti-AFK movement types
 
-    RANDOM: Random key presses
-    RANDOM_CENTERED: Random key presses but end up back in the center
-    CIRCLE: Go in a circle
+    CENTERED: Random key presses but end up back in the center
     STRAFE: Go right to left
+    RANDOM: Random key presses
+    CIRCLE: Go in a circle
 
     ### Methods
     next: Returns the next movement type in the enum
     """
 
-    RANDOM_CENTERED = "Random Centered"
+    CENTERED = "Centered"
     STRAFE = "Strafe"
     RANDOM = "Random"
     CIRCLE = "Circle"
@@ -288,27 +296,29 @@ class Region:
         self.location = location
         self.color = color
 
-        self.location_end = location_end if location_end else (
-            location[0] + size[0], location[1] + size[1]
+        self.location_end = (
+            location_end
+            if location_end
+            else (location[0] + size[0], location[1] + size[1])
         )
 
         self.size = size
-        
+
     def __repr__(self) -> str:
         return f"Region(x: {self.location[0]} -> {self.location_end[0]}, y: {self.location[1]} -> {self.location_end[1]}, w.h: {self.size[0]} . {self.size[1]}, color: {self.color})"
 
     @property
     def x(self) -> int:
         return self.location[0]
-    
+
     @property
     def y(self) -> int:
         return self.location[1]
-    
+
     @property
     def x_end(self) -> int:
         return self.location_end[0]
-    
+
     @property
     def y_end(self) -> int:
         return self.location_end[1]
@@ -316,15 +326,15 @@ class Region:
     @property
     def width(self) -> int:
         return self.size[0]
-    
+
     @property
     def height(self) -> int:
         return self.size[1]
-    
+
     @property
     def center(self) -> tuple[int, int]:
         return (self.x + self.width // 2, self.y + self.height // 2)
-    
+
 
 '''
 class Save():
