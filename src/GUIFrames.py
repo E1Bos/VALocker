@@ -300,9 +300,7 @@ class OverviewFrame(SideFrame):
             middle_frame,
             text="Anti-AFK",
             variable=self.parent.anti_afk,
-            command=lambda: self.parent.toggle_boolean_and_run_function(
-                self.parent.anti_afk, self.parent.autostart_tools
-            ),
+            command=lambda: self.parent.toggle_tool(self.parent.anti_afk),
         )
         anti_afk_button.grid(row=7, column=0, sticky=ctk.NSEW, padx=10)
 
@@ -810,9 +808,9 @@ class SaveFilesFrame(SideFrame):
             first_time (bool, optional): Only set to true when "SaveFilesFrame" is initiated, since it reads from disk.
             Defaults to False.
         """
-        
+
         favorite_button_names = [button.save_file for button in self.favorite_buttons]
-        
+
         if not first_time:
             for button in self.buttons:
                 button.destroy()
@@ -1086,7 +1084,7 @@ class ToolsFrame(SideFrame):
             self,
             text=["Tools: Enabled", "Tools: Disabled"],
             variable=self.tool_status,
-            command=lambda: self.parent.manual_toggle_tools(self.tool_status),
+            command=lambda: self.parent.toggle_boolean(self.tool_status),
             corner_radius=10,
         )
         toggle_tool_status.pack(side=ctk.TOP, fill=ctk.X, pady=(10, 0), padx=0)
@@ -1105,27 +1103,12 @@ class ToolsFrame(SideFrame):
                 text=tool,
                 variable=var,
                 corner_radius=10,
-                command=lambda tool_var=var: self.toggle_tool(tool_var),
+                command=lambda tool_var=var: self.parent.toggle_tool(tool_var),
             )
             button.grid(row=index, column=0, padx=10, pady=10, sticky=ctk.NSEW)
 
             self.tool_buttons[tool] = button
 
-    def toggle_tool(self, tool_var: ctk.BooleanVar) -> None:
-        """
-        Toggles the state of the specified tool.
-
-        Args:
-            tool_var (ctk.BooleanVar): The tool to be toggled.
-        """
-        self.parent.toggle_boolean(tool_var)
-
-        if tool_var.get():
-            self.parent.num_running_tools += 1
-        else:
-            self.parent.num_running_tools -= 1
-
-        self.parent.autostart_tools()
 
     def on_raise(self) -> None:
         pass
@@ -1141,7 +1124,7 @@ class SettingsFrame(SideFrame):
     # TODO: Add more settings
     current_locking_config: ctk.StringVar
     backup_locking_config: str = None
-    
+
     initUI_called: bool
 
     def __init__(self, parent: "VALocker"):
@@ -1177,9 +1160,8 @@ class SettingsFrame(SideFrame):
 
         # region: Update Section
 
-        update_and_reset_frame = ThemedFrame(
-            scrollable_frame, fg_color="transparent")
-        update_and_reset_frame.pack(fill=ctk.X, pady=5, padx=0)
+        update_and_reset_frame = ThemedFrame(scrollable_frame, fg_color="transparent")
+        update_and_reset_frame.pack(fill=ctk.X, pady=(0, 10), padx=0)
 
         update_and_reset_frame.grid_columnconfigure(0, weight=4)
         update_and_reset_frame.grid_columnconfigure(1, weight=1)
@@ -1190,18 +1172,18 @@ class SettingsFrame(SideFrame):
             command=self.manual_update,
             corner_radius=10,
         )
-        self.update_button.pack(side=ctk.LEFT, fill=ctk.X, expand=True, padx=5, pady=0)
-        
+        self.update_button.pack(side=ctk.LEFT, fill=ctk.X, expand=True, padx=(0,5), pady=0)
+
         self.reset_button = ThemedButton(
             update_and_reset_frame,
             text="Reset",
-            command=self.reset_settings,
+            command=self.reset_configs,
             corner_radius=10,
             fg_color=self.theme["button-disabled"],
             hover_color=self.theme["button-disabled-hover"],
+            width=0,
         )
-        # TODO: UNCOMMENT AFTER RESET IMPLEMENTATION ADDED
-        # self.reset_button.pack(side=ctk.LEFT, padx=(0,5), pady=0)
+        self.reset_button.pack(side=ctk.LEFT, padx=0, pady=0)
 
         # endregion
 
@@ -1229,8 +1211,20 @@ class SettingsFrame(SideFrame):
             variable=self.current_locking_config,
             values=list(locking_configs.keys()),
         )
-        self.locking_config_dropdown.pack(fill=ctk.X, padx=10, pady=5)
+        self.locking_config_dropdown.pack(fill=ctk.X, padx=10, pady=5, side=ctk.LEFT, expand=True)
         self.current_locking_config.trace_add("write", self.change_locking_config)
+
+        self.generate_config_button = ThemedButton(
+            locking_config_frame,
+            image=ctk.CTkImage(Image.open(ICON.NEW_FILE.value), size=(20, 20)),
+            text="",
+            width=0,
+            command=self.generate_config,
+            corner_radius=10,
+        )
+        # TODO: GET CONFIG GENERATOR TO WORK
+        # self.generate_config_button.pack(padx=(0,10), pady=5, side=ctk.LEFT)
+        
 
         # endregion
 
@@ -1379,29 +1373,29 @@ class SettingsFrame(SideFrame):
     def manual_update(self) -> None:
         if not self.initUI_called:
             self.initUI_called = True
-            self.update_button.configure(
-                state=ctk.DISABLED
-            )
-            self.parent.initUI(force_check_update=True, set_frame = FRAME.SETTINGS)
-            
-            self.initUI_called = False
-            self.after(1000, lambda: self.update_button.configure(
-                state=ctk.NORMAL
-            ))
+            self.update_button.configure(state=ctk.DISABLED)
+            self.parent.init(force_check_update=True, set_frame=FRAME.SETTINGS)
 
-    def reset_settings(self) -> None:
-        # TODO: Make reset settings work
+            self.initUI_called = False
+            self.after(1000, lambda: self.update_button.configure(state=ctk.NORMAL))
+
+    def reset_configs(self) -> None:
         confirm = ConfirmPopup(
             self.parent,
-            title="Reset Settings",
-            message="Are you sure you want to reset all settings?\nThis cannot be undone.\n\nYour save files will not be affected.",
-            geometry="400x150",
+            title="Reset Configurations",
+            message="Are you sure you want to reset all configs?\nThis cannot be undone.\n\nYour save files will not be affected.\nThe default save file will be reset.\n\nYour current configs will be backed up.",
+            geometry="400x200",
         ).get_input()
 
         if not confirm:
             return
 
-        print("Settings reset")
+        self.parent.file_manager.reset_configs()
+
+        self.parent.init(reset_config=True, set_frame=FRAME.OVERVIEW)
+
+    def generate_config(self) -> None:
+        print("Generating config...")
 
     def on_raise(self) -> None:
         pass
@@ -1423,7 +1417,7 @@ class UpdateFrame(ctk.CTkFrame):
     status_variables: dict[FILE, ctk.StringVar]
     version_variable: ctk.StringVar
 
-    def __init__(self, parent: "VALocker", **kwargs) -> None:
+    def __init__(self, parent: "VALocker", reset_configs = False, **kwargs) -> None:
         self.parent = parent
         self.theme = parent.theme
 
@@ -1461,7 +1455,7 @@ class UpdateFrame(ctk.CTkFrame):
         self.progress_bar.start()
 
         self.status_variables = {}
-        
+
         version_frame = ThemedFrame(self)
         version_frame.grid(row=2, column=0, sticky=ctk.NSEW, padx=50, pady=10)
 
@@ -1472,9 +1466,9 @@ class UpdateFrame(ctk.CTkFrame):
         version_status = ThemedLabel(
             version_frame, textvariable=self.version_variable, font=self.font_size
         )
-        
+
         version_status.pack(side=ctk.RIGHT, padx=10, pady=10)
-        
+
         for row, file_to_check in enumerate(self.parent.updater.ITEMS_TO_CHECK):
             row += 3
 
