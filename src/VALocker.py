@@ -3,6 +3,7 @@ from customtkinter import CTk, BooleanVar, StringVar, IntVar
 from typing import Optional
 from sys import exit as sys_exit
 
+import ruamel.yaml as ruamel_yaml
 from webbrowser import open as web_open
 from threading import Lock
 from ctypes import windll
@@ -85,11 +86,11 @@ class VALocker(CTk):
     pause_tools_thread: BooleanVar
     tools_thread_running: BooleanVar
     anti_afk: BooleanVar
-    anti_afk_mode = ANTI_AFK = ANTI_AFK.RANDOM_CENTERED
+    anti_afk_mode = ANTI_AFK = ANTI_AFK.CENTERED
     # drop_spike: BooleanVar
 
     # UI
-    update_frame: UpdateFrame = None
+    update_frame: UpdateFrame
     frames: Dict[
         FRAME, OverviewFrame | AgentToggleFrame | RandomSelectFrame | SaveFilesFrame
     ] = dict()
@@ -117,21 +118,13 @@ class VALocker(CTk):
         self.theme = self.theme_manager.get_theme(theme_name)
         self.logger.info(f'Theme "{theme_name}" loaded')
 
-        self.load_variables()
-
-        # Load save
-        self.logger.info("Loading Save")
-        self.load_save(self.file_manager.get_value(FILE.SETTINGS, "activeSaveFile"))
-
         # Load exit handler
         self.protocol("WM_DELETE_WINDOW", self.exit)
         windll.shell32.SetCurrentProcessExplicitAppUserModelID("VALocker.GUI")
 
-        # Start UI and check for updates
-        self.logger.info("Starting UI")
-        self.initUI()
-
-        self.after_idle(self.load_threads)
+        # Load VALocker and check for updates
+        self.logger.info("Starting VALocker")
+        self.init()
 
     # region: Setup
     def load_variables(self) -> None:
@@ -147,18 +140,17 @@ class VALocker(CTk):
 
         self.instalocker_status = BooleanVar(value=True)
 
-        fast_mode_timings = self.file_manager.get_config(FILE.SETTINGS).get(
-            "fastModeTimings", None
-        )
+        fast_mode_timings = self.file_manager.get_value(FILE.SETTINGS, "fastModeTimings")
 
-        if type(fast_mode_timings) is not dict:
-            fast_mode_timings = {"clickDelay": 0.04, "moveDelay": 0.04}
+        if type(fast_mode_timings) is not ruamel_yaml.CommentedMap:
+            fast_mode_timings = dict()
+            
 
         self.fast_mode_timings = [
             (
-                fast_mode_timings.get("clickDelay")
+                fast_mode_timings.get("clickDelay", 0.04)
                 if i % 2 == 0
-                else fast_mode_timings.get("moveDelay")
+                else fast_mode_timings.get("moveDelay", 0.04)
             )
             for i in range(5)
         ]
@@ -255,6 +247,11 @@ class VALocker(CTk):
         # endregion
 
     def load_threads(self) -> None:
+        if hasattr(self, "__threads_loaded"):
+            return
+
+        self.__threads_loaded = True
+
         # Initialize Instalocker
         self.logger.info("Initializing Instalocker")
         self.instalocker = Instalocker(self)
@@ -295,7 +292,7 @@ class VALocker(CTk):
         sys_exit()
 
     def check_for_updates(
-        self, force_check_update: bool = False, set_frame: FRAME = None
+        self, set_frame: Optional[FRAME] = None
     ) -> None:
         """
         Checks for updates and performs necessary actions if updates are available.
@@ -346,13 +343,10 @@ class VALocker(CTk):
         self.updater.update_last_checked()
         self.update_frame.finished_checking_updates()
 
-        if force_check_update:
-            self.after(
-                1000,
-                lambda set_frame=set_frame: self.initMainUI(set_frame),
-            )
-        else:
-            self.after(1000, lambda: self.initMainUI())
+        if set_frame is None:
+            set_frame = FRAME.OVERVIEW
+
+        self.after(1000, lambda: self.initMain(set_frame, True))
 
     def handle_incompatible(self, set_frame: FRAME, can_force_update=False) -> None:
         for item in self.updater.ITEMS_TO_CHECK:
@@ -389,7 +383,7 @@ class VALocker(CTk):
                     item, can_force_update=can_force_update, set_frame=set_frame
                 )
 
-                self.logger.info(f"Config file '{item}' is compatible")
+                self.logger.info(f"Config file '{item.name}' is compatible")
 
     def _handle_incompatible(
         self,
@@ -402,7 +396,7 @@ class VALocker(CTk):
             self.logger.error(f"Config file '{config_enum.name}' is not compatible")
 
             if can_force_update:
-                self.initUI(force_check_update=True, set_frame=set_frame)
+                self.init(force_check_update=True, set_frame=set_frame)
                 return
 
             go_to_update = ConfirmPopup(
@@ -482,19 +476,22 @@ class VALocker(CTk):
         if self.num_running_tools == 0:
             self.toggle_boolean(self.tools_thread_running, False)
         else:  # Enable tools thread
+            if self.tools_thread_running.get():
+                return
+            
             self.toggle_boolean(self.tools_thread_running, True)
 
     # endregion
 
     # region: UI
 
-    def initUI(self, force_check_update: bool = False, set_frame=None) -> None:
+    def init(self, force_check_update: bool = False, set_frame=None, reset_config = False) -> None:
         """
-        Initializes the user interface.
+        Initializes VALocker.
 
         Sets the window size and minimum size.
         Updates the title and icon.
-        Checks for updates and then initializes the main user interface.
+        Checks for updates and then initializes the UI and all variables.
         """
 
         self.geometry("700x400")
@@ -502,48 +499,60 @@ class VALocker(CTk):
         self.update_title_and_icon()
         self.configure(fg_color=self.theme["background"])
 
-        if self.update_frame is not None and type(self.update_frame) is UpdateFrame:
+        if hasattr(self, "update_frame") and type(self.update_frame) is UpdateFrame:
             self.update_frame.destroy()
             del self.update_frame
 
-        self.update_frame = UpdateFrame(self)
+        if not reset_config and (self.updater.check_frequency_met() or force_check_update):
+            self.update_frame = UpdateFrame(self)
 
-        if self.updater.check_frequency_met() or force_check_update:
             if not force_check_update:
                 self.logger.info("Check frequency met, checking for updates")
             else:
                 self.logger.info("Manually checking for updates")
+
             self.update_frame.pack(fill="both", expand=True)
             self.update()
 
+            # Prevent init method from being called multiple times
             if not self.update_called:
                 self.update_called = True
                 self.check_for_updates(
-                    force_check_update=force_check_update, set_frame=set_frame
+                    set_frame=set_frame
                 )
         else:
             self.handle_incompatible(can_force_update=True, set_frame=set_frame)
-            self.initMainUI()
+            self.initMain()
 
-    def initMainUI(self, open_to_frame: FRAME = FRAME.OVERVIEW) -> None:
+    def initMain(self, open_to_frame: FRAME = FRAME.OVERVIEW, reset_frames: bool = False) -> None:
         """
-        Initializes the main user interface.
+        The main VALocker initialization.
 
-        Sets the grid configuration.
-        Creates navigation frame and frames for different sections.
-        Raises the "Overview" frame by default.
+        Loads (or reloads) the variables and the save file.
+
+        Creates the entire UI.
         """
         # self.resizable(False, False)
-        try:
+
+        # Load/Reload variables
+        self.load_variables()
+
+        # Load/Reload save
+        self.logger.info("Loading Save")
+        self.load_save(self.file_manager.get_value(FILE.SETTINGS, "activeSaveFile"))
+
+        if hasattr(self, "update_frame"):
             self.update_frame.destroy()
             del self.update_frame
-        except Exception as e:
-            self.logger.error(f"Error destroying update frame: {e}")
-            self.update_frame = None
 
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
         self.grid_propagate(False)
+        
+        if reset_frames:
+            for frame in self.frames.values():
+                frame.destroy()
+            self.frames = {}
 
         if len(self.frames) == 0:
             self.frames = {
@@ -566,6 +575,9 @@ class VALocker(CTk):
 
         self.agent_unlock_status_changed()
         self.select_frame(open_to_frame)
+
+        # Initialize threads if not already initialized
+        self.load_threads()
 
         self.update_called = False
 
@@ -604,7 +616,10 @@ class VALocker(CTk):
         Manages the program icon and the window title.
         """
 
-        if not self.instalocker_thread_running.get():
+        if (
+            not hasattr(self, "instalocker_thread_running")
+            or not self.instalocker_thread_running.get()
+        ):
             self.wm_iconbitmap(ICON.DISABLED.value)
             self.title("VALocker")
         elif self.instalocker_status.get():
@@ -800,6 +815,7 @@ class VALocker(CTk):
         """
         Gets the current stats of the program.
         """
+        
         stats = self.file_manager.get_config(FILE.STATS)
 
         # Set times used
@@ -818,21 +834,18 @@ class VALocker(CTk):
                 "Stats field 'timeToLock' or 'timeToLockSafe' is missing from the stats file"
             )
 
+        self.times_used.set(f"{times_used} times")
+
         if time_to_lock is None or len(time_to_lock) == 0:
-            self.times_used.set("N/A")
             self.average_lock.set("N/A")
             self.last_lock.set("N/A")
 
-            self.logger.info(
-                "Not enough data to calculate average lock time or last lock time"
-            )
             return
 
         if time_to_lock is not None:
             average_lock = sum(time_to_lock) / len(time_to_lock)
             last_lock = time_to_lock[-1]
 
-        self.times_used.set(f"{times_used} times")
         self.average_lock.set(f"{average_lock:.2f} ms")
         self.last_lock.set(f"{last_lock:.2f} ms")
 
@@ -940,6 +953,23 @@ class VALocker(CTk):
         self.anti_afk_mode = self.anti_afk_mode.next()
         self.tools.change_movement_type(self.anti_afk_mode)
         return self.anti_afk_mode
+
+    
+    def toggle_tool(self, tool_var: ctk.BooleanVar) -> None:
+        """
+        Toggles the state of the specified tool.
+
+        Args:
+            tool_var (ctk.BooleanVar): The tool to be toggled.
+        """
+        self.toggle_boolean(tool_var)
+
+        if tool_var.get():
+            self.num_running_tools += 1
+        else:
+            self.num_running_tools -= 1
+
+        self.autostart_tools()
 
     # endregion
 
