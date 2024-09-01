@@ -153,6 +153,7 @@ class Updater:
                 self._logger.info(f"{item.name} is up to date")
                 innerStringVar.set("Up to date")
                 main_window.update()
+
         # If checking an entire folder
         elif type(item) is FOLDER:
 
@@ -360,25 +361,24 @@ class Updater:
 
         Returns:
             bool: True if the agent version meets the required version, False otherwise.
-        """ 
-        
-        minimum_version = (
-            self._file_manager.get_config(config_file)
-            .get("requiredVersion", None)
+        """
+
+        minimum_version = self._file_manager.get_config(config_file).get(
+            "requiredVersion", None
         )
 
         if minimum_version is None or len(minimum_version) == 0:
             return False
 
         release_version = self.release_version.replace("v", "").split(".")
-        
-        try: 
+
+        try:
             minimum_version = minimum_version.replace("v", "").split(".")
         except AttributeError:
             return False
 
         self._logger.info(
-            f"Checking if {config_file.name} (version: {'.'.join(minimum_version)}) can be run by VALocker (version: {self.release_version})"
+            f"Checking {config_file.name} (v{'.'.join(minimum_version)}) runnable on v{self.release_version}"
         )
 
         for release_vers_digit, minimum_version_digit in zip(
@@ -389,16 +389,12 @@ class Updater:
                     continue
                 case _:
                     if release_vers_digit != minimum_version_digit:
-                        self._logger.warning(
+                        self._logger.error(
                             "VALocker version does not meet the required version"
                         )
-                            
+
                         return False
 
-        self._logger.info(
-            "VALocker version meets the required version for the configuration file"
-        )
-        
         return True
 
 
