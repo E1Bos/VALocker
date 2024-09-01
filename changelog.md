@@ -2,6 +2,20 @@
 
 Date Format: YYYY-MM-DD
 
+## Version 2.2.0 ??? | 2024-XX-XX
+
+### Added
+
+- Reset button to Settings tab, which will backup all configs (that are not user generated), and re-download them. i.e. a "Factory Reset".
+
+### Changed
+- Order of operations when VALocker loads, improving performance and ensuring variables are always most up-to-date.
+- When updates are manually checked, the GUI is refreshed in case any new information was downloaded.
+
+### Fixed
+- Tools don't stop correctly when enabled or disabled from the Overview tab and then the Tools tab
+- Times Used stat always displays regardless of whether average and last time to lock can be calculated
+
 ## Version 2.1.4 | 2024-08-15
 
 ### Changed
