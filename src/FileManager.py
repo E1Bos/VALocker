@@ -2,6 +2,7 @@ import os
 import requests
 import json
 from ruamel.yaml import YAML
+import datetime
 
 # Custom imports
 from CustomLogger import CustomLogger
@@ -493,8 +494,8 @@ class FileManager:
         self.update_config_data(file, data)
 
         self._logger.info(f"Updated {file.value} to the latest version")
-
-    # endregion
+        
+        print(file, data)
 
     def update_config_data(
         self, file: FILE | LOCKING_CONFIG, new_data: dict[str, any]
@@ -546,6 +547,8 @@ class FileManager:
         # Reload the configuration in memory if necessary
         self.configs[file] = new_data
 
+    # endregion
+
     def get_files_in_folder(self, folder: FOLDER) -> list[str]:
         """
         Get all the files in a specified folder.
@@ -558,6 +561,51 @@ class FileManager:
         """
         folder_path = self._absolute_file_path(folder.value)
         return os.listdir(folder_path)
+
+    def reset_configs(self) -> None:
+        """
+        Reset the configuration files to their default values.
+        """
+        REQUIRES_BACKUP: list[FILE] = [
+            FILE.STATS,
+            FILE.SETTINGS,
+            FILE.DEFAULT_SAVE,
+        ]
+        
+        self._logger.info("Resetting configuration files")
+        
+        for file in self._REQUIRED_FILES:
+            if file in REQUIRES_BACKUP:
+                if not os.path.exists(self._absolute_file_path("backups")):
+                    os.mkdir(self._absolute_file_path("backups"))
+                
+                self._logger.info(f"Backing up {file.name}")
+                
+                with open(self._absolute_file_path(file.value), "r") as f:
+                    file_content = self.yaml.load(f)
+                
+                now = datetime.datetime.now().strftime("-%d-%m-%Y--%H-%M")
+                with open(self._absolute_file_path(f"backups/{file.file_name}-{now}.bak"), "w") as f:
+                    self.yaml.dump(file_content, f)
+
+            self._logger.info(f"Fetching content for {file.name}")
+            
+            try:
+                file_content = self._download_file(file)
+            except:
+                self._logger.error(f"Failed to fetch content for {file.name}")
+                continue
+            
+            with open(self._absolute_file_path(file.value), "w") as f:
+                self.yaml.dump(file_content, f)
+            
+            self._logger.info(f"Reset {file.name}")
+        
+            self.configs[file] = file_content
+        
+        self._logger.info("Configuration files reset")
+        
+        
 
 
 if __name__ == "__main__":
