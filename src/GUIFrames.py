@@ -379,7 +379,7 @@ class OverviewFrame(SideFrame):
         self.pack_unlocked_agents()
         self.select_agent(self.parent.selected_agent.get())
 
-    def pack_unlocked_agents(self) -> None:
+    def pack_unlocked_agents(self, loaded_save: bool = False) -> None:
         all_agents = self.parent.all_agents
         unlocked_agents = self.parent.get_unlocked_agents()
 
@@ -392,13 +392,23 @@ class OverviewFrame(SideFrame):
         if self.parent.selected_agent.get().lower() not in unlocked_agents:
             self.select_agent(unlocked_agents[0].capitalize())
 
-    def select_agent(self, agent: str) -> None:
-        previous_agent = self.parent.selected_agent.get()
+        if loaded_save:
+            self.select_agent()
 
-        self.toggle_buttons[previous_agent.lower()].configure(
-            fg_color=self.theme["foreground-highlight"],
-            hover_color=self.theme["foreground-highlight-hover"],
-        )
+
+
+    def select_agent(self, agent: str = None) -> None:
+        if not agent:
+            previous_agent = self.parent.get_unlocked_agents()
+            agent = self.parent.selected_agent.get()
+        else:
+            previous_agent = [self.parent.selected_agent.get()]
+
+        for prev_agent in previous_agent:
+            self.toggle_buttons[prev_agent.lower()].configure(
+                fg_color=self.theme["foreground-highlight"],
+                hover_color=self.theme["foreground-highlight-hover"],
+            )
 
         role = self.parent.get_agent_role_and_index(agent.lower(), efficient=False)[
             0

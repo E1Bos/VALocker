@@ -598,7 +598,7 @@ class VALocker(CTk):
         frame_obj.tkraise()
         self.nav_frame.highlight_button(frame)
 
-    def agent_unlock_status_changed(self, *_) -> None:
+    def agent_unlock_status_changed(self, *_, loaded_save: bool = False) -> None:
         """
         Called when the status of an agent is changed.
         """
@@ -606,7 +606,7 @@ class VALocker(CTk):
             (FRAME.OVERVIEW, "pack_unlocked_agents")
         ]:
             try:
-                getattr(self.frames[frame_key], method)()
+                getattr(self.frames[frame_key], method)(loaded_save=loaded_save)
             except KeyError:
                 pass
 
@@ -744,7 +744,7 @@ class VALocker(CTk):
             value=self.save_manager.get_current_agent().capitalize()
         )
 
-        self.agent_unlock_status_changed()
+        self.agent_unlock_status_changed(loaded_save=True)
 
     # endregion
 

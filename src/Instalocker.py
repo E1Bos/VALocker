@@ -22,7 +22,6 @@ from Constants import Region, LOCKING_CONFIG, ROLE, AgentIndex, AgentGrid
 
 # from GUIFrames import ErrorPopup
 
-
 class Instalocker:
     """
     Responsible for instalocking agents
