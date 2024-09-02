@@ -17,6 +17,7 @@ Date Format: YYYY-MM-DD
 ### Fixed
 - Tools don't stop correctly when enabled or disabled from the Overview tab and then the Tools tab
 - Times Used stat always displays regardless of whether average and last time to lock can be calculated
+- VALocker crashing after not updating when an update is required for file compatibility
 
 ## Version 2.1.4 | 2024-08-15
 
