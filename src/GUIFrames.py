@@ -148,17 +148,20 @@ class OverviewFrame(SideFrame):
     def __init__(self, parent: "VALocker") -> None:
         super().__init__(parent)
 
+        self.main_overview_items = ThemedFrame(self, fg_color="transparent")
+
         # Make each frame take up equal space
         for frame in range(3):
-            self.grid_columnconfigure(frame, weight=1)
+            self.main_overview_items.grid_columnconfigure(frame, weight=1)
 
         # Make the frames take up the entire vertical space
-        self.grid_rowconfigure(0, weight=1)
+        self.main_overview_items.grid_rowconfigure(0, weight=1)
 
         # Segmented Frames
-        left_frame = ThemedFrame(self)
-        middle_frame = ThemedFrame(self)
-        right_frame = ThemedFrame(self)
+
+        left_frame = ThemedFrame(self.main_overview_items)
+        middle_frame = ThemedFrame(self.main_overview_items)
+        right_frame = ThemedFrame(self.main_overview_items)
 
         # Grid the frames
         for index, frame in enumerate([left_frame, middle_frame, right_frame]):
@@ -248,14 +251,12 @@ class OverviewFrame(SideFrame):
         agent_label = ThemedLabel(middle_frame, "Selected Agent")
         agent_label.grid(row=0, column=0, sticky=ctk.NSEW, padx=10, pady=(10, 0))
 
-        self.agent_dropdown = ThemedDropdown(
+        self.agent_button = ThemedButton(
             middle_frame,
-            values=[],
-            variable=self.parent.selected_agent,
+            textvariable=self.parent.selected_agent,
+            command=self.show_agent_select_buttons,
         )
-        self.agent_dropdown.grid(
-            row=1, column=0, sticky=ctk.NSEW, padx=10, pady=(0, 10)
-        )
+        self.agent_button.grid(row=1, column=0, sticky=ctk.NSEW, padx=10, pady=(0, 10))
 
         options_label = ThemedLabel(middle_frame, "Options")
         options_label.grid(row=2, column=0, sticky=ctk.NSEW, padx=10, pady=(10, 0))
@@ -336,6 +337,83 @@ class OverviewFrame(SideFrame):
 
         # endregion
 
+        # region: Agent Select Buttons
+        self.select_agent_frame = ThemedFrame(self, fg_color="transparent")
+
+        self.toggle_buttons: dict[str, ThemedButton] = {}
+
+        # TODO: Implement fuzzy search
+        # TODO: Implement keybinds to select (maybe smth with arrow keys)
+
+        roles = self.parent.file_manager.get_value(FILE.AGENT_CONFIG, "roles")
+
+        for index, role in enumerate(roles):
+
+            self.select_agent_frame.grid_columnconfigure(index, weight=1)
+
+            role_frame = ThemedFrame(self.select_agent_frame)
+
+            role_label = ThemedLabel(
+                role_frame,
+                text=f"{role.capitalize()}s",
+            )
+            role_label.pack(side=ctk.TOP, pady=3, padx=5)
+
+            for agent in self.parent.file_manager.get_value(FILE.AGENT_CONFIG, role):
+
+                agent_button = ThemedButton(
+                    role_frame,
+                    text=agent.capitalize(),
+                    fg_color=self.theme["foreground-highlight"],
+                    hover_color=self.theme["foreground-highlight-hover"],
+                    border_color=self.theme[role],
+                    border_width=1,
+                    command=lambda agent=agent: self.select_agent(agent),
+                )
+                self.toggle_buttons[agent] = agent_button
+
+            role_frame.grid(
+                row=0, column=index, sticky=ctk.NSEW, padx=5, pady=10, ipady=5
+            )
+
+        self.pack_unlocked_agents()
+        self.select_agent(self.parent.selected_agent.get())
+
+    def pack_unlocked_agents(self) -> None:
+        all_agents = self.parent.all_agents
+        unlocked_agents = self.parent.get_unlocked_agents()
+
+        for agent in all_agents:
+            self.toggle_buttons[agent].pack_forget()
+
+        for agent in unlocked_agents:
+            self.toggle_buttons[agent].pack(side=ctk.TOP, padx=5, pady=2)
+
+        if self.parent.selected_agent.get().lower() not in unlocked_agents:
+            self.select_agent(unlocked_agents[0].capitalize())
+
+    def select_agent(self, agent: str) -> None:
+        previous_agent = self.parent.selected_agent.get()
+
+        self.toggle_buttons[previous_agent.lower()].configure(
+            fg_color=self.theme["foreground-highlight"],
+            hover_color=self.theme["foreground-highlight-hover"],
+        )
+
+        role = self.parent.get_agent_role_and_index(agent.lower(), efficient=False)[
+            0
+        ].value
+
+        self.toggle_buttons[agent.lower()].configure(
+            fg_color=self.theme[role],
+            hover_color=self.theme[f"{role}-hover"],
+        )
+
+        if previous_agent != agent:
+            self.parent.selected_agent.set(agent.capitalize())
+
+        self.on_raise()
+
     def redirect_save_files_frame(self) -> None:
         """
         Redirects the user to the "Save Files" frame.
@@ -352,18 +430,22 @@ class OverviewFrame(SideFrame):
         """
         self.parent.select_frame(FRAME.TOOLS)
 
-    def update_dropdown(self, unlocked_agents: list[str]) -> None:
-        """
-        Updates the options in the agent dropdown based on the unlocked agents.
-
-        Args:
-            unlocked_agents (list[str]): A list of unlocked agents.
-        """
-
-        self.agent_dropdown.set_values(unlocked_agents)
+    def show_agent_select_buttons(self) -> None:
+        self.main_overview_items.pack_forget()
+        self.select_agent_frame.pack(fill=ctk.BOTH, expand=True)
+        self.parent.bind("<Button-1>", lambda _: self.on_raise())
+        self.parent.bind("<Return>", lambda _: self.on_raise())
+        self.parent.bind("<Escape>", lambda _: self.on_raise())
+        self.parent.bind("<space>", lambda _: self.on_raise())
 
     def on_raise(self) -> None:
-        pass
+        self.select_agent_frame.pack_forget()
+        self.main_overview_items.pack(fill=ctk.BOTH, expand=True)
+
+        self.parent.unbind("<Button-1>")
+        self.parent.unbind("<Return>")
+        self.parent.unbind("<Escape>")
+        self.parent.unbind("<space>")
 
 
 # endregion
@@ -1109,7 +1191,6 @@ class ToolsFrame(SideFrame):
 
             self.tool_buttons[tool] = button
 
-
     def on_raise(self) -> None:
         pass
 
@@ -1172,7 +1253,9 @@ class SettingsFrame(SideFrame):
             command=self.manual_update,
             corner_radius=10,
         )
-        self.update_button.pack(side=ctk.LEFT, fill=ctk.X, expand=True, padx=(0,5), pady=0)
+        self.update_button.pack(
+            side=ctk.LEFT, fill=ctk.X, expand=True, padx=(0, 5), pady=0
+        )
 
         self.reset_button = ThemedButton(
             update_and_reset_frame,
@@ -1211,7 +1294,9 @@ class SettingsFrame(SideFrame):
             variable=self.current_locking_config,
             values=list(locking_configs.keys()),
         )
-        self.locking_config_dropdown.pack(fill=ctk.X, padx=10, pady=5, side=ctk.LEFT, expand=True)
+        self.locking_config_dropdown.pack(
+            fill=ctk.X, padx=10, pady=5, side=ctk.LEFT, expand=True
+        )
         self.current_locking_config.trace_add("write", self.change_locking_config)
 
         self.generate_config_button = ThemedButton(
@@ -1224,7 +1309,6 @@ class SettingsFrame(SideFrame):
         )
         # TODO: GET CONFIG GENERATOR TO WORK
         # self.generate_config_button.pack(padx=(0,10), pady=5, side=ctk.LEFT)
-        
 
         # endregion
 
@@ -1241,7 +1325,7 @@ class SettingsFrame(SideFrame):
             general_settings_frame, text="General Settings:"
         )
         general_settings_label.grid(
-            row=0, column=0, sticky=ctk.NSEW, columnspan=2, padx=10, pady=(10, 5)
+            row=0, column=0, sticky=ctk.NSEW, columnspan=2, padx=10, pady=5
         )
 
         self.start_tools_automatically_button = IndependentButton(
@@ -1280,7 +1364,7 @@ class SettingsFrame(SideFrame):
 
         on_startup_label = ThemedLabel(on_startup_frame, text="On Startup:")
         on_startup_label.grid(
-            row=0, column=0, sticky=ctk.NSEW, columnspan=2, padx=10, pady=(10, 5)
+            row=0, column=0, sticky=ctk.NSEW, columnspan=2, padx=10, pady=5
         )
 
         self.enable_on_startup_button = IndependentButton(
@@ -1417,7 +1501,7 @@ class UpdateFrame(ctk.CTkFrame):
     status_variables: dict[FILE, ctk.StringVar]
     version_variable: ctk.StringVar
 
-    def __init__(self, parent: "VALocker", reset_configs = False, **kwargs) -> None:
+    def __init__(self, parent: "VALocker", reset_configs=False, **kwargs) -> None:
         self.parent = parent
         self.theme = parent.theme
 
