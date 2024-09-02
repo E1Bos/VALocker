@@ -25,30 +25,6 @@ Some antivirus software may flag this program as malware, due to the nature of t
 
 ### VALocker finally works with the new VALORANT UI!
 - Full support for the new UI. The new implementation uses the new role buttons instead of scrolling through all possible agents, so it is slower than v2.0.5 with the old version of the UI, but it means that no matter how many agents VALORANT adds, it will continue to work!
-- Some config files require a certain version of VALocker to be run, so VALocker should NOT crash when an incompatible file is downloaded
-- Downloading files OTA fully works
-
-## 📰 New in v2.0.0
-
-### Support for different resolutions and aspect ratios!
-- VALocker can now be used at different resolutions, and with different settings, without needing to modify the code. Custom files can be created if your resolution and aspect ratio are not supported by default.
-- Currently supported resolutions and aspect ratios are:
-  - 1920x1080 [16:9] (Measured on a 1920x1080 monitor)
-  - 1650x1050 [16:10] (Measured on a 1920x1080 monitor)
-  - 1280x1024 [5:4] (Measured on a 1920x1080 monitor)
-  <!-- - 1024x768 [4:3] (Measured on a 1920x1080 monitor) -->
-- Custom files can be created for other resolutions and aspect ratios. See the [wiki page](https://github.com/E1Bos/VALocker/wiki/Custom-Configs) for more information.
-### Overhauled UI!
-- Overhauled the entire UI, making it more responsive, consistent, and adding support for custom themes.
-- All elements are dynamically rendered, meaning resizing the window is possible (while not recommended, due to the lag of tkinter).
-### Improved performance!
-- The mss library has been replaced with betterDXcam, a fork of [DXcam](https://github.com/ra1nty/DXcam), which is [much faster](https://github.com/E1Bos/betterDXcam#benchmarks).
-- BetterDXcam allows for changing resolutions and aspect ratios, making it easier to support different setups, this is the reason DXcam was forked in the first place.
-### Improved storage and updates!
-- All data is now stored in `%APPDATA%\VALocker`, making the location of the executable irrelevant, and allowing for easy updates.
-- Over-the-air updates for all config files. No need to download the project zip file and replace all files.
-### Improved error handling!
-- Added loggers for all functions, making diagnosing issues easier.
 
 ## 📚 Features
 
