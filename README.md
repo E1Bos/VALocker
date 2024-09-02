@@ -210,17 +210,22 @@ I can only provide support for resolutions that I can test on my 1920x1080 monit
       <b>Overview Tab</b>
     </td>
     <td align="center">
+      <img src="images/readme_images/agent_select.png" alt="Overview Tab" width="400px">
+      <br>
+      <b>Agent Select View</b>
+    </td>
+    <td align="center">
       <img src="images/readme_images/agent_toggle_tab.png" alt="Agent Toggle Tab" width="400px">
       <br>
       <b>Agent Toggle Tab</b>
     </td>
+  </tr>
+  <tr>
     <td align="center">
       <img src="images/readme_images/random_agent_tab.png" alt="Random Agent Tab" width="400px">
       <br>
       <b>Random Agent Tab</b>
     </td>
-  </tr>
-  <tr>
     <td align="center">
       <img src="images/readme_images/save_file_tab.png" alt="Save Files Tab" width="400px">
       <br>
@@ -231,13 +236,13 @@ I can only provide support for resolutions that I can test on my 1920x1080 monit
       <br>
       <b>Settings Tab</b>
     </td>
+  </tr>
+  <tr>
     <td align="center">
       <img src="images/readme_images/tools_tab.png" alt="Tools Tab" width="400px">
       <br>
       <b>Tools Tab</b>
     </td>
-  </tr>
-  <tr>
     <td align="center">
       <img src="images/readme_images/updating_window.png" alt="Updating Window" width="400px">
       <br>
