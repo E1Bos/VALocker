@@ -39,6 +39,18 @@ class ThemeManager:
     logger = CustomLogger("Theme Manager").get_logger()
     working_dir = GET_WORKING_DIR()
     theme: dict[str, str]
+    
+    elements_to_add_hover_effect = [
+        "accent",
+        "button-enabled",
+        "button-disabled",
+        "foreground",
+        "foreground-highlight",
+        "controller",
+        "duelist",
+        "initiator",
+        "sentinel",
+    ]
 
     def get_theme(self, theme_name: str) -> dict[str, str]:
         """
@@ -59,13 +71,7 @@ class ThemeManager:
         ) as theme_file:
             self.theme = yaml.load(theme_file)
 
-        for element_to_brighten in [
-            "accent",
-            "button-enabled",
-            "button-disabled",
-            "foreground",
-            "foreground-highlight",
-        ]:
+        for element_to_brighten in self.elements_to_add_hover_effect:
             self.theme[f"{element_to_brighten}-hover"] = BRIGHTEN_COLOR(
                 self.theme[element_to_brighten], 1.1
             )

@@ -1,7 +1,7 @@
 # Version of the configuration
 # If the configuration is custom, uncomment the custom line and comment out the version line
-version: 1.0.3
-requiredVersion: 2.1.*
+version: 1.0.4
+requiredVersion: 2.*.*
 # custom: True
 # --------------------------------------------------
 # Title of the configuration
