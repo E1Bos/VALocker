@@ -40,7 +40,7 @@ class VALocker(CTk):
     """
 
     # VERSION
-    VERSION: str = "2.1.4"
+    VERSION: str = "2.2.0"
 
     # Custom Classes
     logger: CustomLogger = CustomLogger("VALocker").get_logger()
@@ -597,17 +597,11 @@ class VALocker(CTk):
         """
         Called when the status of an agent is changed.
         """
-        unlocked_agents = self.get_unlocked_agents()
-        unlocked_agents = [agent.capitalize() for agent in unlocked_agents]
-
-        if not self.selected_agent.get() in unlocked_agents:
-            self.selected_agent.set(value=unlocked_agents[0])
-
-        for frame_key, method, *args in [
-            (FRAME.OVERVIEW, "update_dropdown", unlocked_agents)
+        for frame_key, method in [
+            (FRAME.OVERVIEW, "pack_unlocked_agents")
         ]:
             try:
-                getattr(self.frames[frame_key], method)(*args)
+                getattr(self.frames[frame_key], method)()
             except KeyError:
                 pass
 
@@ -749,12 +743,13 @@ class VALocker(CTk):
     # endregion
 
     # region: Locking Functions
-    def get_agent_role_and_index(self, agent: str) -> tuple[ROLE, int]:
+    def get_agent_role_and_index(self, agent: str, efficient: bool = True) -> tuple[ROLE, int]:
         """
         Returns the role and index of the given agent.
 
         Args:
             agent (str): The agent to get the role and index of.
+            efficient (bool, optional): Whether to use the agent grid. Defaults to True.
 
         Returns:
             tuple[ROLE, int]: The role and index of the agent.
@@ -764,7 +759,7 @@ class VALocker(CTk):
         if (
             unlocked_agents.index(agent)
             < self.agent_grid.columns * self.agent_grid.rows
-        ):
+        ) and efficient:
             return ROLE.DEFAULT, unlocked_agents.index(agent)
 
         for role in self.file_manager.get_value(FILE.AGENT_CONFIG, "roles"):
