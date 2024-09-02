@@ -2,15 +2,17 @@
 
 Date Format: YYYY-MM-DD
 
-## Version 2.2.0 ??? | 2024-XX-XX
+## Version 2.2.0 | 2024-09-01
 
 ### Added
-
+- Agent select dropdown has been replaced with a button that takes the user to a screen to select an agent, sorted by roles. This was done since the list of agents when all agents are unlocked is way too long and getting out of hand.
 - Reset button to Settings tab, which will backup all configs (that are not user generated), and re-download them. i.e. a "Factory Reset".
 
 ### Changed
 - Order of operations when VALocker loads, improving performance and ensuring variables are always most up-to-date.
 - When updates are manually checked, the GUI is refreshed in case any new information was downloaded.
+- Removed dropdown menu to select agent
+- Spacing on settings frame has been modified to look better
 
 ### Fixed
 - Tools don't stop correctly when enabled or disabled from the Overview tab and then the Tools tab
