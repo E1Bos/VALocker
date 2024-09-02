@@ -277,15 +277,20 @@ class VALocker(CTk):
 
     # endregion
 
-    def exit(self):
+    def exit(self, save_data: bool = True):
         """
         Saves the current configuration and exits the program.
+        
+        Args:
+            save_data (bool, optional): Whether to save the current configuration. Defaults to True.
+        
         """
 
         self.logger.info("Exiting VALocker")
 
         # Saves the current configuration
-        self.save_data()
+        if save_data:
+            self.save_data()
 
         # Exits
         self.after_idle(self.destroy)
@@ -410,10 +415,10 @@ class VALocker(CTk):
             if go_to_update:
                 self.logger.info("Opening update page")
                 web_open("https://www.github.com/E1Bos/VALocker/releases/latest/")
-                self.exit()
+                self.exit(save_data=False)
             else:
                 self.logger.info("User chose not to update")
-                self.exit()
+                self.exit(save_data=False)
 
         self.logger.info(f"Config file '{config_enum.name}' is compatible")
 
@@ -684,6 +689,7 @@ class VALocker(CTk):
             filename (str, optional): The filename. Defaults to None. If none
                 is provided, the current save file will be used.
         """
+        
         save_data = self.save_manager.get_save_data()
         save_data["selectedAgent"] = self.selected_agent.get().lower()
 
