@@ -397,13 +397,5 @@ class Updater:
 
         return True
 
-
 if __name__ == "__main__":
-    # Test Updater class
-    file_manager = FileManager()
-    file_manager.setup()
-    updater = Updater("2.1.3", file_manager)
-    updater.meets_required_version(FILE.SETTINGS)
-    # updater.check_for_config_update(FOLDER.LOCKING_CONFIGS)
-    # updater.check_for_version_update()
-    # updater.update_last_checked()
+    pass
