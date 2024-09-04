@@ -1,4 +1,5 @@
 from __future__ import annotations
+import customtkinter as ctk
 from customtkinter import CTk, BooleanVar, StringVar, IntVar
 from typing import Optional
 from sys import exit as sys_exit
@@ -8,7 +9,9 @@ from webbrowser import open as web_open
 from threading import Lock
 from ctypes import windll
 
+
 # Custom imports
+from CustomElements import ConfirmPopup, SideFrame
 from CustomLogger import CustomLogger
 from Constants import *
 from FileManager import FileManager
@@ -19,8 +22,15 @@ from Tools import Tools
 from ThemeManager import ThemeManager
 
 # UI Imports
-# from CustomElements import *
-from GUIFrames import *
+from frames.Navigation import NavigationUI
+from frames.Overview import OverviewUI
+from frames.AgentToggle import AgentToggleUI
+from frames.RandomSelect import RandomSelectUI
+from frames.SaveFiles import SaveFilesUI
+from frames.Tools import ToolsUI
+from frames.Settings import SettingsUI
+from frames.Update import UpdateUI
+
 
 
 class VALocker(CTk):
@@ -80,9 +90,9 @@ class VALocker(CTk):
     # drop_spike: BooleanVar
 
     # UI
-    update_frame: UpdateFrame
-    frames: Dict[
-        FRAME, OverviewFrame | AgentToggleFrame | RandomSelectFrame | SaveFilesFrame
+    update_frame: UpdateUI
+    frames: dict[
+        FRAME, OverviewUI | AgentToggleUI | RandomSelectUI | SaveFilesUI | ToolsUI | SettingsUI
     ] = dict()
 
     # Settings Frame
@@ -130,11 +140,12 @@ class VALocker(CTk):
 
         self.instalocker_status = BooleanVar(value=True)
 
-        fast_mode_timings = self.file_manager.get_value(FILE.SETTINGS, "$fastModeTimings")
+        fast_mode_timings = self.file_manager.get_value(
+            FILE.SETTINGS, "$fastModeTimings"
+        )
 
         if type(fast_mode_timings) is not ruamel_yaml.CommentedMap:
             fast_mode_timings = dict()
-            
 
         self.fast_mode_timings = [
             (
@@ -146,7 +157,9 @@ class VALocker(CTk):
         ]
 
         self.safe_mode_enabled = BooleanVar(
-            value=self.file_manager.get_value(FILE.SETTINGS, "$safeModeOnStartup", False)
+            value=self.file_manager.get_value(
+                FILE.SETTINGS, "$safeModeOnStartup", False
+            )
         )
 
         self.safe_mode_strength = IntVar(
@@ -212,7 +225,9 @@ class VALocker(CTk):
         )
 
         self.anti_afk_mode = ANTI_AFK.from_name(
-            self.file_manager.get_value(FILE.SETTINGS, "$antiAfkMode", "Random Centered")
+            self.file_manager.get_value(
+                FILE.SETTINGS, "$antiAfkMode", "Random Centered"
+            )
         )
 
         # region: Traces
@@ -270,10 +285,10 @@ class VALocker(CTk):
     def exit(self, save_data: bool = True):
         """
         Saves the current configuration and exits the program.
-        
+
         Args:
             save_data (bool, optional): Whether to save the current configuration. Defaults to True.
-        
+
         """
 
         self.logger.info("Exiting VALocker")
@@ -286,9 +301,7 @@ class VALocker(CTk):
         self.after_idle(self.destroy)
         sys_exit()
 
-    def check_for_updates(
-        self, set_frame: Optional[FRAME] = None
-    ) -> None:
+    def check_for_updates(self, set_frame: Optional[FRAME] = None) -> None:
         """
         Checks for updates and performs necessary actions if updates are available.
         """
@@ -391,7 +404,7 @@ class VALocker(CTk):
                 self.update_frame.stop_progress()
             except AttributeError:
                 pass
-            
+
             self.logger.error(f"Config file '{config_enum.name}' is not compatible")
 
             if can_force_update:
@@ -475,14 +488,16 @@ class VALocker(CTk):
         else:  # Enable tools thread
             if self.tools_thread_running.get():
                 return
-            
+
             self.toggle_boolean(self.tools_thread_running, True)
 
     # endregion
 
     # region: UI
 
-    def init(self, force_check_update: bool = False, set_frame=None, reset_config = False) -> None:
+    def init(
+        self, force_check_update: bool = False, set_frame=None, reset_config=False
+    ) -> None:
         """
         Initializes VALocker.
 
@@ -496,12 +511,17 @@ class VALocker(CTk):
         self.update_title_and_icon()
         self.configure(fg_color=self.theme["background"])
 
-        if hasattr(self, "update_frame") and type(self.update_frame) is UpdateFrame:
+        if hasattr(self, "update_frame") and type(self.update_frame) is UpdateUI:
             self.update_frame.destroy()
             del self.update_frame
 
-        if not reset_config and (self.updater.check_frequency_met() or force_check_update):
-            self.update_frame = UpdateFrame(self)
+        # TODO: REMOVE
+        reset_config = True
+
+        if not reset_config and (
+            self.updater.check_frequency_met() or force_check_update
+        ):
+            self.update_frame = UpdateUI(self)
 
             if not force_check_update:
                 self.logger.info("Check frequency met, checking for updates")
@@ -512,16 +532,17 @@ class VALocker(CTk):
             self.update()
 
             # Prevent init method from being called multiple times
+
             if not self.update_called:
                 self.update_called = True
-                self.check_for_updates(
-                    set_frame=set_frame
-                )
+                self.check_for_updates(set_frame=set_frame)
         else:
             self.handle_incompatible(can_force_update=True, set_frame=set_frame)
             self.initMain()
 
-    def initMain(self, open_to_frame: FRAME = FRAME.OVERVIEW, reset_frames: bool = False) -> None:
+    def initMain(
+        self, open_to_frame: FRAME = FRAME.OVERVIEW, reset_frames: bool = False
+    ) -> None:
         """
         The main VALocker initialization.
 
@@ -545,7 +566,7 @@ class VALocker(CTk):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
         self.grid_propagate(False)
-        
+
         if reset_frames:
             for frame in self.frames.values():
                 frame.destroy()
@@ -553,17 +574,17 @@ class VALocker(CTk):
 
         if len(self.frames) == 0:
             self.frames = {
-                FRAME.OVERVIEW: OverviewFrame(self),
-                FRAME.AGENT_TOGGLE: AgentToggleFrame(self),
-                FRAME.RANDOM_SELECT: RandomSelectFrame(self),
+                FRAME.OVERVIEW: OverviewUI(self),
+                FRAME.AGENT_TOGGLE: AgentToggleUI(self),
+                FRAME.RANDOM_SELECT: RandomSelectUI(self),
                 # FRAME.MAP_TOGGLE: MapToggleFrame(self),
-                FRAME.SAVE_FILES: SaveFilesFrame(self),
-                FRAME.TOOLS: ToolsFrame(self),
-                FRAME.SETTINGS: SettingsFrame(self),
+                FRAME.SAVE_FILES: SaveFilesUI(self),
+                FRAME.TOOLS: ToolsUI(self),
+                FRAME.SETTINGS: SettingsUI(self),
             }
 
             nav_width = 150
-            self.nav_frame = NavigationFrame(self, width=150)
+            self.nav_frame = NavigationUI(self, width=150)
             self.nav_frame.grid(row=0, column=0, sticky=ctk.NSEW)
             self.grid_columnconfigure(0, minsize=nav_width)
 
@@ -594,9 +615,7 @@ class VALocker(CTk):
         """
         Called when the status of an agent is changed.
         """
-        for frame_key, method in [
-            (FRAME.OVERVIEW, "pack_unlocked_agents")
-        ]:
+        for frame_key, method in [(FRAME.OVERVIEW, "pack_unlocked_agents")]:
             try:
                 getattr(self.frames[frame_key], method)(loaded_save=loaded_save)
             except KeyError:
@@ -681,7 +700,7 @@ class VALocker(CTk):
             filename (str, optional): The filename. Defaults to None. If none
                 is provided, the current save file will be used.
         """
-        
+
         save_data = self.save_manager.get_save_data()
         save_data["selectedAgent"] = self.selected_agent.get().lower()
 
@@ -741,7 +760,9 @@ class VALocker(CTk):
     # endregion
 
     # region: Locking Functions
-    def get_agent_role_and_index(self, agent: str, efficient: bool = True) -> tuple[ROLE, int]:
+    def get_agent_role_and_index(
+        self, agent: str, efficient: bool = True
+    ) -> tuple[ROLE, int]:
         """
         Returns the role and index of the given agent.
 
@@ -808,7 +829,7 @@ class VALocker(CTk):
         """
         Gets the current stats of the program.
         """
-        
+
         stats = self.file_manager.get_config(FILE.STATS)
 
         # Set times used
@@ -947,7 +968,6 @@ class VALocker(CTk):
         self.tools.change_movement_type(self.anti_afk_mode)
         return self.anti_afk_mode
 
-    
     def toggle_tool(self, tool_var: ctk.BooleanVar) -> None:
         """
         Toggles the state of the specified tool.
