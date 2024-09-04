@@ -2,6 +2,20 @@
 
 Date Format: YYYY-MM-DD
 
+## Version 2.2.X | 2024-XX-XX
+
+### Added
+- Files no longer have a version number, some fields are marked with a $ to indicate they are user generated. When checking for updates, all non-user generated fields will be checked for changes.
+
+### Changed
+- Switched back to mss from betterDXcam due to issues with strange bugs
+- Agent select button will reflect the color of the role
+- Custom Logger properly logs all errors and is faster
+
+### Fixed
+- Edge case crash when checking for incompatible files without an update
+
+
 ## Version 2.2.0 | 2024-09-01
 
 ### Added
