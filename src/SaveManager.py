@@ -15,7 +15,7 @@ class SaveManager:
     """
     
     
-    logger: CustomLogger = CustomLogger("Save Manager").get_logger()
+    logger: CustomLogger = CustomLogger.get_instance().get_logger("SaveManager")
 
     FOLDER_PATH: str = os.path.join(GET_WORKING_DIR(), FOLDER.SAVE_FILES.value)
     file_manager: FileManager

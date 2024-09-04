@@ -23,7 +23,7 @@ class Tools:
     @author: [E1Bos](https://www.github.com/E1Bos)
     """
 
-    logger = CustomLogger("Tools").get_logger()
+    logger: CustomLogger = CustomLogger.get_instance().get_logger("Tools")
 
     stop_flag = False
     tools_input: bool = False
