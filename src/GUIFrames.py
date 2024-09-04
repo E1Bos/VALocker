@@ -419,6 +419,11 @@ class OverviewFrame(SideFrame):
             hover_color=self.theme[f"{role}-hover"],
         )
 
+        self.agent_button.configure(
+            fg_color=self.theme[role],
+            hover_color=self.theme[f"{role}-hover"],
+        )
+
         if previous_agent != agent:
             self.parent.selected_agent.set(agent.capitalize())
 
@@ -443,7 +448,8 @@ class OverviewFrame(SideFrame):
     def show_agent_select_buttons(self) -> None:
         self.main_overview_items.pack_forget()
         self.select_agent_frame.pack(fill=ctk.BOTH, expand=True)
-        self.parent.bind("<Button-1>", lambda _: self.on_raise())
+        self.select_agent_frame.bind("<Button-1>", lambda _: self.on_raise())
+        self.parent.bind("<Button-3>", lambda _: self.on_raise())
         self.parent.bind("<Return>", lambda _: self.on_raise())
         self.parent.bind("<Escape>", lambda _: self.on_raise())
         self.parent.bind("<space>", lambda _: self.on_raise())
@@ -452,7 +458,8 @@ class OverviewFrame(SideFrame):
         self.select_agent_frame.pack_forget()
         self.main_overview_items.pack(fill=ctk.BOTH, expand=True)
 
-        self.parent.unbind("<Button-1>")
+        self.select_agent_frame.unbind("<Button-1>")
+        self.parent.unbind("<Button-3>")
         self.parent.unbind("<Return>")
         self.parent.unbind("<Escape>")
         self.parent.unbind("<space>")
@@ -910,7 +917,7 @@ class SaveFilesFrame(SideFrame):
         else:
             try:
                 for favorited_save in self.parent.file_manager.get_value(
-                    FILE.SETTINGS, "favoritedSaveFiles"
+                    FILE.SETTINGS, "$favoritedSaveFiles"
                 ):
                     favorite_button_names.append(favorited_save)
             except TypeError as e:
@@ -1022,7 +1029,7 @@ class SaveFilesFrame(SideFrame):
 
         self.parent.file_manager.set_value(
             FILE.SETTINGS,
-            "favoritedSaveFiles",
+            "$favoritedSaveFiles",
             [button.save_file for button in self.favorite_buttons],
         )
 
@@ -1100,24 +1107,24 @@ class SaveFilesFrame(SideFrame):
         if old_name.removesuffix(".yaml") == self.parent.current_save_name.get():
             self.parent.current_save_name.set(file_name)
             if (
-                self.parent.file_manager.get_value(FILE.SETTINGS, "activeSaveFile")
+                self.parent.file_manager.get_value(FILE.SETTINGS, "$activeSaveFile")
                 == old_name
             ):
                 self.parent.file_manager.set_value(
-                    FILE.SETTINGS, "activeSaveFile", file_name_with_extension
+                    FILE.SETTINGS, "$activeSaveFile", file_name_with_extension
                 )
 
         if old_name in self.parent.file_manager.get_value(
-            FILE.SETTINGS, "favoritedSaveFiles"
+            FILE.SETTINGS, "$favoritedSaveFiles"
         ):
             # Ensure the new file name has the .yaml extension
             self.parent.file_manager.set_value(
                 FILE.SETTINGS,
-                "favoritedSaveFiles",
+                "$favoritedSaveFiles",
                 [
                     file_name_with_extension if name == old_name else name
                     for name in self.parent.file_manager.get_value(
-                        FILE.SETTINGS, "favoritedSaveFiles"
+                        FILE.SETTINGS, "$favoritedSaveFiles"
                     )
                 ],
             )
@@ -1284,7 +1291,7 @@ class SettingsFrame(SideFrame):
         locking_configs = self.parent.file_manager.get_locking_configs()
         self.current_locking_config = ctk.StringVar(
             value=self.parent.file_manager.get_locking_config_by_file_name(
-                self.parent.file_manager.get_value(FILE.SETTINGS, "lockingConfig"),
+                self.parent.file_manager.get_value(FILE.SETTINGS, "$lockingConfig"),
                 get_title=True,
             )
         )
@@ -1462,7 +1469,7 @@ class SettingsFrame(SideFrame):
         new_mode = self.parent.next_anti_afk_mode()
         self.anti_afk_mode = new_mode
         self.anti_afk_mode_intvar.set(new_mode.index)
-        self.parent.file_manager.set_value(FILE.SETTINGS, "antiAfkMode", new_mode.name)
+        self.parent.file_manager.set_value(FILE.SETTINGS, "$antiAfkMode", new_mode.name)
 
     def manual_update(self) -> None:
         if not self.initUI_called:
