@@ -1,8 +1,6 @@
-# Version of the configuration
-# If the configuration is custom, uncomment the custom line and comment out the version line
-version: 1.0.4
-requiredVersion: 2.*.*
-# custom: True
+# --------------------------------------------------
+# Version requirement of VALocker
+requiredVersion: 2.2.1
 # --------------------------------------------------
 # Title of the configuration
 title: 1610x1050 16:10

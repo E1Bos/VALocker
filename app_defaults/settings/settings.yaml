@@ -1,49 +1,48 @@
 # --------------------------------------------------
-# Version of the settings config and the required version
-version: 1.0.3
-requiredVersion: 2.*.*
+# Version requirement of VALocker
+requiredVersion: 2.2.1
 # --------------------------------------------------
 # Time since the last check for updates, in epoch time
-lastChecked: 0
+$lastChecked: 0
 # --------------------------------------------------
 # The theme of the application
-theme: default-theme.yaml
+$theme: default-theme.yaml
 # --------------------------------------------------
 # Current Locking Config
-lockingConfig: locking-config-1920-1080-16-9.yaml
+$lockingConfig: locking-config-1920-1080-16-9.yaml
 # --------------------------------------------------
 # The active save file, including the extension
-activeSaveFile: default.yaml
+$activeSaveFile: default.yaml
 # --------------------------------------------------
 # The save files that are favorited
-favoritedSaveFiles:
+$favoritedSaveFiles:
 # --------------------------------------------------
 # Settings on startup
-enableOnStartup: false
-safeModeOnStartup: false
-safeModeStrengthOnStartup: 0
+$enableOnStartup: false
+$safeModeOnStartup: false
+$safeModeStrengthOnStartup: 0
 # --------------------------------------------------
 # Timings for fast mode, in seconds, delays for
 # moving to a location and clicking
-fastModeTimings:
+$fastModeTimings:
   moveDelay: 0.04
   clickDelay: 0.04
 # --------------------------------------------------
 # Timings for safe mode, in seconds
-safeModeTimings:
+$safeModeTimings:
   - [0.4, 0.6]
   - [0.7, 0.9]
   - [1.0, 1.2]
 # --------------------------------------------------
 # Whether to show the default save file
-hideDefaultSave: false
+$hideDefaultSave: false
 # --------------------------------------------------
 # Whether to automatically start the tools thread
-startToolsAutomatically: true
+$startToolsAutomatically: true
 # --------------------------------------------------
 # The anti-afk mode
-antiAfkMode: Random Centered
+$antiAfkMode: Random Centered
 # --------------------------------------------------
 # Whether files have already been migrated
-alreadyMigrated: true
+$alreadyMigrated: false
 # --------------------------------------------------
