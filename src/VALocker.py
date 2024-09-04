@@ -10,17 +10,7 @@ from ctypes import windll
 
 # Custom imports
 from CustomLogger import CustomLogger
-from Constants import (
-    FILE,
-    FOLDER,
-    FRAME,
-    ICON,
-    LOCKING_CONFIG,
-    ANTI_AFK,
-    ROLE,
-    AgentIndex,
-    AgentGrid,
-)
+from Constants import *
 from FileManager import FileManager
 from SaveManager import SaveManager
 from Updater import Updater
@@ -40,10 +30,10 @@ class VALocker(CTk):
     """
 
     # VERSION
-    VERSION: str = "2.2.0"
+    VERSION: str = "2.2.1"
 
     # Custom Classes
-    logger: CustomLogger = CustomLogger("VALocker").get_logger()
+    logger: CustomLogger = CustomLogger.get_instance()
     file_manager: FileManager = FileManager()
     save_manager: SaveManager = SaveManager(file_manager)
     updater: Updater = Updater(VERSION, file_manager)
@@ -114,7 +104,7 @@ class VALocker(CTk):
 
         # Loads theme
         self.logger.info("Loading theme")
-        theme_name = self.file_manager.get_value(FILE.SETTINGS, "theme")
+        theme_name = self.file_manager.get_value(FILE.SETTINGS, "$theme")
         self.theme = self.theme_manager.get_theme(theme_name)
         self.logger.info(f'Theme "{theme_name}" loaded')
 
@@ -135,12 +125,12 @@ class VALocker(CTk):
         """
 
         self.instalocker_thread_running = BooleanVar(
-            value=self.file_manager.get_value(FILE.SETTINGS, "enableOnStartup", False)
+            value=self.file_manager.get_value(FILE.SETTINGS, "$enableOnStartup", False)
         )
 
         self.instalocker_status = BooleanVar(value=True)
 
-        fast_mode_timings = self.file_manager.get_value(FILE.SETTINGS, "fastModeTimings")
+        fast_mode_timings = self.file_manager.get_value(FILE.SETTINGS, "$fastModeTimings")
 
         if type(fast_mode_timings) is not ruamel_yaml.CommentedMap:
             fast_mode_timings = dict()
@@ -156,17 +146,17 @@ class VALocker(CTk):
         ]
 
         self.safe_mode_enabled = BooleanVar(
-            value=self.file_manager.get_value(FILE.SETTINGS, "safeModeOnStartup", False)
+            value=self.file_manager.get_value(FILE.SETTINGS, "$safeModeOnStartup", False)
         )
 
         self.safe_mode_strength = IntVar(
             value=self.file_manager.get_value(
-                FILE.SETTINGS, "safeModeStrengthOnStartup", 0
+                FILE.SETTINGS, "$safeModeStrengthOnStartup", 0
             )
         )
 
         self.safe_mode_timings = self.file_manager.get_value(
-            FILE.SETTINGS, "safeModeTimings"
+            FILE.SETTINGS, "$safeModeTimings"
         )
 
         roles = self.file_manager.get_value(FILE.AGENT_CONFIG, "roles")
@@ -217,12 +207,12 @@ class VALocker(CTk):
         # Settings Vars
         self.start_tools_automatically = BooleanVar(
             value=self.file_manager.get_value(
-                FILE.SETTINGS, "startToolsAutomatically", True
+                FILE.SETTINGS, "$startToolsAutomatically", True
             )
         )
 
         self.anti_afk_mode = ANTI_AFK.from_name(
-            self.file_manager.get_value(FILE.SETTINGS, "antiAfkMode", "Random Centered")
+            self.file_manager.get_value(FILE.SETTINGS, "$antiAfkMode", "Random Centered")
         )
 
         # region: Traces
@@ -257,7 +247,7 @@ class VALocker(CTk):
         self.instalocker = Instalocker(self)
         self.change_locking_config(
             self.file_manager.get_locking_config_by_file_name(
-                self.file_manager.get_value(FILE.SETTINGS, "lockingConfig")
+                self.file_manager.get_value(FILE.SETTINGS, "$lockingConfig")
             )
         )
 
@@ -397,7 +387,11 @@ class VALocker(CTk):
         can_force_update=False,
     ) -> None:
         if not self.updater.meets_required_version(config_enum):
-            self.update_frame.stop_progress()
+            try:
+                self.update_frame.stop_progress()
+            except AttributeError:
+                pass
+            
             self.logger.error(f"Config file '{config_enum.name}' is not compatible")
 
             if can_force_update:
@@ -419,8 +413,6 @@ class VALocker(CTk):
             else:
                 self.logger.info("User chose not to update")
                 self.exit(save_data=False)
-
-        self.logger.info(f"Config file '{config_enum.name}' is compatible")
 
     # region: Thread Management
 
@@ -544,7 +536,7 @@ class VALocker(CTk):
 
         # Load/Reload save
         self.logger.info("Loading Save")
-        self.load_save(self.file_manager.get_value(FILE.SETTINGS, "activeSaveFile"))
+        self.load_save(self.file_manager.get_value(FILE.SETTINGS, "$activeSaveFile"))
 
         if hasattr(self, "update_frame"):
             self.update_frame.destroy()
@@ -720,14 +712,14 @@ class VALocker(CTk):
         if save_current_config:
             self.save_data()
 
-        self.file_manager.set_value(FILE.SETTINGS, "activeSaveFile", save_name)
+        self.file_manager.set_value(FILE.SETTINGS, "$activeSaveFile", save_name)
 
         try:
             self.save_manager.load_save(save_name)
         except FileNotFoundError:
             self.file_manager.set_value(
                 FILE.SETTINGS,
-                "activeSaveFile",
+                "$activeSaveFile",
                 self.save_manager.get_current_save_file(),
             )
 
@@ -806,7 +798,7 @@ class VALocker(CTk):
         if type(file) is LOCKING_CONFIG:
             file = os.path.basename(file.value)
 
-        self.file_manager.set_value(FILE.SETTINGS, "lockingConfig", file)
+        self.file_manager.set_value(FILE.SETTINGS, "$lockingConfig", file)
 
     # endregion
 
