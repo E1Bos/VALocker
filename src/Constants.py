@@ -335,6 +335,14 @@ class Region:
     def center(self) -> tuple[int, int]:
         return (self.x + self.width // 2, self.y + self.height // 2)
 
+    @property
+    def as_tuple(self) -> tuple[int, int, int, int]:
+        return (
+            self.location[0],
+            self.location[1],
+            self.location_end[0],
+            self.location_end[1],
+        )
 
 '''
 class Save():
