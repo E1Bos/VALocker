@@ -45,5 +45,5 @@ startToolsAutomatically: true
 antiAfkMode: Random Centered
 # --------------------------------------------------
 # Whether files have already been migrated
-alreadyMigrated: true
+alreadyMigrated: false
 # --------------------------------------------------
