@@ -2,10 +2,11 @@
 
 Date Format: YYYY-MM-DD
 
-## Version 2.2.X | 2024-XX-XX
+## Version 2.2.1 | 2024-09-24
 
 ### Added
 - Files no longer have a version number, some fields are marked with a $ to indicate they are user generated. When checking for updates, all non-user generated fields will be checked for changes.
+- Debug flag, toggleable with `--debug` when starting VALocker in the command line
 
 ### Changed
 - Switched back to mss from betterDXcam due to issues with strange bugs
