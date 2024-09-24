@@ -4,7 +4,7 @@ import os
 import sys
 import traceback
 from typing import Optional
-from Constants import FOLDER, GET_WORKING_DIR
+from Constants import FOLDER, GET_WORKING_DIR, LOGGER_LEVEL
 
 
 class CustomLogger:
@@ -21,7 +21,7 @@ class CustomLogger:
     _instance: Optional["CustomLogger"] = None
 
     @classmethod
-    def get_instance(cls, name: str = "VALocker", log_file: str = "VALocker.log", log_level: int = INFO) -> "CustomLogger":
+    def get_instance(cls, name: str = "VALocker", log_file: str = "VALocker.log", log_level: int = LOGGER_LEVEL) -> "CustomLogger":
         """
         Get the logger instance.
 
