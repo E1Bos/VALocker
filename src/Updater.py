@@ -217,9 +217,9 @@ class Updater:
 
         latest_config = self._file_manager.yaml.load(latest_config_str)
 
-        for key in current_config:
+        for key in latest_config:
             if not key.startswith("$"):
-                if current_config[key] != latest_config[key]:
+                if key not in current_config or current_config[key] != latest_config[key]:
                     self._logger.info(f"{config_file.name} configuration needs updating")
                     self._logger.info(
                         f"key: {key}, current: {current_config[key]}, latest: {latest_config[key]}"
