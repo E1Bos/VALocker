@@ -84,6 +84,9 @@ agents:
   viper:
     - false
     - false
+  vyse:
+    - false
+    - false
   yoru:
     - false
     - false

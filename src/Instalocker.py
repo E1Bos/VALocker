@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING, Optional
 
+import mss.windows
+
 if TYPE_CHECKING:
     from VALocker import VALocker
 
@@ -13,7 +15,7 @@ from customtkinter import BooleanVar, IntVar
 import pynput.mouse as pynmouse
 
 # import pynput.keyboard as pynkeyboard
-import betterdxcam
+import mss
 import numpy as np
 
 # Custom Imports
@@ -22,13 +24,14 @@ from Constants import Region, LOCKING_CONFIG, ROLE, AgentIndex, AgentGrid
 
 # from GUIFrames import ErrorPopup
 
+
 class Instalocker:
     """
     Responsible for instalocking agents
     @author: [E1Bos](https://www.github.com/E1Bos)
     """
 
-    logger = CustomLogger("Instalocker").get_logger()
+    logger: CustomLogger = CustomLogger.get_instance().get_logger("Instalocker")
 
     # Parent
     parent: "VALocker"
@@ -62,7 +65,7 @@ class Instalocker:
     safe_mode_timings = list[tuple[int, int]]
 
     # Screen Recorder
-    cam: betterdxcam.betterDXCamera
+    cam: mss.windows.MSS
 
     # Controllers
     mouse: pynmouse.Controller = pynmouse.Controller()
@@ -97,12 +100,9 @@ class Instalocker:
 
         # Current Selected Agent
         self.agent_index = parent.agent_index
-        
+
         # Agent Grid
         self.agent_grid = parent.agent_grid
-
-        # Screen Recorder
-        self.cam = betterdxcam.create(print_capture_fps=False)
 
         # Threading
         self.stop_event = threading.Event()
@@ -200,7 +200,7 @@ class Instalocker:
 
     def location_in_role_button(self, agent_index: AgentIndex) -> tuple[int, int]:
         role = agent_index.role
-        
+
         x = self.role_coords[role][0] + randint(5, (self.role_box_size[0] - 5))
         y = self.role_coords[role][1] + randint(5, (self.role_box_size[1] - 5))
 
@@ -208,7 +208,7 @@ class Instalocker:
 
     def location_in_agent_button(self, agent_index: AgentIndex) -> tuple[int, int]:
         top_left = self.agent_coords[agent_index.index]
-        
+
         x = top_left[0] + randint(5, (self.agent_box_size[0] - 5))
         y = top_left[1] + randint(5, (self.agent_box_size[1] - 5))
 
@@ -220,12 +220,11 @@ class Instalocker:
 
         return x, y
 
-    def frame_matches(self, frame, region: Region) -> bool:
-        if frame is None:
+    def frame_matches(self, area: np.array, region: Region) -> bool:
+        if area is None:
             return False
 
-        area = np.array(frame[region.y : region.y_end, region.x : region.x_end])
-
+        # Compare the screenshot array with the target RGB value
         return np.all(np.all(area == region.color, axis=2))
 
     def calculate_random_agent(self) -> tuple[ROLE, int]:
@@ -272,9 +271,16 @@ class Instalocker:
 
         return AgentIndex(role, index)
 
-    def get_latest_frame(self) -> np.ndarray:
+    def get_latest_frame(self, region: Region) -> np.ndarray:
         try:
-            return self.cam.get_latest_frame()
+            # Get the frame from the camera
+            frame = np.array(self.cam.grab(region.as_tuple))
+
+            # Convert the frame from BGRA to RGB
+            rgb_frame = frame[:, :, :3]
+            rgb_frame = np.flip(rgb_frame, axis=2)
+
+            return rgb_frame
         except Exception as e:
             self.logger.error(f"Error getting frame: {e}")
             return None
@@ -283,8 +289,8 @@ class Instalocker:
 
     def main(self):
         try:
-            self.cam.start(target_fps=144)
             self.logger.info("Thread started")
+            self.cam = mss.mss()
             while not self.stopped():
                 if self.state.get():
                     self.locking()
@@ -295,42 +301,51 @@ class Instalocker:
             self.running.set(False)
             self.stop_event.set()
         finally:
-            self.cam.stop()
             self.logger.info("Thread stopped")
 
     def locking(self) -> None:
+        start_time = time()
         while not self.stopped() and self.state.get():
-            frame = self.get_latest_frame()
+            frame = self.get_latest_frame(self.lock_region)
             if self.frame_matches(frame, self.lock_region):
-                start = time()
+                break
 
-                if self.random_select.get():
-                    agent_index = self.calculate_random_agent()
-                else:
-                    agent_index = self.agent_index
+        if self.stopped():
+            return
 
-                self.lock_agent(agent_index)
+        agent_index = self.calculate_random_agent() if self.random_select.get() else self.agent_index
 
-                end = time()
+        self.lock_agent(agent_index)
 
-                self.parent.add_stat(end - start)
+        end_time = time()
+        self.parent.add_stat(end_time - start_time)
 
-                self.toggle_state(False)
+        self.toggle_state(False)
 
-                self.logger.info(
-                    f"Locked agent in {(end-start)*1000:.2f}ms\nSafe Mode: {self.safe_mode_enabled.get()} Strength: {self.safe_mode_strength.get()}\nRandom Select: {self.random_select.get()}"
-                )
-                return
+        locking_time_ms = (end_time - start_time) * 1000
+        self.logger.info(
+            f"Locked agent in {locking_time_ms:.2f}ms\n"
+            f"Role: {self.agent_index.role} | Index: {self.agent_index.index}\n"
+            f"Safe Mode: {self.safe_mode_enabled.get()} | Strength: {self.safe_mode_strength.get()}\n"
+            f"Random Select: {self.random_select.get()}"
+        )
 
     def waiting(self) -> None:
+        regions = iter(self.waiting_regions)
         while not self.stopped() and not self.state.get():
-            frame = self.get_latest_frame()
-            for region in self.waiting_regions:
-                if self.frame_matches(frame, region):
-                    self.toggle_state(True)
-                    self.logger.info(f"Matched waiting region:\n{region}")
-                    return
-            self.stop_event.wait(2)
+            try:
+                region = next(regions)
+            except StopIteration:
+                regions = iter(self.waiting_regions)
+                region = next(regions)
+
+            frame = self.get_latest_frame(region)
+            if self.frame_matches(frame, region):
+                self.toggle_state(True)
+                self.logger.info(f"Matched waiting region:\n{region}")
+                return
+
+            self.stop_event.wait(1.5)
 
     def lock_agent(self, agent_index: AgentIndex) -> None:
         # Sets timings based on safe mode
@@ -350,9 +365,7 @@ class Instalocker:
             self.stop_event.wait(timings[1])
 
         # Select correct agent
-        self.mouse.position = self.location_in_agent_button(
-            agent_index
-        )
+        self.mouse.position = self.location_in_agent_button(agent_index)
         self.stop_event.wait(timings[2])
         self.mouse.click(pynmouse.Button.left, 1)
         self.stop_event.wait(timings[3])
@@ -363,19 +376,36 @@ class Instalocker:
             self.stop_event.wait(timings[4])
             self.mouse.click(pynmouse.Button.left, 1)
 
-    def toggle_state(self, value: Optional[bool] = None):
+    def toggle_state(self, value: Optional[bool] = None) -> None:
+        """
+        Set the state of the instalocker.
+
+        Args:
+            value (bool, optional): The state to set the instalocker to. If None, the state will be toggled.
+        """
         if value is None:
             value = not self.state.get()
         self.state.set(value)
 
-    def start(self):
-        # Start thread
+    def start(self) -> None:
+        """
+        Starts the instalocker thread.
+
+        This method starts the instalocker thread if it is not already running.
+        It sets the `stop_event` to False and starts the thread.
+        """
         self.stop_event.clear()
         self.thread = threading.Thread(target=self.main, daemon=True)
         self.thread.start()
 
-    def stop(self):
-        # Ensure thread exists
+    def stop(self) -> None:
+        """
+        Stops the instalocker thread.
+
+        If the thread is not running, this method will log a message and return.
+        If the method is called from within the thread itself, this method will log a message and return.
+        Otherwise, this method will set the `stop_event` to True, which will cause the thread to stop.
+        """
         if self.thread is None:
             self.logger.info("Thread not started")
             return

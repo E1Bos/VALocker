@@ -1375,9 +1375,15 @@ class ErrorPopup(ThemedPopup):
 
     theme: dict[str, str]
 
-    def __init__(self, parent: "VALocker", message: str, size: str = "300x100", **kwargs) -> None:
+    def __init__(self, parent: "VALocker", message: str, size: str = None, **kwargs) -> None:
         self.theme = parent.theme
         self.message = message
+
+        # dynamically size the popup based on the message length
+        if size is None:
+            longest_line = max(message.split("\\n"), key=len)
+            total_lines = message.count("\\n")
+            size = f"{len(longest_line)*4}x{100+(total_lines*15)}"
 
         super().__init__(parent, "Error", size, **kwargs)
 

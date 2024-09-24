@@ -32,7 +32,7 @@ class Updater:
     @author: [E1Bos](https://www.github.com/E1Bos)
     """
 
-    _logger: CustomLogger = CustomLogger("Updater").get_logger()
+    _logger: CustomLogger = CustomLogger.get_instance().get_logger("Updater")
     _file_manager: FileManager
     release_version: str
     check_frequency: int
@@ -79,7 +79,7 @@ class Updater:
             bool: True if the check frequency has been met, False otherwise.
         """
         last_checked_release = int(
-            self._file_manager.get_value(FILE.SETTINGS, "lastChecked", 0)
+            self._file_manager.get_value(FILE.SETTINGS, "$lastChecked", 0)
         )
 
         time_since_last_check = int(time.time()) - last_checked_release
@@ -156,10 +156,9 @@ class Updater:
 
         # If checking an entire folder
         elif type(item) is FOLDER:
-
             self._logger.info(f"Checking folder {item.name} for updates")
 
-            files = self._file_manager.get_files_in_folder(item)
+            files = self._file_manager.get_files_in_folder(item, contains_field="requiredVersion")
 
             total_files = len(files)
 
@@ -176,9 +175,6 @@ class Updater:
                     update_available = self.compare_yaml_configs(config_enum)
 
                     if update_available:
-                        self._logger.info(
-                            f"{config_enum.name} configuration needs updating"
-                        )
                         self._file_manager.update_file(config_enum)
                     else:
                         self._logger.info(f"{config_enum.name} is up to date")
@@ -202,53 +198,63 @@ class Updater:
 
     def compare_yaml_configs(self, config_file: FILE | LOCKING_CONFIG) -> bool:
         """
-        Compares the version of the current agent configuration with the latest version available.
+        Compares the content of the current agent configuration with the latest version available.
 
         Args:
             config_file (constant.Files): The Enum of the configuration file to check.
 
         Returns:
-            bool: True if the current version is older than the latest version, False otherwise.
+            bool: True if the current version is different than the latest version, False otherwise.
         """
         self._logger.info(f"Comparing YAML config versions for {config_file.name}")
-        current_version: str = self._file_manager.get_config(config_file).get(
-            "version", None
-        )
+        current_config = self._file_manager.get_config(config_file)
 
-        latest_version: str = self._get_latest_config_version(config_file.value)
+        latest_config_str = self._get_latest_config(config_file.value)
 
-        self._logger.info(
-            f"{config_file.name} : Current version: {current_version} | Latest version: {latest_version}"
-        )
+        if latest_config_str is None:
+            self._logger.error(f"Failed to retrieve YAML config for {config_file.name}")
+            return False
 
-        return self.compare_versions(current_version, latest_version)
+        latest_config = self._file_manager.yaml.load(latest_config_str)
 
-    # endregion
+        for key in current_config:
+            if not key.startswith("$"):
+                if current_config[key] != latest_config[key]:
+                    self._logger.info(f"{config_file.name} configuration needs updating")
+                    self._logger.info(
+                        f"key: {key}, current: {current_config[key]}, latest: {latest_config[key]}"
+                    )
+                    return True
 
-    def _get_latest_config_version(self, download_path: str, timeout: int = 2) -> str:
+        self._logger.info(f"{config_file.name} is up to date")
+
+        return False
+
+    def _get_latest_config(self, download_path: str, timeout: int = 2) -> str:
         """
-        Retrieves the latest configuration version from the specified download path.
+        Retrieves the latest configuration content from the specified download path.
 
         Args:
             download_path (str): The path to the configuration file.
             timeout (int): The timeout value for the HTTP request in seconds. Default is 2 seconds.
 
         Returns:
-            str: The latest configuration version, or None if an error occurred during the request.
+            str: The latest configuration content, or None if an error occurred during the request.
         """
         config_url = f"{URL.DOWNLOAD_URL.value}/{FOLDER.DEFAULTS.value}/{download_path}"
 
         try:
             response = requests.get(config_url, timeout=timeout)
             response.raise_for_status()
-            config_file: dict = self._file_manager.yaml.load(response.text)
+            return response.text
 
         except requests.exceptions.RequestException as e:
             self._logger.error(
-                f"Failed to retrieve configuration file from {config_url}, {e}"
+                f"Failed to retrieve YAML config from {config_url}, {e}"
             )
             return None
-        return config_file.get("version", None)
+
+    # endregion
 
     # region: Release Versions
 
@@ -346,7 +352,7 @@ class Updater:
         Updates the last checked time in the settings file.
         """
         settings = self._file_manager.get_config(FILE.SETTINGS)
-        settings["lastChecked"] = int(time.time())
+        settings["$lastChecked"] = int(time.time())
         self._file_manager.set_config(FILE.SETTINGS, settings)
 
     def meets_required_version(self, config_file: FILE | LOCKING_CONFIG) -> bool:
@@ -364,36 +370,23 @@ class Updater:
         """
 
         minimum_version = self._file_manager.get_config(config_file).get(
-            "requiredVersion", None
+            "requiredVersion", "*.*.*"
         )
 
-        if minimum_version is None or len(minimum_version) == 0:
-            return False
+        release_version = self.release_version
 
-        release_version = self.release_version.replace("v", "").split(".")
-
-        try:
-            minimum_version = minimum_version.replace("v", "").split(".")
-        except AttributeError:
-            return False
-
-        self._logger.info(
-            f"Checking {config_file.name} (v{'.'.join(minimum_version)}) runnable on v{self.release_version}"
-        )
-
-        for release_vers_digit, minimum_version_digit in zip(
-            release_version, minimum_version
+        if any(
+            release_vers_digit != minimum_version_digit
+            and minimum_version_digit != "*"
+            for release_vers_digit, minimum_version_digit in zip(
+                release_version.split("."), minimum_version.split(".")
+            )
         ):
-            match minimum_version_digit:
-                case "*" | "X" | "x":
-                    continue
-                case _:
-                    if release_vers_digit != minimum_version_digit:
-                        self._logger.error(
-                            "VALocker version does not meet the required version"
-                        )
+            self._logger.error(
+                "VALocker version does not meet the required version"
+            )
 
-                        return False
+            return False
 
         return True
 

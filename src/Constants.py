@@ -8,6 +8,7 @@ import os
 import sys
 from typing import Optional
 
+LOGGER_LEVEL = "INFO"
 
 def RESOURCE_PATH(relative_path):
     """Get absolute path to resource, works for dev and for PyInstaller"""
@@ -36,8 +37,8 @@ class FOLDER(Enum):
     """
 
     # Specific folder to use (None for AppData/roaming)
-    # STORAGE_FOLDER: str = "app_defaults"
-    STORAGE_FOLDER: str = None
+    # Defaults to AppData/roaming if not in debug mode
+    STORAGE_FOLDER: str = "app_defaults" if "--debug" in sys.argv else None
 
     # Where default files are stored
     DEFAULTS: str = "app_defaults"
@@ -335,6 +336,14 @@ class Region:
     def center(self) -> tuple[int, int]:
         return (self.x + self.width // 2, self.y + self.height // 2)
 
+    @property
+    def as_tuple(self) -> tuple[int, int, int, int]:
+        return (
+            self.location[0],
+            self.location[1],
+            self.location_end[0],
+            self.location_end[1],
+        )
 
 '''
 class Save():

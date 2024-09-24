@@ -1,3 +1,5 @@
+
+from typing import Optional
 import os
 import requests
 import json
@@ -39,7 +41,6 @@ class FileManager:
         FILE.SETTINGS,
         FILE.DEFAULT_SAVE,
         FILE.DEFAULT_THEME,
-        # All locking configs
     ]
 
     _WORKING_DIR: str = GET_WORKING_DIR()
@@ -50,7 +51,7 @@ class FileManager:
     locking_configs: dict[str, LOCKING_CONFIG] = dict()
 
     yaml: YAML = YAML(typ="rt")
-    _logger: CustomLogger = CustomLogger("File Manager").get_logger()
+    _logger: CustomLogger = CustomLogger.get_instance().get_logger("FileManager")
 
     def __init__(self) -> None:
         self.yaml.indent(mapping=2, sequence=4, offset=2)
@@ -69,7 +70,7 @@ class FileManager:
         self._read_all_files()
         self._logger.info("File manager setup complete")
 
-        if self.get_value(FILE.SETTINGS, "alreadyMigrated", False) == False:
+        if self.get_value(FILE.SETTINGS, "$alreadyMigrated", False) == False:
             self._logger.info("Files may need to be migrated, checking for old files")
             self._migrate_old_files()
 
@@ -176,7 +177,7 @@ class FileManager:
             }
 
             new_settings = {
-                "favoritedSaveFiles": stats_data.get("FAVORITED_SAVE_FILES"),
+                "$favoritedSaveFiles": stats_data.get("FAVORITED_SAVE_FILES"),
             }
 
             # Migrate the old stats data to the new file structure
@@ -197,15 +198,15 @@ class FileManager:
                 user_settings_data: dict = json.load(f)
 
             new_settings = {
-                "activeSaveFile": f"{user_settings_data.get('ACTIVE_SAVE_FILE')}.yaml",
-                "enableOnStartup": user_settings_data.get("ENABLE_ON_STARTUP"),
-                "safeModeOnStartup": user_settings_data.get("SAFE_MODE_ON_STARTUP"),
-                "safeModeStrengthOnStartup": user_settings_data.get(
+                "$activeSaveFile": f"{user_settings_data.get('ACTIVE_SAVE_FILE')}.yaml",
+                "$enableOnStartup": user_settings_data.get("ENABLE_ON_STARTUP"),
+                "$safeModeOnStartup": user_settings_data.get("SAFE_MODE_ON_STARTUP"),
+                "$safeModeStrengthOnStartup": user_settings_data.get(
                     "SAFE_MODE_STRENGTH_ON_STARTUP"
                 ),
-                "lockingConfirmations": user_settings_data.get("LOCKING_CONFIRMATIONS"),
-                "hideDefaultSave": user_settings_data.get("HIDE_DEFAULT_SAVE_FILE"),
-                "antiAfkMode": user_settings_data.get("ANTI_AFK_MODE"),
+                "$lockingConfirmations": user_settings_data.get("LOCKING_CONFIRMATIONS"),
+                "$hideDefaultSave": user_settings_data.get("HIDE_DEFAULT_SAVE_FILE"),
+                "$antiAfkMode": user_settings_data.get("ANTI_AFK_MODE"),
             }
 
             self._update_data(new_settings, FILE.SETTINGS)
@@ -320,7 +321,7 @@ class FileManager:
             value (bool): The value to set for the 'ALREADY_MIGRATED' flag.
 
         """
-        self.set_value(FILE.SETTINGS, "alreadyMigrated", value)
+        self.set_value(FILE.SETTINGS, "$alreadyMigrated", value)
 
     # endregion
 
@@ -329,29 +330,27 @@ class FileManager:
         Reads all the files into memory.
         """
         for config in FILE:
-            with open(self._absolute_file_path(config.value), "r") as f:
+            file_path = self._absolute_file_path(config.value)
+            self._logger.debug(f"Reading file: {file_path}")
+            with open(file_path, "r") as f:
                 self.configs[config] = self.yaml.load(f)
-
+                self._logger.debug(self.configs[config])
+                
         for config in os.listdir(
             self._absolute_file_path(FOLDER.LOCKING_CONFIGS.value)
         ):
             try:
                 config_enum = LOCKING_CONFIG(config)
-                with open(self._absolute_file_path(config_enum.value), "r") as f:
-                    data: dict = self.yaml.load(f)
+                file_path = self._absolute_file_path(config_enum.value)
                 
             except ValueError:
-                with open(
-                    self._absolute_file_path(FOLDER.LOCKING_CONFIGS.value, config), "r"
-                ) as f:
-                    data: dict = self.yaml.load(f)
-
-                    is_custom = data.get("custom", False)
-
-                    config_enum = config
-                    self._logger.info(
-                        f"Found config: {config_enum} - custom: {is_custom}"
-                    )
+                self._logger.debug(f"Found custom config: {config}")
+                config_enum = config
+                file_path = self._absolute_file_path(FOLDER.LOCKING_CONFIGS.value, config)
+            
+            self._logger.debug(f"Reading file: {file_path}")
+            with open(file_path, "r") as f:
+                data: dict = self.yaml.load(f)
 
             self.configs[config_enum] = data
 
@@ -408,32 +407,39 @@ class FileManager:
             key (str): The key to set the value for.
             value (any): The value to set for the key.
         """
-        self.configs[file][key] = value
+        # check if the key exists with a $
+        if self.configs[file].get(f"${key}", None) is not None:
+            self.configs[file][f"${key}"] = value
+        else:
+            self.configs[file][key] = value
+        
 
         with open(self._absolute_file_path(file.value), "w") as f:
             self.yaml.dump(self.configs[file], f)
 
-    def get_value(self, file: FILE | LOCKING_CONFIG, key: str, set_value=None) -> any:
+    def get_value(self, file: FILE | LOCKING_CONFIG, key: str, set_value: Optional[any] = None) -> any:
         """
         Returns the value of the specified key from the configuration dictionary of the specified file.
+
+        If the value is not found, it can be set with the `set_value` parameter.
 
         Args:
             file (constants.Files): The file enum for which the configuration is required.
             key (str): The key for which the value is required.
-            set_value (any): The value to set for the key if it doesn't exist.
+            set_value (any, optional): The value to set for the key if it doesn't exist. Defaults to None.
 
         Returns:
             any: The value of the specified key.
         """
         value = self.configs[file].get(key, None)
+        value = value or self.configs[file].get(f"${key}", None)
 
         if value is None and set_value is not None:
-            self._logger.warning(
-                f"Value for key '{key}' not found in {file.value}, setting to {set_value}"
-            )
+            self._logger.debug(f"Value for key '{key}' not found in {file.value}, setting to {set_value}")
             self.set_value(file, key, set_value)
             return set_value
 
+        self._logger.debug(f"Value for key '{key}' in {file.value} is {value}")
         return value
 
     def get_locking_configs(self) -> dict[str, LOCKING_CONFIG]:
@@ -443,7 +449,21 @@ class FileManager:
         Returns:
             dict[str, LOCKING_CONFIG]: A dictionary of locking configs with the title as the key.
         """
+        self._logger.debug("Getting locking configs")
         return self.locking_configs
+
+    def get_locking_config(self, key: str) -> LOCKING_CONFIG | None:
+        """
+        Returns the locking config for the specified key.
+
+        Args:
+            key (str): The key of the locking config.
+
+        Returns:
+            LOCKING_CONFIG | None: The locking config if found, otherwise None.
+        """
+        self._logger.debug(f"Getting locking config for key {key}")
+        return self.locking_configs.get(key)
 
     def get_locking_config_by_file_name(
         self, file_name: str, get_title: bool = False, get_data: bool = False
@@ -457,25 +477,37 @@ class FileManager:
             get_data (bool): If True, the data of the locking config is returned.
 
         Returns:
-            str | LOCKING_CONFIG: The locking config
+            str | LOCKING_CONFIG | dict[str, any]: The locking config
         """
+        self._logger.debug(f"Getting locking config by file name: {file_name}")
 
         if get_title and get_data:
-            raise ValueError("Only one of get_title and get_data can be True")
+            raise ValueError(
+                "Only one of get_title and get_data can be True. "
+                "Please specify which one to use."
+            )
 
-        for config in self.get_locking_configs().items():
-            if type(config[1]) is LOCKING_CONFIG:
-                file = config[1].value
+        locking_configs = self.get_locking_configs()
+
+        for title, config in locking_configs.items():
+            if type(config) is LOCKING_CONFIG:
+                file = config.value
             else:
-                file = config[1]
+                file = config
 
             file = os.path.basename(file)
+
             if file == file_name:
+                self._logger.debug(f"Found locking config: {title}")
+
                 if get_title:
-                    return config[0]
+                    return title
                 if get_data:
-                    return self.configs[config[1]]
-                return config[1]
+                    return self.configs[config]
+                return config
+
+        self._logger.warning(f"Locking config not found: {file_name}")
+        return None
 
     # region:  Update files
 
@@ -484,88 +516,137 @@ class FileManager:
         Update a file by downloading the latest version from the repository.
 
         Args:
-            file_path (FILE): The file enum that needs to be updated.
+            file (FILE | LOCKING_CONFIG): The file enum that needs to be updated.
         """
         self._logger.info(f"Updating {file.value} to the latest version")
 
         # Download the latest version of the file
         data = self._download_file(file)
 
+        self._logger.debug(f"Downloaded data for {file.value}: {data}")
+
+        # Update the configuration data in memory
         self.update_config_data(file, data)
 
         self._logger.info(f"Updated {file.value} to the latest version")
-        
-        print(file, data)
 
     def update_config_data(
         self, file: FILE | LOCKING_CONFIG, new_data: dict[str, any]
     ) -> None:
         """
         Update the configuration data in the specified file while preserving user-defined fields.
+
+        This method loads the current configuration, prepares a copy of the current configuration
+        for fields to preserve, merges the user-defined fields with the new data, saves the
+        updated configuration, and reloads the configuration in memory if necessary.
+
+        Args:
+            file (FILE | LOCKING_CONFIG): The file enum that needs to be updated.
+            new_data (dict[str, any]): The new configuration data to update with.
         """
-        
+        self._logger.debug(f"Updating {file.value} with new data: {new_data}")
+
         # Load current configuration
-        with open(self._absolute_file_path(file.value), "r") as f:
-            current_data = self.yaml.load(f)
+        current_data = self._load_config_data(file)
 
-        # Prepare a copy of the current data for fields to preserve
-        preserved_data = {}
+        self._logger.debug(f"Current configuration in {file.value}: {current_data}")
 
-        match file:
-            case FILE.SETTINGS:
-                user_defined_fields = [
-                    "theme",
-                    "lockingConfig",
-                    "activeSaveFile",
-                    "favoritedSaveFiles",
-                    "enableOnStartup",
-                    "safeModeOnStartup",
-                    "safeModeStrengthOnStartup",
-                    "antiAfkMode"
-                    "alreadyMigrated",
-                ]
-                preserved_data = {
-                    field: current_data[field]
-                    for field in user_defined_fields
-                    if field in current_data
-                }
-            case _:
-                pass
+        # Prepare a copy of the current configuration for fields to preserve
+        preserved_data = {
+            key: value
+            for key, value in current_data.items()
+            if not key.startswith("$$") and key.startswith("$")
+        }
 
-        self._logger.info(f"Preserved user-defined fields in {file.value}: {preserved_data}")
+        self._logger.debug(f"Preserved user-defined fields in {file.value}: {preserved_data}")
 
         # Preserve the user defined fields
         for key in preserved_data:
             new_data[key] = preserved_data[key]
 
-        # Save updated configuration
-        with open(self._absolute_file_path(file.value), "w") as f:
-            self.yaml.dump(new_data, f)
-            
-        self._logger.info(f"Updated configuration, preserved user-defined fields, in {file.value}. Fields: {new_data}")
+        self._logger.debug(f"Updated configuration, preserved user-defined fields, in {file.value}. Fields: {new_data}")
 
-        # Reload the configuration in memory if necessary
-        self.configs[file] = new_data
+        # Save updated configuration
+        self._save_config_data(file, new_data)
+
+        self._logger.info(f"Updated configuration, preserved user-defined fields, in {file.value}.")
+
+
+    def _load_config_data(self, file: FILE | LOCKING_CONFIG) -> dict[str, any]:
+        """
+        Load the configuration data from the specified file.
+
+        Args:
+            file (FILE | LOCKING_CONFIG): The file enum that needs to be loaded.
+
+        Returns:
+            dict[str, any]: The configuration data.
+        """
+        with open(self._absolute_file_path(file.value), "r") as f:
+            return self.yaml.load(f)
+
+
+    def _save_config_data(self, file: FILE | LOCKING_CONFIG, data: dict[str, any]) -> None:
+        """
+        Save the configuration data to the specified file.
+
+        Args:
+            file (FILE | LOCKING_CONFIG): The file enum that needs to be saved.
+            data (dict[str, any]): The configuration data to save.
+        """
+        with open(self._absolute_file_path(file.value), "w") as f:
+            self.yaml.dump(data, f)
 
     # endregion
 
-    def get_files_in_folder(self, folder: FOLDER) -> list[str]:
+    def get_files_in_folder(self, folder: FOLDER, contains_field: Optional[str] = None) -> list[str]:
         """
         Get all the files in a specified folder.
 
+        This method returns a list of file names in the specified folder. The folder
+        path is obtained using the `absolute_file_path` method.
+
         Args:
             folder (FOLDER): The folder enum for which the files are required.
+            contains_field (str): The field that the files must contain. Defaults to None.
 
         Returns:
             list[str]: A list of file names in the specified folder.
         """
         folder_path = self._absolute_file_path(folder.value)
-        return os.listdir(folder_path)
+        self._logger.debug(f"Getting files in folder: {folder_path}")
+        if not os.path.exists(folder_path):
+            self._logger.warning(f"Folder {folder_path} does not exist")
+            return []
+
+        file_list = [file for file in os.listdir(folder_path) if file.endswith(".yaml")]
+        filtered_files = []
+
+        for file in file_list:
+            self._logger.debug(f"Checking file: {file}")
+            try:
+                with open(os.path.join(folder_path, file), "r") as f:
+                    if contains_field is None or contains_field in f.read():
+                        filtered_files.append(file)
+            except Exception as e:
+                self._logger.warning(f"Failed to check file: {file}. Exception: {e}")
+
+        self._logger.info(f"Found {len(filtered_files)} files in folder: {folder_path}")
+        return filtered_files
 
     def reset_configs(self) -> None:
         """
-        Reset the configuration files to their default values.
+        Resets the configuration files to their default values. This method will backup the current configuration files in the "backups" folder before resetting them, in case the user wants to restore the previous configuration.
+
+        This method will download the default configuration files from the GitHub repository and overwrite the current configuration files with the default ones.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
+        # List of files that require a backup before resetting
         REQUIRES_BACKUP: list[FILE] = [
             FILE.STATS,
             FILE.SETTINGS,
@@ -574,12 +655,13 @@ class FileManager:
         
         self._logger.info("Resetting configuration files")
         
+        # Backup the current configuration files if they exist
         for file in self._REQUIRED_FILES:
             if file in REQUIRES_BACKUP:
                 if not os.path.exists(self._absolute_file_path("backups")):
                     os.mkdir(self._absolute_file_path("backups"))
-                
-                self._logger.info(f"Backing up {file.name}")
+                    
+                self._logger.debug(f"Backing up {file.name}")
                 
                 with open(self._absolute_file_path(file.value), "r") as f:
                     file_content = self.yaml.load(f)
@@ -587,21 +669,27 @@ class FileManager:
                 now = datetime.datetime.now().strftime("-%d-%m-%Y--%H-%M")
                 with open(self._absolute_file_path(f"backups/{file.file_name}-{now}.bak"), "w") as f:
                     self.yaml.dump(file_content, f)
-
-            self._logger.info(f"Fetching content for {file.name}")
+                self._logger.info(f"Backed up {file.name}")
+        
+        # Fetch the default configuration files from the repository
+        for file in self._REQUIRED_FILES:
+            self._logger.debug(f"Fetching content for {file.name}")
             
             try:
                 file_content = self._download_file(file)
-            except:
-                self._logger.error(f"Failed to fetch content for {file.name}")
+            except Exception as e:
+                self._logger.error(f"Failed to fetch content for {file.name}. Exception: {e}")
                 continue
             
+            # Save the default configuration file
             with open(self._absolute_file_path(file.value), "w") as f:
                 self.yaml.dump(file_content, f)
             
             self._logger.info(f"Reset {file.name}")
         
+            # Reload the configuration in memory
             self.configs[file] = file_content
+            self._logger.debug(f"Reloaded {file.name} configuration in memory")
         
         self._logger.info("Configuration files reset")
         

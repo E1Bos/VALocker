@@ -36,7 +36,7 @@ class ThemeManager:
     @author: [E1Bos](https://www.github.com/E1Bos)
     """
     
-    logger = CustomLogger("Theme Manager").get_logger()
+    logger: CustomLogger = CustomLogger.get_instance().get_logger("ThemeManager")
     working_dir = GET_WORKING_DIR()
     theme: dict[str, str]
     

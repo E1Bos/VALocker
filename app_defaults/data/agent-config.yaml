@@ -1,7 +1,6 @@
 # --------------------------------------------------
-# Version of the configuration
-version: 1.0.4
-requiredVersion: 2.*.*
+# Version requirement of VALocker
+requiredVersion: 2.2.1
 # --------------------------------------------------
 # Agents that are unlocked be default
 defaultAgents: [brimstone, jett, phoenix, sage, sova]

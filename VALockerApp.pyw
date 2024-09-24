@@ -12,6 +12,13 @@ sys.path.append(src_path)
 
 from VALocker import VALocker
 
+
 if __name__ == "__main__":
-    locker = VALocker()
+    try:
+        args = sys.argv
+        debug = "--debug" in args
+    except Exception:
+        debug = False
+    
+    locker = VALocker(debug=debug)
     locker.mainloop()
