@@ -10,7 +10,7 @@ a = Analysis(
     datas=[
         ('images/icons/*', 'images/icons'),  # Include icons
         ('src/*', 'src'),  # Include src directory
-        ('src/frames/*', 'src/frames')
+        ('src/frames/*', 'src/frames') # Include GUI frames
     ],
     hiddenimports=[
         'customtkinter',
