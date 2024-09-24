@@ -342,23 +342,15 @@ class FileManager:
             try:
                 config_enum = LOCKING_CONFIG(config)
                 file_path = self._absolute_file_path(config_enum.value)
-                self._logger.debug(f"Reading file: {file_path}")
-                with open(file_path, "r") as f:
-                    data: dict = self.yaml.load(f)
-                    
                 
             except ValueError:
+                self._logger.debug(f"Found custom config: {config}")
+                config_enum = config
                 file_path = self._absolute_file_path(FOLDER.LOCKING_CONFIGS.value, config)
-                self._logger.debug(f"Reading file: {file_path}")
-                with open(file_path, "r") as f:
-                    data: dict = self.yaml.load(f)
-
-                    is_custom = data.get("custom", False)
-
-                    config_enum = config
-                    self._logger.info(
-                        f"Found config: {config_enum} - custom: {is_custom}"
-                    )
+            
+            self._logger.debug(f"Reading file: {file_path}")
+            with open(file_path, "r") as f:
+                data: dict = self.yaml.load(f)
 
             self.configs[config_enum] = data
 
