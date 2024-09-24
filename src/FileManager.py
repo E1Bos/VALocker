@@ -571,6 +571,9 @@ class FileManager:
 
         self._logger.info(f"Updated configuration, preserved user-defined fields, in {file.value}.")
 
+        # Reload configuration in memory
+        self.configs[file] = self._load_config_data(file)
+
 
     def _load_config_data(self, file: FILE | LOCKING_CONFIG) -> dict[str, any]:
         """

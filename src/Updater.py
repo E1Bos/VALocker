@@ -217,6 +217,11 @@ class Updater:
 
         latest_config = self._file_manager.yaml.load(latest_config_str)
 
+        # remove old fields that shouldnt exist
+        for key in list(current_config.keys()):
+            if key not in latest_config:
+                del current_config[key]
+
         for key in latest_config:
             if not key.startswith("$"):
                 if key not in current_config or current_config[key] != latest_config[key]:
