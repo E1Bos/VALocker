@@ -11,7 +11,7 @@ from ctypes import windll
 
 
 # Custom imports
-from CustomElements import ConfirmPopup, SideFrame
+from CustomElements import ConfirmPopup, ErrorPopup, SideFrame
 from CustomLogger import CustomLogger
 from Constants import *
 from FileManager import FileManager
@@ -99,10 +99,14 @@ class VALocker(CTk):
     update_called: bool = False
     start_tools_automatically: BooleanVar
 
-    def __init__(self) -> None:
+    def __init__(self, debug=False) -> None:
         super().__init__()
 
         self.logger.info(f"Initializing VALocker v{self.VERSION}")
+
+        if debug:
+            self.logger.set_log_level("DEBUG")
+            self.logger.info("Debug mode enabled")
 
         # Sets up file manager
         self.logger.info("Setting up file manager")
@@ -260,11 +264,20 @@ class VALocker(CTk):
         # Initialize Instalocker
         self.logger.info("Initializing Instalocker")
         self.instalocker = Instalocker(self)
-        self.change_locking_config(
-            self.file_manager.get_locking_config_by_file_name(
+        
+        saved_locking_config = self.file_manager.get_locking_config_by_file_name(
                 self.file_manager.get_value(FILE.SETTINGS, "$lockingConfig")
             )
-        )
+        
+        if saved_locking_config is None:
+            ErrorPopup(
+                self,
+                "The locking config you selected could not be found.\nThe 1920x1080 default locking config will be used instead.",
+            )
+            
+            saved_locking_config = LOCKING_CONFIG.CONFIG_1920_1080_16_9
+        
+        self.change_locking_config(saved_locking_config)
 
         self.logger.info("Managing Instalocker thread")
         self.manage_instalocker_thread()
@@ -514,9 +527,6 @@ class VALocker(CTk):
         if hasattr(self, "update_frame") and type(self.update_frame) is UpdateUI:
             self.update_frame.destroy()
             del self.update_frame
-
-        # TODO: REMOVE
-        reset_config = True
 
         if not reset_config and (
             self.updater.check_frequency_met() or force_check_update
