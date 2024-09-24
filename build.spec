@@ -9,14 +9,15 @@ a = Analysis(
     binaries=[],
     datas=[
         ('images/icons/*', 'images/icons'),  # Include icons
-        ('src/*', 'src')  # Include src directory
+        ('src/*', 'src'),  # Include src directory
+        ('src/frames/*', 'src/frames')
     ],
     hiddenimports=[
         'customtkinter',
         'requests',
         'pillow',
         'pynput',
-        'betterdxcam',
+        'mss',
         'ruamel.yaml'
     ],
     hookspath=[],
@@ -41,3 +42,4 @@ exe = EXE(
     upx=True,
     runtime_tmpdir=None,
     console=False )
+
