@@ -9,6 +9,8 @@ import os
 current_dir = os.path.dirname(os.path.abspath(__file__))
 src_path = os.path.join(current_dir, 'src')
 sys.path.append(src_path)
+src_path = os.path.join(current_dir, 'src/frames')
+sys.path.append(src_path)
 
 from VALocker import VALocker
 
