@@ -279,7 +279,7 @@ VALocker utilizes the following libraries:
 - [requests](https://pypi.org/project/requests/) - Used for checking for updates.
 - [PIL](https://python-pillow.org/) - Used for image manipulation.
 - [pynput](https://pypi.org/project/pynput/) - Used for controlling and monitoring input devices.
-- [betterDXcam](https://github.com/E1Bos/betterDXcam) - A fork of [DXcam](https://pypi.org/project/DXcam/) maintained by me used for capturing screenshots, it supports changing resolutions while active among other things.
+- [MSS](https://github.com/BoboTiG/python-mss) - Used to gather screenshots of the desktop at blazingly fast speeds.
 - [ruamel.yaml](https://pypi.org/project/ruamel.yaml/) - Used for reading and writing YAML files.
 
 ## 📧 Contact
