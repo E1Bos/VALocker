@@ -21,10 +21,10 @@ VALocker is a Python program that automatically locks any VALORANT agent quickly
 
 Some antivirus software may flag this program as malware, due to the nature of the program, such as Windows Defender. This is a false positive, and the program is safe to use. If you have any concerns, please feel free to check the source code, [compile](#-compiling-yourself) the program yourself, or reach out to me for more information.
 
-## 📰 New in v2.1.0
+## 📰 New in v2.2.0
 
 ### VALocker finally works with the new VALORANT UI!
-- Full support for the new UI. The new implementation uses the new role buttons instead of scrolling through all possible agents, so it is slower than v2.0.5 with the old version of the UI, but it means that no matter how many agents VALORANT adds, it will continue to work!
+- Full support for the new UI. The new implementation will determine if the selected agent is available on the main screen, if not, it uses the new role buttons. In some cases, it will be slower than v2.0.5 with the old version of the UI, but it means that no matter how many agents VALORANT adds, it will continue to work!
 
 ## 📚 Features
 
