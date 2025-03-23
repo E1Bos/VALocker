@@ -27,6 +27,7 @@ duelist:
   - phoenix
   - raze
   - reyna
+  - waylay
   - yoru
 initiator:
   - breach
@@ -35,6 +36,7 @@ initiator:
   - kayo
   - skye
   - sova
+  - tejo
 sentinel:
   - chamber
   - cypher
