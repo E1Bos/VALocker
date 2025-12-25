@@ -43,6 +43,7 @@ sentinel:
   - deadlock
   - killjoy
   - sage
+  - veto
   - vyse
 # --------------------------------------------------
 # All the maps in game
@@ -51,6 +52,7 @@ maps:
   - ascent
   - bind
   - breeze
+  - corrode
   - fracture
   - haven
   - icebox
