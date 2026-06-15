@@ -18,6 +18,7 @@ controller:
   - brimstone
   - clove
   - harbor
+  - miks
   - omen
   - viper
 duelist:
@@ -42,7 +43,6 @@ sentinel:
   - cypher
   - deadlock
   - killjoy
-  - miks
   - sage
   - veto
   - vyse
