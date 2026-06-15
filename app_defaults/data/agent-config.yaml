@@ -42,6 +42,7 @@ sentinel:
   - cypher
   - deadlock
   - killjoy
+  - miks
   - sage
   - veto
   - vyse
